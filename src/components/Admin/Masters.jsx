@@ -1,7 +1,7 @@
 import { Edit, Plus, Search, Trash, X } from "lucide-react"
 import { useCallback, useEffect, useState } from "react"
 import { toast } from "react-toastify"
-import { branchService, categoryService, departmentService, designationService, gradesService, subDepartmentService } from "../../services/api"
+import { branchService, categoryService, departmentService, designationService, gradesService, reasonsService, subDepartmentService } from "../../services/api"
 import Enterprise from "./Enterprise"
 
 const initialCompanies = [
@@ -65,6 +65,8 @@ export default function Masters({ darkMode }) {
   const [subDepartments, setSubDepartments] = useState([])
   const [grades, setGrades] = useState([])
   const [categories, setCategories] = useState([])
+  const [resignationReasons, setResignationReasons] = useState([])
+  const [terminationReasons, setTerminationReasons] = useState([])
   const [isCreateCompanyOpen, setIsCreateCompanyOpen] = useState(false)
   const [isCreateBranchOpen, setIsCreateBranchOpen] = useState(false)
   const [isCreateDepartmentOpen, setIsCreateDepartmentOpen] = useState(false)
@@ -80,15 +82,21 @@ export default function Masters({ darkMode }) {
   const [editingSubDepartment, setEditingSubDepartment] = useState(null)
   const [editingGrade, setEditingGrade] = useState(null)
   const [editingCategory, setEditingCategory] = useState(null)
+  const [editingResignationReason, setEditingResignationReason] = useState(null)
+  const [editingTerminationReason, setEditingTerminationReason] = useState(null)
   const [newBranch, setNewBranch] = useState({ name: "", address: "" })
   const [newDepartment, setNewDepartment] = useState({ name: "" })
   const [newDesignation, setNewDesignation] = useState({ name: "", departmentId: null })
   const [newSubDepartment, setNewSubDepartment] = useState({ name: "", departmentId: null })
   const [newGrade, setNewGrade] = useState({ name: "" })
   const [newCategory, setNewCategory] = useState({ name: "" })
+  const [newResignationReason, setNewResignationReason] = useState({ name: "" })
+  const [newTerminationReason, setNewTerminationReason] = useState({ name: "" })
   const [currentPage, setCurrentPage] = useState(1)
   const [itemsPerPage] = useState(7)
   const [selectedCompanyId, setSelectedCompanyId] = useState(null)
+  const [isCreateResignationReasonOpen, setIsCreateResignationReasonOpen] = useState(false);
+  const [isCreateTerminateReasonOpen, setIsCreateTerminationReasonOpen] = useState(false);
   const [formData, setFormData] = useState({
     code: "",
     name: "",
@@ -208,7 +216,7 @@ export default function Masters({ darkMode }) {
         setLoading(false)
       }
     }
-    fetchDepartments()
+    // fetchDepartments()
 
 
     const fetchSubDepartments = async () => {
@@ -275,6 +283,37 @@ export default function Masters({ darkMode }) {
       }
     }
 
+    const fetchTerminationReasons = async () => {
+      try {
+        setLoading(true)
+        const response = await reasonsService.getAllTerminationReasons()
+        if (response.success) {
+          setTerminationReasons(response.data)
+        } else {
+          toast.error(response.message || 'Failed to fetch departments')
+        }
+      } catch (error) {
+        toast.error('Error fetching departments')
+      } finally {
+        setLoading(false)
+      }
+    }
+    const fetchResginationReasons = async () => {
+      try {
+        setLoading(true)
+        const response = await reasonsService.getAllResignationReasons()
+        if (response.success) {
+          setResignationReasons(response.data)
+        } else {
+          toast.error(response.message || 'Failed to fetch departments')
+        }
+      } catch (error) {
+        toast.error('Error fetching departments')
+      } finally {
+        setLoading(false)
+      }
+    }
+
     if (activeTab === 'branch') {
       fetchBranches()
     } else if (activeTab === 'department') {
@@ -291,6 +330,10 @@ export default function Masters({ darkMode }) {
     else if (activeTab === 'category') {
       fetchCategory()
     }
+    else if (activeTab === 'reasons') {
+      fetchResginationReasons()
+      fetchTerminationReasons()
+    }
   }, [activeTab])
 
   const handleCreateBranch = async () => {
@@ -299,7 +342,7 @@ export default function Masters({ darkMode }) {
       return
     }
     const isDuplicate = branches.some(
-      branch => branch.name.toLowerCase() === newBranch.name.toLowerCase()
+      branch => branch.name.toLowerCase() === newBranch.name.toLowerCase().trim()
     );
     if (isDuplicate) {
       toast.error(`A branch with the name "${newBranch.name}" already exists.`);
@@ -334,7 +377,7 @@ export default function Masters({ darkMode }) {
       return
     }
     const isDuplicate = departments.some(
-      dept => dept.name.toLowerCase() === newDepartment.name.toLowerCase()
+      dept => dept.name.toLowerCase() === newDepartment.name.toLowerCase().trim()
     );
     if (isDuplicate) {
       toast.error(`A department with the name "${newDepartment.name}" already exists.`);
@@ -369,7 +412,7 @@ export default function Masters({ darkMode }) {
       return
     }
     const isDuplicate = grades.some(
-      grade => grade.name.toLowerCase() === newGrade.name.toLowerCase()
+      grade => grade.name.toLowerCase() === newGrade.name.toLowerCase().trim()
     );
     if (isDuplicate) {
       toast.error(`A grade with the name "${newGrade.name}" already exists.`);
@@ -401,7 +444,7 @@ export default function Masters({ darkMode }) {
       return
     }
     const isDuplicate = categories.some(
-      cat => cat.name.toLowerCase() === newCategory.name.toLowerCase()
+      cat => cat.name.toLowerCase() === newCategory.name.toLowerCase().trim()
     );
     if (isDuplicate) {
       toast.error(`A category with the name "${newCategory.name}" already exists.`);
@@ -433,7 +476,7 @@ export default function Masters({ darkMode }) {
       return
     }
     const isDuplicate = designations.some(
-      des => des.name.toLowerCase() === newDesignation.name.toLowerCase()
+      des => des.name.toLowerCase() === newDesignation.name.toLowerCase().trim()
     );
     if (isDuplicate) {
       toast.error(`A designation with the name "${newDesignation.name}" already exists.`);
@@ -464,7 +507,7 @@ export default function Masters({ darkMode }) {
   const handleCreateSubDepartment = () => {
     if (newSubDepartment.name && newSubDepartment.departmentId) {
       const isDuplicate = subDepartments.some(
-        sub => sub.name.toLowerCase() === newSubDepartment.name.toLowerCase()
+        sub => sub.name.toLowerCase() === newSubDepartment.name.toLowerCase().trim()
       );
       if (isDuplicate) {
         toast.error(`A sub-department with the name "${newSubDepartment.name}" already exists.`);
@@ -585,6 +628,17 @@ export default function Masters({ darkMode }) {
     setNewCategory(category)
     setIsCreateGradeOpen(true)
   }
+  const handleEditResignationReason = (reason) => {
+    setEditingResignationReason(reason)
+    setNewResignationReason(reason)
+    setIsCreateResignationReasonOpen(true)
+  }
+
+  const handleEditTerminationReason = (reason) => {
+    setEditingTerminationReason(reason)
+    setNewTerminationReason(reason)
+    setIsCreateTerminationReasonOpen(true)
+  }
 
   const handleUpdateCompany = () => {
     setCompanies(companies.map((company) => (company.id === editingCompany.id ? { ...company, ...formData } : company)))
@@ -597,7 +651,13 @@ export default function Masters({ darkMode }) {
       toast.error('Branch name is required')
       return
     }
-
+    const isDuplicate = branches.some(
+      branch => branch.name.toLowerCase() === newBranch.name.toLowerCase().trim()
+    );
+    if (isDuplicate) {
+      toast.error(`A branch with the name "${newBranch.name}" already exists.`);
+      return false;
+    }
     try {
       setLoading(true)
       const response = await branchService.updateBranch(editingBranch.id, {
@@ -628,7 +688,9 @@ export default function Masters({ darkMode }) {
       toast.error('Department name is required')
       return
     }
-
+    const isDuplicate = departments.some(
+      dept => dept.name.toLowerCase() === newDepartment.name.toLowerCase().trim()
+    );
     try {
       setLoading(true)
       const response = await departmentService.updateDepartment(editingDepartment.id, {
@@ -658,7 +720,13 @@ export default function Masters({ darkMode }) {
       toast.error('Designation name and department are required')
       return
     }
-
+    const isDuplicate = designations.some(
+      des => des.name.toLowerCase() === newDesignation.name.toLowerCase().trim()
+    );
+    if (isDuplicate) {
+      toast.error(`A designation with the name "${newDesignation.name}" already exists.`);
+      return false;
+    }
     try {
       setLoading(true)
       const response = await designationService.updateDesignation(editingDesignation.id, {
@@ -685,6 +753,13 @@ export default function Masters({ darkMode }) {
   }
 
   const handleUpdateSubDepartment = () => {
+    const isDuplicate = subDepartments.some(
+      sub => sub.name.toLowerCase() === newSubDepartment.name.toLowerCase().trim()
+    );
+    if (isDuplicate) {
+      toast.error(`A sub-department with the name "${newSubDepartment.name}" already exists.`);
+      return false;
+    }
     setSubDepartments(
       subDepartments.map((subDept) =>
         subDept.id === editingSubDepartment.id ? { ...subDept, ...newSubDepartment } : subDept,
@@ -696,17 +771,135 @@ export default function Masters({ darkMode }) {
   }
 
   const handleUpdateGrade = () => {
+    const isDuplicate = grades.some(
+      grade => grade.name.toLowerCase() === newGrade.name.toLowerCase().trim()
+    );
+    if (isDuplicate) {
+      toast.error(`A grade with the name "${newGrade.name}" already exists.`);
+      return false;
+    }
     setGrades(grades.map((grade) => (grade.id === editingGrade.id ? { ...grade, ...newGrade } : grade)))
     setIsCreateGradeOpen(false)
     setEditingGrade(null)
     setNewGrade({ name: "" })
   }
   const handleUpdateCategory = () => {
+    const isDuplicate = categories.some(
+      cat => cat.name.toLowerCase() === newCategory.name.toLowerCase()
+    );
+    if (isDuplicate) {
+      toast.error(`A category with the name "${newCategory.name}" already exists.`);
+      return false;
+    }
     setCategories(categories.map((grade) => (categories.id === editingCategory.id ? { ...categories, ...newCategory } : grade)))
     setIsCreateCategoryOpen(false)
     setEditingCategory(null)
     setNewCategory({ name: "" })
   }
+
+  const handleUpdateResignationReason = (reason) => {
+    const isDuplicate = resignationReasons.some(
+      cat => cat.name.toLowerCase() === reason.name.toLowerCase().trim()
+    );
+    if (isDuplicate) {
+      toast.error(`"${reason.name}" reason already exists.`);
+      return false;
+    }
+    setResignationReasons(resignationReasons.map((reason) => (resignationReasons.id === editingResignationReason.id ? { ...resignationReasons, ...reason } : reason)))
+    setIsCreateResignationReasonOpen(false)
+    setEditingResignationReason(null)
+    setNewResignationReason({ name: "" })
+  };
+
+  const handleDeleteResignationReason = (id) => {
+    setResignationReasons(resignationReasons.filter((reason) => reason.id !== id))
+  };
+
+  const handleUpdateTerminationReason = (reason) => {
+    const isDuplicate = terminationReasons.some(
+      cat => cat.name.toLowerCase() === reason.name.toLowerCase().trim()
+    );
+    if (isDuplicate) {
+      toast.error(`"${reason.name}" reason already exists.`);
+      return false;
+    }
+    setTerminationReasons(terminationReasons.map((reason) => (terminationReasons.id === editingTerminationReason.id ? { ...terminationReasons, ...reason } : reason)))
+    setIsCreateTerminationReasonOpen(false)
+    setEditingTerminationReason(null)
+    setNewTerminationReason({ name: "" })
+  };
+  const handleDeleteTerminationReason = (id) => {
+    setTerminationReasons(terminationReasons.filter((reason) => reason.id !== id))
+  };
+
+  const handleCreateResignationReasons = async () => {
+    if (!newResignationReason.name) {
+      toast.error('Resignation name is required')
+      return
+    }
+    const isDuplicate = resignationReasons.some(
+      cat => cat.name.toLowerCase() === newResignationReason.name.toLowerCase().trim()
+    );
+    if (isDuplicate) {
+      toast.error(`"${newResignationReason.name}" already exists.`);
+      return false;
+    }
+    try {
+      setLoading(true)
+      const response = await reasonsService.createReasons({
+        name: newResignationReason.name,
+        type: 'resignation'
+      })
+
+      if (response.success) {
+        setResignationReasons([...resignationReasons, response.data])
+        setIsCreateResignationReasonOpen(false)
+        setNewResignationReason({ name: "" })
+        toast.success('Resignation reason created successfully')
+      } else {
+        toast.error(response.message || 'Failed to create reason')
+      }
+    } catch (error) {
+      toast.error('Error creating reason')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleCreateTerminationReasons = async () => {
+    if (!newTerminationReason.name) {
+      toast.error('Termination name is required')
+      return
+    }
+    const isDuplicate = terminationReasons.some(
+      cat => cat.name.toLowerCase() === newTerminationReason.name.toLowerCase().trim()
+    );
+    if (isDuplicate) {
+      toast.error(`"${newTerminationReason.name}" already exists.`);
+      return false;
+    }
+    try {
+      setLoading(true)
+      const response = await reasonsService.createReasons({
+        name: newTerminationReason.name,
+        type: 'termination'
+      })
+
+      if (response.success) {
+        setTerminationReasons([...terminationReasons, response.data])
+        setIsCreateTerminationReasonOpen(false)
+        setNewTerminationReason({ name: "" })
+        toast.success('Termination reason created successfully')
+      } else {
+        toast.error(response.message || 'Failed to create reason')
+      }
+    } catch (error) {
+      toast.error('Error creating reason')
+    } finally {
+      setLoading(false)
+    }
+  }
+
 
   const filteredBranches = branches.filter(branch =>
     branch.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -749,6 +942,7 @@ export default function Masters({ darkMode }) {
           // "employment type",
           // "employment status",
           "category",
+          "reasons"
           // "custom2",
         ].map((tab) => (
           <button
@@ -1092,6 +1286,89 @@ export default function Masters({ darkMode }) {
         </div>
       )}
 
+      {activeTab === "reasons" && (
+        <div className="flex flex-wrap gap-4">
+          {/* First Reason Table */}
+          <div className="flex-1 min-w-[300px]">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className={`text-lg font-semibold ${darkMode ? "text-white" : "text-black"}`}>Resignation</h2>
+            </div>
+            <button
+              className={`${darkMode ? "bg-green-600 hover:bg-green-700" : "bg-green-500 hover:bg-green-600"} text-white px-4 py-2 rounded-lg flex items-center transition duration-200 mb-4`}
+              onClick={() => setIsCreateResignationReasonOpen(true)}
+            >
+              <Plus className="mr-2" size={20} />
+              Create Reason
+            </button>
+            <table className={`min-w-full ${darkMode ? "bg-gray-800 border-gray-700" : "bg-white border-gray-300"} border rounded-lg shadow-sm`}>
+              <thead className={darkMode ? "bg-gray-700" : "bg-gray-100"}>
+                <tr>
+                  <th className="px-6 py-3 text-left text-sm font-medium uppercase tracking-wider border-b">ID</th>
+                  <th className="px-6 py-3 text-left text-sm font-medium uppercase tracking-wider border-b">Reason</th>
+                  <th className="px-6 py-3 text-left text-sm font-medium uppercase tracking-wider border-b">Action</th>
+                </tr>
+              </thead>
+              <tbody className={`${darkMode ? "divide-gray-700" : "divide-gray-200"} divide-y`}>
+                {resignationReasons.map((reason, index) => (
+                  <tr key={reason.id} className="hover:bg-gray-50 dark:hover:bg-gray-700 transition duration-150">
+                    <td className="px-6 py-2 border-b">{index + 1}</td>
+                    <td className="px-6 py-2 border-b">{reason.name}</td>
+                    <td className="px-6 py-2 border-b text-sm font-medium">
+                      <button onClick={() => handleEditResignationReason(reason)} className={`${darkMode ? "text-blue-400 hover:text-blue-300" : "text-blue-600 hover:text-blue-900"} mr-2`}>
+                        <Edit size={18} />
+                      </button>
+                      <button onClick={() => handleDeleteResignationReason(reason.id)} className={`${darkMode ? "text-red-400 hover:text-red-300" : "text-red-600 hover:text-red-900"}`}>
+                        <Trash size={18} />
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Second Reason Table */}
+          <div className="flex-1 min-w-[300px]">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className={`text-lg font-semibold ${darkMode ? "text-white" : "text-black"}`}>Termination</h2>
+            </div>
+            <button
+              className={`${darkMode ? "bg-green-600 hover:bg-green-700" : "bg-green-500 hover:bg-green-600"} text-white px-4 py-2 rounded-lg flex items-center transition duration-200 mb-4`}
+              onClick={() => setIsCreateTerminationReasonOpen(true)}
+            >
+              <Plus className="mr-2" size={20} />
+              Create Reason
+            </button>
+            <table className={`min-w-full ${darkMode ? "bg-gray-800 border-gray-700" : "bg-white border-gray-300"} border rounded-lg shadow-sm`}>
+              <thead className={darkMode ? "bg-gray-700" : "bg-gray-100"}>
+                <tr>
+                  <th className="px-6 py-3 text-left text-sm font-medium uppercase tracking-wider border-b">ID</th>
+                  <th className="px-6 py-3 text-left text-sm font-medium uppercase tracking-wider border-b">Reason</th>
+                  <th className="px-6 py-3 text-left text-sm font-medium uppercase tracking-wider border-b">Action</th>
+                </tr>
+              </thead>
+              <tbody className={`${darkMode ? "divide-gray-700" : "divide-gray-200"} divide-y`}>
+                {terminationReasons.map((reason, index) => (
+                  <tr key={reason.id} className="hover:bg-gray-50 dark:hover:bg-gray-700 transition duration-150">
+                    <td className="px-6 py-2 border-b">{index + 1}</td>
+                    <td className="px-6 py-2 border-b">{reason.name}</td>
+                    <td className="px-6 py-2 border-b text-sm font-medium">
+                      <button onClick={() => handleEditTerminationReason(reason)} className={`${darkMode ? "text-blue-400 hover:text-blue-300" : "text-blue-600 hover:text-blue-900"} mr-2`}>
+                        <Edit size={18} />
+                      </button>
+                      <button onClick={() => handleDeleteTerminationReason(reason.id)} className={`${darkMode ? "text-red-400 hover:text-red-300" : "text-red-600 hover:text-red-900"}`}>
+                        <Trash size={18} />
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+
       {/* Placeholder for other tabs */}
       {/* {["employment type", "employment status", "category"].includes(activeTab) && (
         <div className="text-center py-8">
@@ -1227,6 +1504,7 @@ export default function Masters({ darkMode }) {
               onClick={() => {
                 setIsCreateBranchOpen(false)
                 setEditingBranch(null)
+                setNewBranch({ name: '', address: '' })
               }}
               className={`absolute top-2 right-2 ${darkMode ? "text-gray-300 hover:text-gray-100" : "text-gray-500 hover:text-gray-700"}`}
             >
@@ -1259,6 +1537,7 @@ export default function Masters({ darkMode }) {
                 onClick={() => {
                   setIsCreateBranchOpen(false)
                   setEditingBranch(null)
+                  setNewBranch({ name: '', address: '' })
                 }}
                 className={`${darkMode ? "bg-red-600 hover:bg-red-700" : "bg-red-500 hover:bg-red-600"} text-white px-4 py-1 rounded`}
               >
@@ -1274,7 +1553,7 @@ export default function Masters({ darkMode }) {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center">
           <div className={`${darkMode ? 'bg-gray-800' : 'bg-white'} p-6 rounded-lg shadow-xl relative max-w-md w-full`}>
             <button
-              onClick={() => { setIsCreateDepartmentOpen(false); setEditingDepartment(null); }}
+              onClick={() => { setIsCreateDepartmentOpen(false); setEditingDepartment(null); setNewDepartment({ name: '' }) }}
               className={`absolute top-2 right-2 ${darkMode ? 'text-gray-300 hover:text-gray-100' : 'text-gray-500 hover:text-gray-700'}`}
             >
               <X size={24} />
@@ -1295,7 +1574,7 @@ export default function Masters({ darkMode }) {
                 {editingDepartment ? 'Update' : 'Save'}
               </button>
               <button
-                onClick={() => { setIsCreateDepartmentOpen(false); setEditingDepartment(null); }}
+                onClick={() => { setIsCreateDepartmentOpen(false); setEditingDepartment(null); setNewDepartment({ name: '' }) }}
                 className={`${darkMode ? 'bg-red-600 hover:bg-red-700' : 'bg-red-500 hover:bg-red-600'} text-white px-4 py-1 rounded`}
               >
                 Cancel
@@ -1313,6 +1592,7 @@ export default function Masters({ darkMode }) {
               onClick={() => {
                 setIsCreateDesignationOpen(false)
                 setEditingDesignation(null)
+                setNewDesignation({ name: "", departmentId: null })
               }}
               className={`absolute top-2 right-2 ${darkMode ? "text-gray-300 hover:text-gray-100" : "text-gray-500 hover:text-gray-700"}`}
             >
@@ -1349,6 +1629,7 @@ export default function Masters({ darkMode }) {
                 onClick={() => {
                   setIsCreateDesignationOpen(false)
                   setEditingDesignation(null)
+                  setNewDesignation({ name: "", departmentId: null })
                 }}
                 className={`${darkMode ? "bg-red-600 hover:bg-red-700" : "bg-red-500 hover:bg-red-600"} text-white px-4 py-1 rounded`}
               >
@@ -1368,6 +1649,7 @@ export default function Masters({ darkMode }) {
               onClick={() => {
                 setIsCreateSubDepartmentOpen(false)
                 setEditingSubDepartment(null)
+                setNewSubDepartment({ name: "", departmentId: null })
               }}
               className={`absolute top-2 right-2 ${darkMode ? "text-gray-300 hover:text-gray-100" : "text-gray-500 hover:text-gray-700"}`}
             >
@@ -1406,6 +1688,7 @@ export default function Masters({ darkMode }) {
                 onClick={() => {
                   setIsCreateSubDepartmentOpen(false)
                   setEditingSubDepartment(null)
+                  setNewSubDepartment({ name: "", departmentId: null })
                 }}
                 className={`${darkMode ? "bg-red-600 hover:bg-red-700" : "bg-red-500 hover:bg-red-600"} text-white px-4 py-1 rounded`}
               >
@@ -1424,6 +1707,7 @@ export default function Masters({ darkMode }) {
               onClick={() => {
                 setIsCreateGradeOpen(false)
                 setEditingGrade(null)
+                setNewGrade({ name: "" })
               }}
               className="absolute top-2 right-2 text-gray-500 hover:text-gray-700"
             >
@@ -1448,6 +1732,7 @@ export default function Masters({ darkMode }) {
                 onClick={() => {
                   setIsCreateGradeOpen(false)
                   setEditingGrade(null)
+                  setNewGrade({ name: "" })
                 }}
                 className="bg-red-500 hover:bg-red-600 text-white px-4 py-1 rounded"
               >
@@ -1457,6 +1742,7 @@ export default function Masters({ darkMode }) {
           </div>
         </div>
       )}
+
       {isCreateCategoryOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center">
           <div className="bg-white p-6 rounded-lg shadow-xl relative max-w-md w-full">
@@ -1464,6 +1750,7 @@ export default function Masters({ darkMode }) {
               onClick={() => {
                 setIsCreateCategoryOpen(false)
                 setEditingCategory(null)
+                setNewCategory({ name: "" })
               }}
               className="absolute top-2 right-2 text-gray-500 hover:text-gray-700"
             >
@@ -1488,6 +1775,91 @@ export default function Masters({ darkMode }) {
                 onClick={() => {
                   setIsCreateCategoryOpen(false)
                   setEditingCategory(null)
+                  setNewCategory({ name: "" })
+                }}
+                className="bg-red-500 hover:bg-red-600 text-white px-4 py-1 rounded"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {isCreateResignationReasonOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center">
+          <div className="bg-white p-6 rounded-lg shadow-xl relative max-w-md w-full">
+            <button
+              onClick={() => {
+                setIsCreateResignationReasonOpen(false)
+                setEditingResignationReason(null)
+                setNewResignationReason({ name: "" })
+              }}
+              className="absolute top-2 right-2 text-gray-500 hover:text-gray-700"
+            >
+              <X size={24} />
+            </button>
+            <h2 className="text-xl font-bold mb-4">{editingResignationReason ? "Edit Resignation Reason" : "Create Resignation Reason"}</h2>
+            <input
+              type="text"
+              value={newResignationReason.name}
+              onChange={(e) => setNewResignationReason({ ...newResignationReason, name: e.target.value })}
+              placeholder="Reason Name"
+              className="w-full p-2 border rounded mb-4 bg-white border-gray-300 text-gray-800"
+            />
+            <div className="flex justify-end space-x-2">
+              <button
+                onClick={editingResignationReason ? handleUpdateResignationReason : handleCreateResignationReasons}
+                className="bg-green-500 hover:bg-green-600 text-white px-4 py-1 rounded"
+              >
+                {editingResignationReason ? "Update" : "Save"}
+              </button>
+              <button
+                onClick={() => {
+                  setIsCreateResignationReasonOpen(false)
+                  setEditingResignationReason(null)
+                  setNewResignationReason({ name: "" })
+                }}
+                className="bg-red-500 hover:bg-red-600 text-white px-4 py-1 rounded"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {isCreateTerminateReasonOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center">
+          <div className="bg-white p-6 rounded-lg shadow-xl relative max-w-md w-full">
+            <button
+              onClick={() => {
+                setIsCreateTerminationReasonOpen(false)
+                setEditingTerminationReason(null)
+                setNewTerminationReason({ name: "" })
+              }}
+              className="absolute top-2 right-2 text-gray-500 hover:text-gray-700"
+            >
+              <X size={24} />
+            </button>
+            <h2 className="text-xl font-bold mb-4">{editingTerminationReason ? "Edit Termination Reason" : "Create Termination Reason"}</h2>
+            <input
+              type="text"
+              value={newTerminationReason.name}
+              onChange={(e) => setNewTerminationReason({ ...newTerminationReason, name: e.target.value })}
+              placeholder="Reason Name"
+              className="w-full p-2 border rounded mb-4 bg-white border-gray-300 text-gray-800"
+            />
+            <div className="flex justify-end space-x-2">
+              <button
+                onClick={editingTerminationReason ? handleUpdateTerminationReason : handleCreateTerminationReasons}
+                className="bg-green-500 hover:bg-green-600 text-white px-4 py-1 rounded"
+              >
+                {editingTerminationReason ? "Update" : "Save"}
+              </button>
+              <button
+                onClick={() => {
+                  setIsCreateTerminationReasonOpen(false)
+                  setEditingTerminationReason(null)
+                  setNewTerminationReason({ name: "" })
                 }}
                 className="bg-red-500 hover:bg-red-600 text-white px-4 py-1 rounded"
               >

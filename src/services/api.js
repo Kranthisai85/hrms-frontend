@@ -1,7 +1,7 @@
 import axios from 'axios';
 
-const API_URL = 'https://admin.pacehrm.com/api/';
-// const API_URL = 'http://localhost:3306/api/';
+// const API_URL = 'https://admin.pacehrm.com/api/';
+const API_URL = 'http://localhost:3306/api/';
 
 // Create axios instance with default config
 const api = axios.create({
@@ -365,6 +365,38 @@ export const categoryService = {
 
   getAllCategories: async () => {
     const response = await api.get('/categories');
+    return response.data;
+  },
+
+  // getBranch: async (id) => {
+  //   const response = await api.get(`/branches/${id}`);
+  //   return response.data;
+  // },
+
+  // updateBranch: async (id, branchData) => {
+  //   const response = await api.put(`/branches/${id}`, branchData);
+  //   return response.data;
+  // },
+
+  // deleteBranch: async (id) => {
+  //   const response = await api.delete(`/branches/${id}`);
+  //   return response.data;
+  // }
+};
+
+export const reasonsService = {
+  createReasons: async (branchData) => {
+    const response = await api.post('/reasons', branchData);
+    return response.data;
+  },
+
+  getAllTerminationReasons: async () => {
+    const response = await api.get('/reasons/termination');
+    return response.data;
+  },
+
+  getAllResignationReasons: async () => {
+    const response = await api.get('/reasons/resignation');
     return response.data;
   },
 

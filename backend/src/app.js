@@ -16,6 +16,7 @@ const subDepartmentRoutes = require('./routes/subDepartment');
 const gradesRoutes = require('./routes/grades');
 const categoryRoutes = require('./routes/category');
 const companyRoutes = require('./routes/company');
+const reasonsRoutes = require('./routes/reasons');
 
 const app = express();
 
@@ -112,6 +113,7 @@ const startServer = async () => {
     app.use('/api/grades', gradesRoutes);
     app.use('/api/categories', categoryRoutes);
     app.use('/api/companies', companyRoutes);
+    app.use('/api/reasons', reasonsRoutes);
 
 
     // Error handling middleware

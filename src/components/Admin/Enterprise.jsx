@@ -66,6 +66,22 @@ export default function Enterprise({ darkMode }) {
           <InputField label="Mobile Number" name="mobile" value={formData.mobile} darkMode={darkMode} />
           <InputField label="PF Code No." name="pfCode" value={formData.pfCode} darkMode={darkMode} />
           <InputField label="ESI Code No." name="esiCode" value={formData.esiCode} darkMode={darkMode} />
+          {/* {formData.logo && (
+            <div className="mt-4">
+              <h2 className={`${darkMode ? 'text-[#A6A9C8]' : 'text-[#31293F]'}`}>Uploaded Logo:</h2>
+              <img src={formData.logo} alt="Uploaded Logo" className="border rounded-lg w-24 h-24" />
+            </div>
+          )} */}
+          {formData.logo && (
+            <div className="mt-4 flex items-center space-x-28">
+              <h2 className={`${darkMode ? 'text-[#A6A9C8]' : 'text-[#31293F]'}`}>Uploaded Logo:</h2>
+              <img
+                src={formData.logo}
+                alt="Uploaded Logo"
+                className="border rounded-lg w-24 h-24 object-contain"
+              />
+            </div>
+          )}
         </div>
         <div className="space-y-4">
           <InputField label="Labour License No." name="labourLicense" value={formData.labourLicense} darkMode={darkMode} />
@@ -74,13 +90,6 @@ export default function Enterprise({ darkMode }) {
           <InputField label="Website" name="website" value={formData.website} darkMode={darkMode} />
           <InputField label="Super Admin ID" name="superAdminID" value={formData.superAdminID} darkMode={darkMode} />
           <InputField label="Password" name="password" value={formData.password} darkMode={darkMode} />
-
-          {/* {formData.logo && (
-            <div className="mt-4">
-              <h2 className={`${darkMode ? 'text-[#A6A9C8]' : 'text-[#31293F]'}`}>Uploaded Logo:</h2>
-              <img src={formData.logo} alt="Uploaded Logo" className="border rounded-lg w-24 h-24" />
-            </div>
-          )} */}
         </div>
       </div>
     </div>

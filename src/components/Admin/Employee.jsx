@@ -1,8 +1,7 @@
-import React, { useState, useEffect } from 'react';
-import { Search, ChevronLeft, ChevronRight, X, Edit, Trash2, Eye, Upload, FileUp } from 'lucide-react';
-import EmployeeProfileDetails from './EmployeeProfileDetails';
-import * as XLSX from 'xlsx';
+import { ChevronLeft, ChevronRight, Edit, Eye, FileUp, Search, Trash2, Upload, X } from 'lucide-react';
+import { useEffect, useState } from 'react';
 import { employeeService } from '../../services/api';
+import EmployeeProfileDetails from './EmployeeProfileDetails';
 
 const bloodGroupOptions = [
   'A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'
@@ -42,7 +41,7 @@ export default function Employee({ darkMode }) {
 
   const filteredEmployees = employees.filter(employee =>
     (employee.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-     employee.id?.toString().toLowerCase().includes(searchTerm.toLowerCase())) &&
+      employee.id?.toString().toLowerCase().includes(searchTerm.toLowerCase())) &&
 
     (status === 'All' || employee.employmentStatus === status) &&
     (department === 'All' || employee.department === department) &&
@@ -66,8 +65,8 @@ export default function Employee({ darkMode }) {
     try {
       if (selectedEmployee && selectedEmployee.id) {
         await employeeService.updateEmployee(selectedEmployee.id, updatedEmployeeData);
-        setEmployees(prevEmployees => 
-          prevEmployees.map(emp => 
+        setEmployees(prevEmployees =>
+          prevEmployees.map(emp =>
             emp.id === selectedEmployee.id ? { ...emp, ...updatedEmployeeData } : emp
           )
         );
@@ -243,7 +242,7 @@ export default function Employee({ darkMode }) {
               />
             </div>
           </div>
-          
+
           <div className="overflow-x-auto flex-grow">
             <table className={`w-full text-sm ${darkMode ? 'bg-[#2C2C2C] text-[#E0E0E0]' : 'bg-white text-[#31293F]'}`}>
               <thead className={darkMode ? 'bg-[#3C3C3C]' : 'bg-gray-100'}>
@@ -274,12 +273,11 @@ export default function Employee({ darkMode }) {
                     <td className="px-4 py-2">{employee.email}</td>
                     <td className="px-4 py-2">{employee.phoneNumber}</td>
                     <td className="px-4 py-2">
-                      <span className={`px-2 py-1 rounded-full text-xs ${
-                        employee.employmentStatus === 'Probation' ? 'bg-yellow-200 text-yellow-800' :
-                        employee.employmentStatus === 'Confirmed' ? 'bg-green-200 text-green-800' :
-                        employee.employmentStatus === 'Resigned' ? 'bg-red-200 text-red-800' :
-                        'bg-gray-200 text-gray-800'
-                      }`}>
+                      <span className={`px-2 py-1 rounded-full text-xs ${employee.employmentStatus === 'Probation' ? 'bg-yellow-200 text-yellow-800' :
+                          employee.employmentStatus === 'Confirmed' ? 'bg-green-200 text-green-800' :
+                            employee.employmentStatus === 'Resigned' ? 'bg-red-200 text-red-800' :
+                              'bg-gray-200 text-gray-800'
+                        }`}>
                         {employee.employmentStatus}
                       </span>
                     </td>
@@ -293,7 +291,7 @@ export default function Employee({ darkMode }) {
               </tbody>
             </table>
           </div>
-          
+
           <div className="mt-4 flex justify-between items-center p-4">
             <span>Showing {(currentPage - 1) * itemsPerPage + 1} to {Math.min(currentPage * itemsPerPage, filteredEmployees.length)} of {filteredEmployees.length} entries</span>
             <div className="flex space-x-2">
@@ -308,11 +306,10 @@ export default function Employee({ darkMode }) {
                 <button
                   key={page}
                   onClick={() => setCurrentPage(page)}
-                  className={`px-3 py-1.5 border rounded text-sm ${
-                    currentPage === page
+                  className={`px-3 py-1.5 border rounded text-sm ${currentPage === page
                       ? (darkMode ? 'bg-[#BB86FC] text-[#1C1C1C]' : 'bg-blue-500 text-white')
                       : (darkMode ? 'bg-[#2C2C2C] border-[#3C3C3C] text-[#E0E0E0]' : 'bg-white border-gray-300 text-[#31293F]')
-                  }`}
+                    }`}
                 >
                   {page}
                 </button>
@@ -334,7 +331,7 @@ export default function Employee({ darkMode }) {
             <div className="px-4">
               <div className="flex justify-between items-center h-14">
                 <div className="flex items-center">
-                  <button 
+                  <button
                     onClick={() => setShowForm(false)}
                     className={`mr-4 p-1.5 rounded-full hover:bg-gray-100 ${darkMode ? 'hover:bg-gray-800' : ''}`}
                   >
@@ -344,7 +341,7 @@ export default function Employee({ darkMode }) {
                     {selectedEmployee ? 'Edit Employee' : 'Create Employee'}
                   </h2>
                 </div>
-                <div className="flex items-center space-x-3">
+                {/* <div className="flex items-center space-x-3">
                   <button
                     onClick={() => setShowForm(false)}
                     className={`px-3 py-1.5 rounded-md border ${
@@ -366,7 +363,7 @@ export default function Employee({ darkMode }) {
                   >
                     {selectedEmployee ? 'Update Employee' : 'Create Employee'}
                   </button>
-                </div>
+                </div> */}
               </div>
             </div>
           </div>
@@ -374,9 +371,9 @@ export default function Employee({ darkMode }) {
           <div className="px-4 py-4">
             <div className={`${darkMode ? 'bg-[#1C1C1C]' : 'bg-white'} rounded-lg shadow`}>
               <div className="p-4">
-                <EmployeeProfileDetails 
-                  employee={selectedEmployee} 
-                  darkMode={darkMode} 
+                <EmployeeProfileDetails
+                  employee={selectedEmployee}
+                  darkMode={darkMode}
                   onSave={handleSubmit}
                   onCancel={() => setShowForm(false)}
                   bloodGroupOptions={bloodGroupOptions}
@@ -400,10 +397,10 @@ export default function Employee({ darkMode }) {
             <div className="grid grid-cols-2 gap-4">
               {Object.entries(selectedEmployee).map(([key, value]) => {
                 // Handle nested objects and format values
-                const displayValue = typeof value === 'object' 
+                const displayValue = typeof value === 'object'
                   ? JSON.stringify(value, null, 2)
                   : value;
-                
+
                 return (
                   <div key={key}>
                     <label className={`block text-sm font-medium ${darkMode ? 'text-[#E0E0E0]' : 'text-gray-700'}`}>

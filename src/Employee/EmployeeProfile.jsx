@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
-import { FileUp, X, PlusCircle, Upload } from 'lucide-react';
 import { format } from 'date-fns';
+import { FileUp, PlusCircle, Upload, X } from 'lucide-react';
+import { useState } from 'react';
 
 const FloatingInput = ({ id, label, value, onChange, type = 'text', required = false }) => (
   <div className="relative">
@@ -71,7 +71,7 @@ export default function EmployeeProfile() {
   const [activeTab, setActiveTab] = useState('org');
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [uploadedDocuments, setUploadedDocuments] = useState([]);
-const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState({
     employeeType: '',
     employeeStatus: '',
 
@@ -135,7 +135,7 @@ const [formData, setFormData] = useState({
   const handleNestedInputChange = (section, index, field, value) => {
     setFormData(prevData => ({
       ...prevData,
-      [section]: prevData[section].map((item, i) => 
+      [section]: prevData[section].map((item, i) =>
         i === index ? { ...item, [field]: value } : item
       )
     }));
@@ -157,11 +157,11 @@ const [formData, setFormData] = useState({
       ...prevData,
       [section]: [
         ...prevData[section],
-        section === 'familyMembers' 
+        section === 'familyMembers'
           ? { name: '', dateOfBirth: '', relationship: '', gender: '', nominee: false, sharePercentage: 0 }
           : section === 'qualifications'
-          ? { qualification: '', yearOfPassing: '', institution: '' }
-          : { companyName: '', designation: '', fromDate: '', toDate: '' }
+            ? { qualification: '', yearOfPassing: '', institution: '' }
+            : { companyName: '', designation: '', fromDate: '', toDate: '' }
       ]
     }));
   };
@@ -426,45 +426,45 @@ const [formData, setFormData] = useState({
         </div>
       </div>
       <div className="space-y-2">
-      <h3 className="font-semibold text-lg">Identity Details</h3>
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <FloatingInput
-          id="aadhaarNo"
-          label="Aadhaar No"
-          value={formData.aadhaarNo}
-          onChange={(e) => handleInputChange({ target: { name: 'aadhaarNo', value: e.target.value } })}
-          required
-        />
-        <FloatingInput
-          id="pan"
-          label="PAN"
-          value={formData.pan}
-          onChange={(e) => handleInputChange({ target: { name: 'pan', value: e.target.value } })}
-          required
-        />
-        
-        <FloatingSelect
-          id="maritalStatus"
-          label="Marital Status"
-          value={formData.maritalStatus}
-          onChange={(e) => handleInputChange({ target: { name: 'maritalStatus', value: e.target.value } })}
-          options={[
-            { value: 'single', label: 'Single' },
-            { value: 'married', label: 'Married' },
-            { value: 'divorced', label: 'Divorced' },
-            { value: 'widowed', label: 'Widowed' },
-          ]}
-          required
-        />
-        <FloatingInput
-          id="address"
-          label="Address"
-          value={formData.address}
-          onChange={(e) => handleInputChange({ target: { name: 'address', value: e.target.value } })}
-          required
-        />
+        <h3 className="font-semibold text-lg">Identity Details</h3>
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <FloatingInput
+            id="aadhaarNo"
+            label="Aadhaar No"
+            value={formData.aadhaarNo}
+            onChange={(e) => handleInputChange({ target: { name: 'aadhaarNo', value: e.target.value } })}
+            required
+          />
+          <FloatingInput
+            id="pan"
+            label="PAN"
+            value={formData.pan}
+            onChange={(e) => handleInputChange({ target: { name: 'pan', value: e.target.value } })}
+            required
+          />
+
+          <FloatingSelect
+            id="maritalStatus"
+            label="Marital Status"
+            value={formData.maritalStatus}
+            onChange={(e) => handleInputChange({ target: { name: 'maritalStatus', value: e.target.value } })}
+            options={[
+              { value: 'single', label: 'Single' },
+              { value: 'married', label: 'Married' },
+              { value: 'divorced', label: 'Divorced' },
+              { value: 'widowed', label: 'Widowed' },
+            ]}
+            required
+          />
+          <FloatingInput
+            id="address"
+            label="Address"
+            value={formData.address}
+            onChange={(e) => handleInputChange({ target: { name: 'address', value: e.target.value } })}
+            required
+          />
+        </div>
       </div>
-    </div>
       <div className="space-y-2">
         <h3 className="font-semibold text-lg">Emergency Contact</h3>
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -572,7 +572,7 @@ const [formData, setFormData] = useState({
                     className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
                   />
                   <label htmlFor={`familyNominee-${index}`} className="text-sm font-medium text-gray-700">
-                  Nominee
+                    Nominee
                   </label>
                 </div>
                 {member.nominee && (
@@ -878,11 +878,10 @@ const [formData, setFormData] = useState({
           ].map((tab) => (
             <button
               key={tab.id}
-              className={`py-2 px-6 ${
-                activeTab === tab.id
+              className={`py-2 px-6 ${activeTab === tab.id
                   ? 'bg-gray-100 font-semibold border-b-2 border-blue-500'
                   : 'text-gray-600 hover:bg-gray-50'
-              }`}
+                }`}
               onClick={() => setActiveTab(tab.id)}
             >
               {tab.label}
@@ -947,7 +946,7 @@ const ProofDocumentModal = ({ isOpen, onClose, onUpload }) => {
             <X size={20} />
           </button>
         </div>
-        
+
         <div className="space-y-4">
           <div className="relative">
             <select

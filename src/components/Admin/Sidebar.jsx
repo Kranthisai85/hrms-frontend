@@ -1,9 +1,8 @@
-import React from "react"
+import { BarChart2, CalendarClock, FileText, HandCoins, Moon, Sun, Users } from 'lucide-react'
 import { Link, useNavigate } from "react-router-dom"
-import { Home, FileText, Users, CalendarClock, BarChart2,Box, Sun, Moon, HandCoins, UserRoundSearch } from 'lucide-react'
 
 const navItems = [
-  { name: "Home", icon: <Home className="w-5 h-5" /> },
+  // { name: "Home", icon: <Home className="w-5 h-5" /> },
   { name: "Masters", icon: <FileText className="w-5 h-5" /> },
   // { name: "User Roles", icon: <UserCog  className="w-5 h-5" /> },
   // { name: "Hiring", icon: <UserRoundSearch className="w-5 h-5" /> },
@@ -27,9 +26,8 @@ export default function Sidebar({ setCurrentPage, darkMode, toggleDarkMode }) {
 
   return (
     <aside
-      className={`w-16 h-screen px-2 sticky left-0 top-0 z-50 flex flex-col justify-between ${
-        darkMode ? 'bg-[#1A1918]' : 'bg-[#F5F5F5]'
-      }`}
+      className={`w-16 h-screen px-2 sticky left-0 top-0 z-50 flex flex-col justify-between ${darkMode ? 'bg-[#1A1918]' : 'bg-[#F5F5F5]'
+        }`}
     >
       <div className="flex flex-col items-center py-4">
         <button
@@ -58,18 +56,16 @@ export default function Sidebar({ setCurrentPage, darkMode, toggleDarkMode }) {
               <Link
                 to={`/admin/${item.name.toLowerCase().replace(/ & /g, '-').replace(/ /g, '-')}`}
                 onClick={() => setCurrentPage(item.name)}
-                className={`p-2 rounded-lg flex items-center justify-center transition-colors duration-200 ${
-                  darkMode
+                className={`p-2 rounded-lg flex items-center justify-center transition-colors duration-200 ${darkMode
                     ? 'text-[#C0BFBD] hover:bg-[#1F1F22] hover:text-[#C8BCF6]'
                     : 'text-[#1A1918] hover:bg-[#EFEFEF] hover:text-[#C8BCF6]'
-                }`}
+                  }`}
               >
                 {item.icon}
               </Link>
               <span
-                className={`absolute left-full ml-2 px-2 py-1 rounded text-xs transition-opacity duration-200 pointer-events-none whitespace-nowrap opacity-0 group-hover:opacity-100 ${
-                  darkMode ? 'bg-[#1F1F22] text-[#C0BFBD]' : 'bg-[#EFEFEF] text-[#1A1918]'
-                }`}
+                className={`absolute left-full ml-2 px-2 py-1 rounded text-xs transition-opacity duration-200 pointer-events-none whitespace-nowrap opacity-0 group-hover:opacity-100 ${darkMode ? 'bg-[#1F1F22] text-[#C0BFBD]' : 'bg-[#EFEFEF] text-[#1A1918]'
+                  }`}
               >
                 {item.name}
               </span>
@@ -81,11 +77,10 @@ export default function Sidebar({ setCurrentPage, darkMode, toggleDarkMode }) {
       <div className="mb-4 flex flex-col items-center space-y-2">
         <button
           onClick={toggleDarkMode}
-          className={`p-2 rounded-full transition-colors duration-200 ${
-            darkMode
+          className={`p-2 rounded-full transition-colors duration-200 ${darkMode
               ? 'bg-[#1F1F22] text-[#a495e1] hover:bg-[#1F1F22]'
               : 'bg-[#EFEFEF] text-[#1A1918] hover:bg-[#EFEFEF] hover:text-[#C8BCF6]'
-          }`}
+            }`}
         >
           {darkMode ? <Sun size={20} /> : <Moon size={20} />}
         </button>
