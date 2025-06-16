@@ -6,7 +6,6 @@ import {
   Routes,
   useNavigate,
 } from "react-router-dom";
-import { ToastContainer } from "react-toastify"; // Import ToastContainer
 import { authService } from "./services/api";
 
 // Admin Components
@@ -36,6 +35,8 @@ import EmployeeReports from "./Employee/EmployeeReports";
 import "./App.css";
 import EmployeeNavbar from "./Employee/EmployeeNavbar";
 import EmployeeSidebar from "./Employee/EmployeeSidebar";
+import Toast from './Toast';
+
 
 function ProtectedRoute({ children, allowedUserType }) {
   const navigate = useNavigate();
@@ -125,18 +126,7 @@ function App() {
 
   return (
     <Router>
-      <ToastContainer
-        position="top-right"
-        autoClose={3000}
-        hideProgressBar={false}
-        newestOnTop
-        closeOnClick
-        rtl={false}
-        pauseOnFocusLoss
-        draggable
-        pauseOnHover
-        theme={darkMode ? "dark" : "light"} // Sync with darkMode
-      />
+      <Toast />
       <div className={`flex h-screen ${darkMode ? "dark" : ""}`}>
         {isAuthenticated && (
           <>

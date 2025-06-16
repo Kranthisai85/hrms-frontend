@@ -1,8 +1,9 @@
-import { Edit, Plus, Search, Trash, X } from "lucide-react"
-import { useCallback, useEffect, useState } from "react"
-import { toast } from "react-toastify"
-import { branchService, categoryService, departmentService, designationService, gradesService, reasonsService, subDepartmentService } from "../../services/api"
-import Enterprise from "./Enterprise"
+import { Edit, Plus, Search, Trash, X } from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
+import toast from 'react-hot-toast';
+import { branchService, categoryService, departmentService, designationService, gradesService, reasonsService, subDepartmentService } from "../../services/api";
+import Enterprise from "./Enterprise";
+
 
 const initialCompanies = [
   { id: 1, code: "C001", name: "ABC Pvt Ltd", email: "abc@example.com", password: "password123", phone: "1234567890" },
@@ -115,6 +116,8 @@ export default function Masters({ darkMode }) {
   })
   const [inviteAdmin, setInviteAdmin] = useState(false)
   const [searchTerm, setSearchTerm] = useState('');
+  const [resignationSearchTerm, setResignationSearchTerm] = useState('');
+  const [terminationSearchTerm, setTerminationSearchTerm] = useState('');
 
   const handleSearchChange = useCallback((value) => {
     setSearchTerm(value);
@@ -475,8 +478,9 @@ export default function Masters({ darkMode }) {
       toast.error('Designation name and department are required')
       return
     }
-    const isDuplicate = designations.some(
-      des => des.name.toLowerCase() === newDesignation.name.toLowerCase().trim()
+    const isDuplicate = designations.some(des =>
+      des.name.replace(/\t/g, '').toLowerCase().trim() ===
+      newDesignation.name.replace(/\t/g, '').toLowerCase().trim()
     );
     if (isDuplicate) {
       toast.error(`A designation with the name "${newDesignation.name}" already exists.`);
@@ -723,6 +727,8 @@ export default function Masters({ darkMode }) {
     const isDuplicate = designations.some(
       des => des.name.toLowerCase() === newDesignation.name.toLowerCase().trim()
     );
+    console.log("isDuplicate");
+    console.log(isDuplicate);
     if (isDuplicate) {
       toast.error(`A designation with the name "${newDesignation.name}" already exists.`);
       return false;
@@ -791,7 +797,7 @@ export default function Masters({ darkMode }) {
       toast.error(`A category with the name "${newCategory.name}" already exists.`);
       return false;
     }
-    setCategories(categories.map((grade) => (categories.id === editingCategory.id ? { ...categories, ...newCategory } : grade)))
+    setCategories(categories.map((category) => (category.id === editingCategory.id ? { ...category, ...newCategory } : category)))
     setIsCreateCategoryOpen(false)
     setEditingCategory(null)
     setNewCategory({ name: "" })
@@ -799,13 +805,15 @@ export default function Masters({ darkMode }) {
 
   const handleUpdateResignationReason = (reason) => {
     const isDuplicate = resignationReasons.some(
-      cat => cat.name.toLowerCase() === reason.name.toLowerCase().trim()
+      cat => cat.name.toLowerCase() === newResignationReason.name.toLowerCase().trim()
     );
     if (isDuplicate) {
       toast.error(`"${reason.name}" reason already exists.`);
       return false;
     }
-    setResignationReasons(resignationReasons.map((reason) => (resignationReasons.id === editingResignationReason.id ? { ...resignationReasons, ...reason } : reason)))
+    setResignationReasons(resignationReasons.map((reason) => {
+      return (reason.id === editingResignationReason.id ? { ...reason, ...newResignationReason } : reason);
+    }))
     setIsCreateResignationReasonOpen(false)
     setEditingResignationReason(null)
     setNewResignationReason({ name: "" })
@@ -935,8 +943,8 @@ export default function Masters({ darkMode }) {
         {[
           "enterprise",
           "branch",
-          "department",
           "designation",
+          "department",
           "sub Department",
           "grade",
           // "employment type",
@@ -1288,18 +1296,25 @@ export default function Masters({ darkMode }) {
 
       {activeTab === "reasons" && (
         <div className="flex flex-wrap gap-4">
-          {/* First Reason Table */}
+          {/* First Reason Table: Resignation */}
           <div className="flex-1 min-w-[300px]">
             <div className="flex justify-between items-center mb-4">
               <h2 className={`text-lg font-semibold ${darkMode ? "text-white" : "text-black"}`}>Resignation</h2>
             </div>
-            <button
-              className={`${darkMode ? "bg-green-600 hover:bg-green-700" : "bg-green-500 hover:bg-green-600"} text-white px-4 py-2 rounded-lg flex items-center transition duration-200 mb-4`}
-              onClick={() => setIsCreateResignationReasonOpen(true)}
-            >
-              <Plus className="mr-2" size={20} />
-              Create Reason
-            </button>
+            <div className="flex justify-between items-center mb-4 flex-wrap gap-4">
+              <SearchBar
+                darkMode={darkMode}
+                searchTerm={resignationSearchTerm}
+                setSearchTerm={setResignationSearchTerm}
+              />
+              <button
+                className={`${darkMode ? "bg-green-600 hover:bg-green-700" : "bg-green-500 hover:bg-green-600"} text-white px-4 py-2 rounded-lg flex items-center transition duration-200 mb-4`}
+                onClick={() => setIsCreateResignationReasonOpen(true)}
+              >
+                <Plus className="mr-2" size={20} />
+                Create Reason
+              </button>
+            </div>
             <table className={`min-w-full ${darkMode ? "bg-gray-800 border-gray-700" : "bg-white border-gray-300"} border rounded-lg shadow-sm`}>
               <thead className={darkMode ? "bg-gray-700" : "bg-gray-100"}>
                 <tr>
@@ -1309,36 +1324,53 @@ export default function Masters({ darkMode }) {
                 </tr>
               </thead>
               <tbody className={`${darkMode ? "divide-gray-700" : "divide-gray-200"} divide-y`}>
-                {resignationReasons.map((reason, index) => (
-                  <tr key={reason.id} className="hover:bg-gray-50 dark:hover:bg-gray-700 transition duration-150">
-                    <td className="px-6 py-2 border-b">{index + 1}</td>
-                    <td className="px-6 py-2 border-b">{reason.name}</td>
-                    <td className="px-6 py-2 border-b text-sm font-medium">
-                      <button onClick={() => handleEditResignationReason(reason)} className={`${darkMode ? "text-blue-400 hover:text-blue-300" : "text-blue-600 hover:text-blue-900"} mr-2`}>
-                        <Edit size={18} />
-                      </button>
-                      <button onClick={() => handleDeleteResignationReason(reason.id)} className={`${darkMode ? "text-red-400 hover:text-red-300" : "text-red-600 hover:text-red-900"}`}>
-                        <Trash size={18} />
-                      </button>
-                    </td>
-                  </tr>
-                ))}
+                {resignationReasons
+                  .filter(reason =>
+                    reason.name.toLowerCase().includes(resignationSearchTerm.toLowerCase())
+                  )
+                  .map((reason, index) => (
+                    <tr key={reason.id} className="hover:bg-gray-50 dark:hover:bg-gray-700 transition duration-150">
+                      <td className="px-6 py-2 border-b">{index + 1}</td>
+                      <td className="px-6 py-2 border-b">{reason.name}</td>
+                      <td className="px-6 py-2 border-b text-sm font-medium">
+                        <button
+                          onClick={() => handleEditResignationReason(reason)}
+                          className={`${darkMode ? "text-blue-400 hover:text-blue-300" : "text-blue-600 hover:text-blue-900"} mr-2`}
+                        >
+                          <Edit size={18} />
+                        </button>
+                        <button
+                          onClick={() => handleDeleteResignationReason(reason.id)}
+                          className={`${darkMode ? "text-red-400 hover:text-red-300" : "text-red-600 hover:text-red-900"}`}
+                        >
+                          <Trash size={18} />
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
               </tbody>
             </table>
           </div>
 
-          {/* Second Reason Table */}
+          {/* Second Reason Table: Termination */}
           <div className="flex-1 min-w-[300px]">
             <div className="flex justify-between items-center mb-4">
               <h2 className={`text-lg font-semibold ${darkMode ? "text-white" : "text-black"}`}>Termination</h2>
             </div>
-            <button
-              className={`${darkMode ? "bg-green-600 hover:bg-green-700" : "bg-green-500 hover:bg-green-600"} text-white px-4 py-2 rounded-lg flex items-center transition duration-200 mb-4`}
-              onClick={() => setIsCreateTerminationReasonOpen(true)}
-            >
-              <Plus className="mr-2" size={20} />
-              Create Reason
-            </button>
+            <div className="flex justify-between items-center mb-4 flex-wrap gap-4">
+              <SearchBar
+                darkMode={darkMode}
+                searchTerm={terminationSearchTerm}
+                setSearchTerm={setTerminationSearchTerm}
+              />
+              <button
+                className={`${darkMode ? "bg-green-600 hover:bg-green-700" : "bg-green-500 hover:bg-green-600"} text-white px-4 py-2 rounded-lg flex items-center transition duration-200 mb-4`}
+                onClick={() => setIsCreateTerminationReasonOpen(true)}
+              >
+                <Plus className="mr-2" size={20} />
+                Create Reason
+              </button>
+            </div>
             <table className={`min-w-full ${darkMode ? "bg-gray-800 border-gray-700" : "bg-white border-gray-300"} border rounded-lg shadow-sm`}>
               <thead className={darkMode ? "bg-gray-700" : "bg-gray-100"}>
                 <tr>
@@ -1348,25 +1380,36 @@ export default function Masters({ darkMode }) {
                 </tr>
               </thead>
               <tbody className={`${darkMode ? "divide-gray-700" : "divide-gray-200"} divide-y`}>
-                {terminationReasons.map((reason, index) => (
-                  <tr key={reason.id} className="hover:bg-gray-50 dark:hover:bg-gray-700 transition duration-150">
-                    <td className="px-6 py-2 border-b">{index + 1}</td>
-                    <td className="px-6 py-2 border-b">{reason.name}</td>
-                    <td className="px-6 py-2 border-b text-sm font-medium">
-                      <button onClick={() => handleEditTerminationReason(reason)} className={`${darkMode ? "text-blue-400 hover:text-blue-300" : "text-blue-600 hover:text-blue-900"} mr-2`}>
-                        <Edit size={18} />
-                      </button>
-                      <button onClick={() => handleDeleteTerminationReason(reason.id)} className={`${darkMode ? "text-red-400 hover:text-red-300" : "text-red-600 hover:text-red-900"}`}>
-                        <Trash size={18} />
-                      </button>
-                    </td>
-                  </tr>
-                ))}
+                {terminationReasons
+                  .filter(reason =>
+                    reason.name.toLowerCase().includes(terminationSearchTerm.toLowerCase())
+                  )
+                  .map((reason, index) => (
+                    <tr key={reason.id} className="hover:bg-gray-50 dark:hover:bg-gray-700 transition duration-150">
+                      <td className="px-6 py-2 border-b">{index + 1}</td>
+                      <td className="px-6 py-2 border-b">{reason.name}</td>
+                      <td className="px-6 py-2 border-b text-sm font-medium">
+                        <button
+                          onClick={() => handleEditTerminationReason(reason)}
+                          className={`${darkMode ? "text-blue-400 hover:text-blue-300" : "text-blue-600 hover:text-blue-900"} mr-2`}
+                        >
+                          <Edit size={18} />
+                        </button>
+                        <button
+                          onClick={() => handleDeleteTerminationReason(reason.id)}
+                          className={`${darkMode ? "text-red-400 hover:text-red-300" : "text-red-600 hover:text-red-900"}`}
+                        >
+                          <Trash size={18} />
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
               </tbody>
             </table>
           </div>
         </div>
       )}
+
 
 
       {/* Placeholder for other tabs */}

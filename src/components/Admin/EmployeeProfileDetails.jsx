@@ -1,6 +1,8 @@
 import { format } from 'date-fns';
 import { FileUp, PlusCircle, Upload, X } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
+import { branchService, categoryService, departmentService, designationService, employeeService, gradesService, reasonsService, subDepartmentService } from "../../services/api";
+import SearchableSelect from './SearchableSelect'; // Import the new widget
 
 // Helper components
 const FloatingInput = ({ id, label, value, onChange, type = 'text', required = false, error }) => (
@@ -32,6 +34,7 @@ const FloatingSelect = ({ id, label, value, onChange, options, required = false,
       value={value}
       onChange={onChange}
       required={required}
+      style={{ color: error ? '#ef4444' : '#6b7280' }}
       className={`block px-2.5 pb-2.5 pt-4 w-full text-sm text-gray-900 bg-transparent rounded-lg border ${error ? 'border-red-500' : 'border-gray-300'} appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer`}
     >
       <option value="">Select {label}</option>
@@ -62,7 +65,9 @@ export default function EmployeeProfileDetails({
   const [activeTab, setActiveTab] = useState('org');
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [uploadedDocuments, setUploadedDocuments] = useState([]);
-
+  const [branchOptions, setBranchOptions] = useState([]); // Added for branch dropdown
+  const [branchLoading, setBranchLoading] = useState(false); // Added for loading state
+  const [branchError, setBranchError] = useState(null);
   // Initialize formData with employee data or empty values
   const initialFormData = employee || {
     // Org Details
@@ -74,6 +79,8 @@ export default function EmployeeProfileDetails({
     designation: '',
     department: '',
     subDepartment: '',
+    grade: '',
+    category: '',
     reportingManager: '',
     employeeType: '',
     employmentStatus: '',
@@ -83,7 +90,10 @@ export default function EmployeeProfileDetails({
     officialEmail: '',
     bloodGroup: '',
     inviteSent: false,
-
+    confirmationDate: '',
+    resignationDate: '', // Added for resignation date
+    relievedDate: '', // Added for relieved date
+    reason: '',
     // Personal
     photo: null,
     identity: '',
@@ -187,24 +197,50 @@ export default function EmployeeProfileDetails({
     }));
   }, []);
 
-  const validateSection = useCallback((section) => {
-    const errors = {};
-    if (section === 'org') {
-      if (!formData.empCode) errors.empCode = 'Employee Code is required';
-      if (!formData.name) errors.name = 'Name is required';
-      if (!formData.dateOfJoin) errors.dateOfJoin = 'Date of Join is required';
-      if (!formData.mobileNumber) errors.mobileNumber = 'Mobile Number is required';
-      if (!formData.officialEmail) errors.officialEmail = 'Official Email is required';
-    } else if (section === 'personal') {
-      if (!formData.aadhaarNo) errors.aadhaarNo = 'Aadhaar No is required';
-      if (!formData.pan) errors.pan = 'PAN is required';
-    } else if (section === 'bank') {
-      if (!formData.bankName) errors.bankName = 'Bank Name is required';
-      if (!formData.bankAccountNo) errors.bankAccountNo = 'Bank Account No is required';
-      if (!formData.ifscCode) errors.ifscCode = 'IFSC Code is required';
-    }
-    return errors;
-  }, [formData]);
+  const validateSection = useCallback(
+    (section) => {
+      const errors = {};
+      if (section === 'org') {
+        if (!formData.empCode) errors.empCode = 'Employee Code is required';
+        if (!formData.name) errors.name = 'Name is required';
+        if (!formData.gender) errors.gender = 'Gender is required';
+        if (!formData.dateOfBirth) errors.dateOfBirth = 'Date of Birth is required';
+        if (!formData.branch) errors.branch = 'Branch is required';
+        if (!formData.designation) errors.designation = 'Designation is required';
+        if (!formData.department) errors.department = 'Department is required';
+        if (!formData.subDepartment) errors.subDepartment = 'Sub Department is required';
+        if (!formData.grade) errors.grade = 'Grade is required';
+        if (!formData.category) errors.category = 'Category is required';
+        if (!formData.reportingManager) errors.reportingManager = 'Reporting Manager is required';
+        if (!formData.employeeType) errors.employeeType = 'Employee Type is required';
+        if (!formData.employmentStatus) errors.employmentStatus = 'Employment Status is required';
+        if (!formData.dateOfJoin) errors.dateOfJoin = 'Date of Join is required';
+        if (formData.employmentStatus === 'confirmed' && !formData.confirmationDate) {
+          errors.confirmationDate = 'Confirmation Date is required';
+        }
+        if (
+          (formData.employmentStatus === 'resigned' || formData.employmentStatus === 'relieved') &&
+          !formData.resignationDate
+        ) {
+          errors.resignationDate = 'Date of Resignation is required';
+        }
+        if (formData.employmentStatus === 'relieved' && !formData.relievedDate) {
+          errors.relievedDate = 'Date of Relieved is required';
+        }
+        if (!formData.mobileNumber) errors.mobileNumber = 'Mobile Number is required';
+        if (!formData.officialEmail) errors.officialEmail = 'Official Email is required';
+      } else if (section === 'personal') {
+        if (!formData.aadhaarNo) errors.aadhaarNo = 'Aadhaar No is required';
+        if (!formData.pan) errors.pan = 'PAN is required';
+      } else if (section === 'bank') {
+        if (!formData.bankName) errors.bankName = 'Bank Name is required';
+        if (!formData.bankAccountNo) errors.bankAccountNo = 'Bank Account No is required';
+        if (!formData.ifscCode) errors.ifscCode = 'IFSC Code is required';
+      }
+      return errors;
+    },
+    [formData]
+  );
 
   const handleSaveSection = useCallback((section) => {
     const errors = validateSection(section);
@@ -260,7 +296,6 @@ export default function EmployeeProfileDetails({
             { value: 'other', label: 'Other' },
           ]}
           required
-          error={formErrors.gender}
         />
         <FloatingInput
           id="dateOfBirth"
@@ -271,15 +306,86 @@ export default function EmployeeProfileDetails({
           required
           error={formErrors.dateOfBirth}
         />
-        <FloatingInput
+        {/* <FloatingInput
           id="branch"
           label="Branch"
           value={formData.branch}
           onChange={handleInputChange}
           required
           error={formErrors.branch}
+        /> */}
+        <SearchableSelect
+          id="branch"
+          label="Branch"
+          value={formData.branch}
+          onChange={handleInputChange}
+          fetchOptions={branchService.getBranches}
+          darkMode={darkMode}
+          required
+          error={formErrors.branch}
         />
-        <FloatingInput
+        <SearchableSelect
+          id="designation"
+          label="Designation"
+          value={formData.designation}
+          onChange={handleInputChange}
+          fetchOptions={designationService.getDesignations}
+          darkMode={darkMode}
+          required
+          error={formErrors.designation}
+        />
+        <SearchableSelect
+          id="department"
+          label="Department"
+          value={formData.department}
+          onChange={handleInputChange}
+          fetchOptions={departmentService.getDepartments}
+          darkMode={darkMode}
+          required
+          error={formErrors.department}
+        />
+        <SearchableSelect
+          id="subDepartment"
+          label="Sub Department"
+          value={formData.subDepartment}
+          onChange={handleInputChange}
+          fetchOptions={subDepartmentService.getAllSubDepartments}
+          darkMode={darkMode}
+          required
+          error={formErrors.subDepartment}
+        />
+        <SearchableSelect
+          id="grade"
+          label="Grade"
+          value={formData.grade}
+          onChange={handleInputChange}
+          fetchOptions={gradesService.getGrades}
+          darkMode={darkMode}
+          required
+          error={formErrors.grade}
+        />
+        <SearchableSelect
+          id="category"
+          label="Category"
+          value={formData.category}
+          onChange={handleInputChange}
+          fetchOptions={categoryService.getAllCategories}
+          darkMode={darkMode}
+          required
+          error={formErrors.category}
+        />
+        <SearchableSelect
+          id="reportingManager"
+          label="Reporting Manager"
+          value={formData.reportingManager}
+          onChange={handleInputChange}
+          error={formErrors.reportingManager}
+          fetchOptions={employeeService.getEmployees}
+          darkMode={darkMode}
+          isEmployee={true}
+          required
+        />
+        {/* <FloatingInput
           id="designation"
           label="Designation"
           value={formData.designation}
@@ -303,13 +409,27 @@ export default function EmployeeProfileDetails({
           error={formErrors.subDepartment}
         />
         <FloatingInput
+          id="grade"
+          label="Grade"
+          value={formData.grade}
+          onChange={handleInputChange}
+          error={formErrors.grade}
+        />
+        <FloatingInput
+          id="category"
+          label="Category"
+          value={formData.category}
+          onChange={handleInputChange}
+          error={formErrors.category}
+        /> */}
+        {/* <FloatingInput
           id="reportingManager"
           label="Reporting Manager"
           value={formData.reportingManager}
           onChange={handleInputChange}
           required
           error={formErrors.reportingManager}
-        />
+        /> */}
         <FloatingInput
           id="dateOfJoin"
           label="Date of Join"
@@ -334,7 +454,7 @@ export default function EmployeeProfileDetails({
           error={formErrors.employeeType}
         />
 
-        <FloatingSelect
+        {/* <FloatingSelect
           id="employmentStatus"
           label="Employment Status"
           value={formData.employmentStatus}
@@ -352,8 +472,101 @@ export default function EmployeeProfileDetails({
           ]}
           required
           error={formErrors.employmentStatus}
+        /> */}
+        <SearchableSelect
+          id="employmentStatus"
+          label="Employment Status"
+          value={formData.employmentStatus}
+          onChange={(e) => handleInputChange({ target: { name: 'employmentStatus', value: e.target.value } })}
+          staticOptions={[
+            { value: 'probation', label: 'Probation' },
+            { value: 'confirmed', label: 'Confirmed' },
+            { value: 'resigned', label: 'Resigned' },
+            { value: 'relieved', label: 'Relieved' },
+            { value: 'terminated', label: 'Terminated' },
+          ]}
+          darkMode={darkMode}
+          required
+          error={formErrors.employmentStatus}
         />
-
+        {formData.employmentStatus === 'confirmed' && (
+          <div className="flex-1">
+            <FloatingInput
+              id="confirmationDate"
+              label="Confirmation Date"
+              type="date"
+              value={formData.confirmationDate}
+              onChange={handleInputChange}
+              required
+              error={formErrors.confirmationDate}
+            />
+          </div>
+        )}
+        {(formData.employmentStatus === 'resigned' || formData.employmentStatus === 'relieved') && (
+          <>
+            <div className="flex-1">
+              <FloatingInput
+                id="resignationDate"
+                label="Date of Resignation"
+                type="date"
+                value={formData.resignationDate}
+                onChange={handleInputChange}
+                required
+                error={formErrors.resignationDate}
+              />
+            </div>
+            <div className="flex-1">
+              <FloatingInput
+                id="relievedDate"
+                label="Date of Relieved"
+                type="date"
+                value={formData.relievedDate}
+                onChange={handleInputChange}
+                required
+                error={formErrors.relievedDate}
+              />
+            </div>
+            <div className="flex-1">
+              <SearchableSelect
+                id="reasonForResignation"
+                label="Resignation Reason"
+                value={formData.reason}
+                onChange={handleInputChange}
+                fetchOptions={reasonsService.getAllResignationReasons}
+                darkMode={darkMode}
+                required
+                error={formErrors.category}
+              />
+            </div>
+          </>
+        )}
+        {(formData.employmentStatus === 'terminated') && (
+          <>
+            <div className="flex-1">
+              <FloatingInput
+                id="relievedDate"
+                label="Date of Relieved"
+                type="date"
+                value={formData.relievedDate}
+                onChange={handleInputChange}
+                required
+                error={formErrors.relievedDate}
+              />
+            </div>
+            <div className="flex-1">
+              <SearchableSelect
+                id="reasonForTermination"
+                label="Termination Reason"
+                value={formData.reason}
+                onChange={handleInputChange}
+                fetchOptions={reasonsService.getAllTerminationReasons}
+                darkMode={darkMode}
+                required
+                error={formErrors.category}
+              />
+            </div>
+          </>
+        )}
         <FloatingInput
           id="mobileNumber"
           label="Mobile Number"
@@ -398,6 +611,22 @@ export default function EmployeeProfileDetails({
           ]}
           required
         />
+        <FloatingInput
+          id="aadhaarNo"
+          label="Aadhaar No"
+          value={formData.aadhaarNo || ''}
+          onChange={handleInputChange}
+          required
+          error={formErrors.aadhaarNo}
+        />
+        <FloatingInput
+          id="pan"
+          label="PAN"
+          value={formData.pan || ''}
+          onChange={handleInputChange}
+          required
+          error={formErrors.pan}
+        />
         <div className="flex items-center">
           <input
             type="checkbox"
@@ -438,37 +667,20 @@ export default function EmployeeProfileDetails({
         </div>
       </div>
       <div className="space-y-2">
-        <h3 className="font-semibold text-lg">Identity Details</h3>
+        <h3 className="font-semibold text-lg">Present Address</h3>
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <FloatingInput
-            id="aadhaarNo"
-            label="Aadhaar No"
-            value={formData.aadhaarNo || ''}
+            id="address"
+            label="Address"
+            value={formData.address || ''}
             onChange={handleInputChange}
-            required
-            error={formErrors.aadhaarNo}
+            error={formErrors.address}
           />
-          <FloatingInput
-            id="pan"
-            label="PAN"
-            value={formData.pan || ''}
-            onChange={handleInputChange}
-            required
-            error={formErrors.pan}
-          />
-          <FloatingSelect
-            id="maritalStatus"
-            label="Marital Status"
-            value={formData.maritalStatus || ''}
-            onChange={(e) => handleInputChange({ target: { name: 'maritalStatus', value: e.target.value } })}
-            options={[
-              { value: 'single', label: 'Single' },
-              { value: 'married', label: 'Married' },
-              { value: 'divorced', label: 'Divorced' },
-              { value: 'widowed', label: 'Widowed' },
-            ]}
-            error={formErrors.maritalStatus}
-          />
+        </div>
+      </div>
+      <div className="space-y-2">
+        <h3 className="font-semibold text-lg">Present Address</h3>
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <FloatingInput
             id="address"
             label="Address"
