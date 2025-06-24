@@ -6,13 +6,32 @@ const XLSX = require('xlsx');
 // @access  Private/Admin
 exports.createEmployee = async (req, res) => {
   try {
-    const { 
-      firstName, lastName, email, password, phoneNumber, dateOfBirth,
-      gender, address, city, state, country, pinCode,
-      departmentId, designationId, branchId, joiningDate,
-      employmentType, workSchedule, basicSalary,
-      bankName, accountNumber, ifscCode, panNumber, aadharNumber,
-      emergencyContactName, emergencyContactPhone, emergencyContactRelation
+    const {
+      empCode,
+      firstName,
+      lastName,
+      gender,
+      dateOfBirth,
+      branch: branchId,
+      designation: designationId,
+      department: departmentId,
+      subDepartment: subDepartmentId,
+      grade: gradeId,
+      category: categoryId,
+      reportingManager: reportingManagerId,
+      employeeType: employmentType,
+      employmentStatus,
+      dateOfJoin: joiningDate,
+      mobileNumber: phoneNumber,
+      personalEmail, // Not stored, using officialEmail as email
+      officialEmail: email,
+      inviteSent,
+      confirmationDate,
+      resignationDate,
+      relievedDate,
+      reason,
+      aadhaarNo: aadharNumber,
+      pan: panNumber,
     } = req.body;
 
     // Get models and sequelize from global.db
@@ -23,60 +42,80 @@ exports.createEmployee = async (req, res) => {
 
     // Start transaction
     const result = await sequelize.transaction(async (t) => {
-      // Create user first
-      const user = await User.create({
-        firstName,
-        lastName,
-        email,
-        password,
-        role: 'employee',
-        status: 'Active'
-      }, { transaction: t });
+      // Create user
+      const user = await User.create(
+        {
+          firstName,
+          lastName,
+          email,
+          password: null, // No password provided
+          role: 'employee',
+          status: 'Active',
+          phone: phoneNumber,
+        },
+        { transaction: t }
+      );
 
-      // Generate employee ID (you can customize this format)
-      const employeeId = `EMP${String(user.id).padStart(5, '0')}`;
+      // Use provided empCode or generate one
+      const employeeId = empCode || `EMP${String(user.id).padStart(5, '0')}`;
 
-      // Create employee with user association
-      const employee = await Employee.create({
-        userId: user.id,
-        employeeId,
-        firstName,
-        lastName,
-        email,
-        phoneNumber,
-        dateOfBirth,
-        gender,
-        address,
-        city,
-        state,
-        country,
-        pinCode,
-        departmentId,
-        designationId,
-        branchId,
-        joiningDate,
-        employmentType,
-        workSchedule,
-        basicSalary,
-        bankName,
-        accountNumber,
-        ifscCode,
-        panNumber,
-        aadharNumber,
-        emergencyContactName,
-        emergencyContactPhone,
-        emergencyContactRelation
-      }, { transaction: t });
+      // Create employee
+      const employee = await Employee.create(
+        {
+          userId: user.id,
+          employeeId,
+          firstName,
+          lastName,
+          email,
+          phoneNumber,
+          dateOfBirth,
+          gender,
+          departmentId,
+          designationId,
+          branchId,
+          subDepartmentId,
+          gradeId,
+          categoryId,
+          reportingManagerId,
+          joiningDate,
+          employmentType,
+          employmentStatus,
+          inviteSent,
+          confirmationDate: confirmationDate || null,
+          resignationDate: resignationDate || null,
+          relievedDate: relievedDate || null,
+          reason: reason || null,
+          panNumber,
+          aadharNumber,
+          // Optional fields with defaults
+          address: null,
+          city: null,
+          state: null,
+          country: null,
+          pinCode: null,
+          workSchedule: 'Regular',
+          basicSalary: 0.0,
+          bankName: null,
+          accountNumber: null,
+          ifscCode: null,
+          emergencyContactName: null,
+          emergencyContactPhone: null,
+          emergencyContactRelation: null,
+        },
+        { transaction: t }
+      );
 
-      // Get employee with user details
+      // Fetch employee with user details
       const employeeWithUser = await Employee.findOne({
         where: { id: employee.id },
-        include: [{
-          model: User,
-          as: 'user',
-          attributes: ['id', 'firstName', 'lastName', 'email', 'role', 'status']
-        }],
-        transaction: t
+        include: [
+          {
+            model: User,
+            as: 'user',
+            attributes: ['id', 'firstName', 'lastName', 'email', 'role', 'status'],
+          },
+        ],
+        transaction: t,
       });
 
       return employeeWithUser;
@@ -84,15 +123,14 @@ exports.createEmployee = async (req, res) => {
 
     res.status(201).json({
       success: true,
-      data: result
+      data: result,
     });
-
   } catch (error) {
     console.error('Create employee error:', error);
     res.status(500).json({
       success: false,
       message: 'Error creating employee',
-      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined,
     });
   }
 };
@@ -305,7 +343,7 @@ exports.importEmployees = async (req, res) => {
 
     const results = await sequelize.transaction(async (t) => {
       const createdEmployees = [];
-      
+
       for (const row of data) {
         // Create user first
         const user = await User.create({

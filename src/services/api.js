@@ -1,7 +1,7 @@
 import axios from 'axios';
 
-const API_URL = 'https://admin.pacehrm.com/api/';
-// const API_URL = 'http://localhost:3306/api/';
+// const API_URL = 'https://admin.pacehrm.com/api/';
+const API_URL = 'http://localhost:3306/api/';
 
 // Create axios instance with default config
 const api = axios.create({

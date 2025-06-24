@@ -943,8 +943,8 @@ export default function Masters({ darkMode }) {
         {[
           "enterprise",
           "branch",
-          "designation",
           "department",
+          "designation",
           "sub Department",
           "grade",
           // "employment type",

@@ -2,57 +2,9 @@ import { format } from 'date-fns';
 import { FileUp, PlusCircle, Upload, X } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
 import { branchService, categoryService, departmentService, designationService, employeeService, gradesService, reasonsService, subDepartmentService } from "../../services/api";
+import FloatingInput from './FloatingInput';
 import SearchableSelect from './SearchableSelect'; // Import the new widget
 
-// Helper components
-const FloatingInput = ({ id, label, value, onChange, type = 'text', required = false, error }) => (
-  <div className="relative mb-4">
-    <input
-      id={id}
-      name={id}
-      type={type}
-      value={value}
-      onChange={onChange}
-      placeholder=" "
-      required={required}
-      className={`block px-2.5 pb-2.5 pt-4 w-full text-sm text-gray-900 bg-transparent rounded-lg border ${error ? 'border-red-500' : 'border-gray-300'} appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer`}
-    />
-    <label
-      htmlFor={id}
-      className={`absolute text-sm ${error ? 'text-red-500' : 'text-gray-500'} duration-300 transform -translate-y-4 scale-75 top-2 z-10 origin-[0] bg-white px-2 peer-focus:px-2 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:-translate-y-1/2 peer-placeholder-shown:top-1/2 peer-focus:top-2 peer-focus:scale-75 peer-focus:-translate-y-4 left-1`}
-    >
-      {label}{required && <span className="text-red-500">*</span>}
-    </label>
-    {error && <p className="mt-1 text-xs text-red-500">{error}</p>}
-  </div>
-);
-
-const FloatingSelect = ({ id, label, value, onChange, options, required = false, error }) => (
-  <div className="relative mb-4">
-    <select
-      id={id}
-      value={value}
-      onChange={onChange}
-      required={required}
-      style={{ color: error ? '#ef4444' : '#6b7280' }}
-      className={`block px-2.5 pb-2.5 pt-4 w-full text-sm text-gray-900 bg-transparent rounded-lg border ${error ? 'border-red-500' : 'border-gray-300'} appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer`}
-    >
-      <option value="">Select {label}</option>
-      {options.map((option) => (
-        <option key={option.value} value={option.value}>
-          {option.label}
-        </option>
-      ))}
-    </select>
-    <label
-      htmlFor={id}
-      className={`absolute text-sm ${error ? 'text-red-500' : 'text-gray-500'} duration-300 transform -translate-y-4 scale-75 top-2 z-10 origin-[0] bg-white px-2 peer-focus:px-2 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:-translate-y-1/2 peer-placeholder-shown:top-1/2 peer-focus:top-2 peer-focus:scale-75 peer-focus:-translate-y-4 left-1`}
-    >
-      {label}{required && <span className="text-red-500">*</span>}
-    </label>
-    {error && <p className="mt-1 text-xs text-red-500">{error}</p>}
-  </div>
-);
 
 export default function EmployeeProfileDetails({
   employee,
@@ -285,12 +237,12 @@ export default function EmployeeProfileDetails({
           required
           error={formErrors.name}
         />
-        <FloatingSelect
+        <SearchableSelect
           id="gender"
           label="Gender"
           value={formData.gender}
           onChange={(e) => handleInputChange({ target: { name: 'gender', value: e.target.value } })}
-          options={[
+          staticOptions={[
             { value: 'male', label: 'Male' },
             { value: 'female', label: 'Female' },
             { value: 'other', label: 'Other' },
@@ -385,51 +337,6 @@ export default function EmployeeProfileDetails({
           isEmployee={true}
           required
         />
-        {/* <FloatingInput
-          id="designation"
-          label="Designation"
-          value={formData.designation}
-          onChange={handleInputChange}
-          required
-          error={formErrors.designation}
-        />
-        <FloatingInput
-          id="department"
-          label="Department"
-          value={formData.department}
-          onChange={handleInputChange}
-          required
-          error={formErrors.department}
-        />
-        <FloatingInput
-          id="subDepartment"
-          label="Sub Department"
-          value={formData.subDepartment}
-          onChange={handleInputChange}
-          error={formErrors.subDepartment}
-        />
-        <FloatingInput
-          id="grade"
-          label="Grade"
-          value={formData.grade}
-          onChange={handleInputChange}
-          error={formErrors.grade}
-        />
-        <FloatingInput
-          id="category"
-          label="Category"
-          value={formData.category}
-          onChange={handleInputChange}
-          error={formErrors.category}
-        /> */}
-        {/* <FloatingInput
-          id="reportingManager"
-          label="Reporting Manager"
-          value={formData.reportingManager}
-          onChange={handleInputChange}
-          required
-          error={formErrors.reportingManager}
-        /> */}
         <FloatingInput
           id="dateOfJoin"
           label="Date of Join"
@@ -439,12 +346,12 @@ export default function EmployeeProfileDetails({
           required
           error={formErrors.dateOfJoin}
         />
-        <FloatingSelect
+        <SearchableSelect
           id="employeeType"
           label="Employee Type"
           value={formData.employeeType}
           onChange={(e) => handleInputChange({ target: { name: 'employeeType', value: e.target.value } })}
-          options={[
+          staticOptions={[
             { value: 'full-time', label: 'Full-Time' },
             { value: 'part-time', label: 'Part-Time' },
             { value: 'contract', label: 'Contract' },
@@ -454,25 +361,6 @@ export default function EmployeeProfileDetails({
           error={formErrors.employeeType}
         />
 
-        {/* <FloatingSelect
-          id="employmentStatus"
-          label="Employment Status"
-          value={formData.employmentStatus}
-          // onChange={handleInputChange}
-          onChange={(e) => handleInputChange({ target: { name: 'employmentStatus', value: e.target.value } })}
-
-          // onChange={(e) => handleInputChange({ target: { name: 'bloodGroup', value: e.target.value } })}
-
-          options={[
-            { value: 'probation', label: 'Probation' },
-            { value: 'confirmed', label: 'Confirmed' },
-            { value: 'resigned', label: 'Resigned' },
-            { value: 'relieved', label: 'Relieved' },
-            { value: 'terminated', label: 'Terminated' },
-          ]}
-          required
-          error={formErrors.employmentStatus}
-        /> */}
         <SearchableSelect
           id="employmentStatus"
           label="Employment Status"
@@ -593,12 +481,12 @@ export default function EmployeeProfileDetails({
           required
           error={formErrors.officialEmail}
         />
-        <FloatingSelect
+        <SearchableSelect
           id="bloodGroup"
           label="Blood Group"
           value={formData.bloodGroup}
           onChange={(e) => handleInputChange({ target: { name: 'bloodGroup', value: e.target.value } })}
-          options={[
+          staticOptions={[
             { value: 'N/A', label: 'N/A' },
             { value: 'A+', label: 'A+' },
             { value: 'A-', label: 'A-' },
@@ -766,12 +654,12 @@ export default function EmployeeProfileDetails({
                   required
                   error={formErrors.familyMembers?.[index]?.dateOfBirth}
                 />
-                <FloatingSelect
+                <SearchableSelect
                   id={`familyRelationship-${index}`}
                   label="Relationship"
                   value={member.relationship}
                   onChange={(e) => handleNestedInputChange('familyMembers', index, 'relationship', e.target.value)}
-                  options={[
+                  staticOptions={[
                     { value: 'Father', label: 'Father' },
                     { value: 'Mother', label: 'Mother' },
                     { value: 'Spouse', label: 'Spouse' },
@@ -780,12 +668,12 @@ export default function EmployeeProfileDetails({
                   required
                   error={formErrors.familyMembers?.[index]?.relationship}
                 />
-                <FloatingSelect
+                <SearchableSelect
                   id={`familyGender-${index}`}
                   label="Gender"
                   value={member.gender}
                   onChange={(e) => handleNestedInputChange('familyMembers', index, 'gender', e.target.value)}
-                  options={[
+                  staticOptions={[
                     { value: 'male', label: 'Male' },
                     { value: 'female', label: 'Female' },
                     { value: 'other', label: 'Other' },
@@ -885,12 +773,12 @@ export default function EmployeeProfileDetails({
       {formData.qualifications && formData.qualifications.map((qualification, index) => (
         <div key={index} className="p-4 bg-gray-50 rounded-lg">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <FloatingSelect
+            <SearchableSelect
               id={`qualification-${index}`}
               label="Qualification"
               value={qualification.qualification}
               onChange={(e) => handleNestedInputChange('qualifications', index, 'qualification', e.target.value)}
-              options={[
+              staticOptions={[
                 { value: '10th', label: '10th / Matriculation' },
                 { value: '12th', label: '12th / Higher Secondary' },
                 { value: 'diploma', label: 'Diploma' },

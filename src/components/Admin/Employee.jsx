@@ -1,11 +1,9 @@
 import { ChevronLeft, ChevronRight, Edit, Eye, FileUp, Search, Trash2, Upload, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { employeeService } from '../../services/api';
-import EmployeeProfileDetails from './EmployeeProfileDetails';
+// import EmployeeProfileDetails from './EmployeeProfileDetails';
+import EmployeeProfileDetails from './create-employee/EmployeeProfileDetails';
 
-const bloodGroupOptions = [
-  'A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'
-];
 
 export default function Employee({ darkMode }) {
   const [employees, setEmployees] = useState([]);
@@ -274,9 +272,9 @@ export default function Employee({ darkMode }) {
                     <td className="px-4 py-2">{employee.phoneNumber}</td>
                     <td className="px-4 py-2">
                       <span className={`px-2 py-1 rounded-full text-xs ${employee.employmentStatus === 'Probation' ? 'bg-yellow-200 text-yellow-800' :
-                          employee.employmentStatus === 'Confirmed' ? 'bg-green-200 text-green-800' :
-                            employee.employmentStatus === 'Resigned' ? 'bg-red-200 text-red-800' :
-                              'bg-gray-200 text-gray-800'
+                        employee.employmentStatus === 'Confirmed' ? 'bg-green-200 text-green-800' :
+                          employee.employmentStatus === 'Resigned' ? 'bg-red-200 text-red-800' :
+                            'bg-gray-200 text-gray-800'
                         }`}>
                         {employee.employmentStatus}
                       </span>
@@ -307,8 +305,8 @@ export default function Employee({ darkMode }) {
                   key={page}
                   onClick={() => setCurrentPage(page)}
                   className={`px-3 py-1.5 border rounded text-sm ${currentPage === page
-                      ? (darkMode ? 'bg-[#BB86FC] text-[#1C1C1C]' : 'bg-blue-500 text-white')
-                      : (darkMode ? 'bg-[#2C2C2C] border-[#3C3C3C] text-[#E0E0E0]' : 'bg-white border-gray-300 text-[#31293F]')
+                    ? (darkMode ? 'bg-[#BB86FC] text-[#1C1C1C]' : 'bg-blue-500 text-white')
+                    : (darkMode ? 'bg-[#2C2C2C] border-[#3C3C3C] text-[#E0E0E0]' : 'bg-white border-gray-300 text-[#31293F]')
                     }`}
                 >
                   {page}
@@ -376,7 +374,6 @@ export default function Employee({ darkMode }) {
                   darkMode={darkMode}
                   onSave={handleSubmit}
                   onCancel={() => setShowForm(false)}
-                  bloodGroupOptions={bloodGroupOptions}
                   formId="employee-form"
                 />
               </div>

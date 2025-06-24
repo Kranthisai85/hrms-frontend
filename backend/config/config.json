@@ -2,8 +2,8 @@
   "development": {
     "username": "root",
     "password": "jiwika@199",
-    "database": "pacehrm",
-    "host": "127.0.0.1",
+    "database": "hrm_db",
+    "host": "82.112.236.201",
     "dialect": "mysql",
     "logging": false
   },

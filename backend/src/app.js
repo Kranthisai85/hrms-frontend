@@ -62,6 +62,12 @@ const initializeModels = async (sequelize) => {
   console.log('Initializing SubDepartment model...');
   const SubDepartment = await require('./models/SubDepartment')(sequelize, DataTypes);
 
+  console.log('Initializing Grade model...');
+  const Grade = await require('./models/Grade')(sequelize, DataTypes);
+
+  console.log('Initializing Category model...');
+  const Category = await require('./models/Category')(sequelize, DataTypes);
+
   // Create models object
   const models = {
     sequelize,
@@ -74,6 +80,8 @@ const initializeModels = async (sequelize) => {
     Department,
     Designation,
     SubDepartment,
+    Grade,
+    Category
   };
 
   // Initialize associations
