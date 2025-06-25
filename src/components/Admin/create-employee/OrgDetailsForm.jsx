@@ -14,31 +14,33 @@ import SearchableSelect from '../SearchableSelect.jsx';
 
 export function OrgDetailsForm({ employee, onSave, darkMode }) {
     const initialFormData = {
-        empCode: employee?.empCode || '',
-        firstName: employee?.firstName || '',
-        lastName: employee?.lastName || '',
-        gender: employee?.gender || '',
-        dateOfBirth: employee?.dateOfBirth || '',
-        branch: employee?.branch || '',
-        designation: employee?.designation || '',
-        department: employee?.department || '',
-        subDepartment: employee?.subDepartment || '',
-        grade: employee?.grade || '',
-        category: employee?.category || '',
-        reportingManager: employee?.reportingManager || '',
-        employeeType: employee?.employeeType || '',
+        empCode: employee?.employeeId || '',
+        name: employee?.user?.name || '',
+        gender: employee?.user.gender || '', // Not present in employee object; stays as is
+        dateOfBirth: employee?.user.date_of_birth || '', // Not present in employee object; stays as is
+        branch: employee?.branchId || '',
+        designation: employee?.designationId || '',
+        department: employee?.departmentId || '',
+        subDepartment: employee?.subDepartmentId || '',
+        grade: employee?.gradeId || '',
+        category: employee?.categoryId || '',
+        reportingManager: employee?.reportingManagerId || '',
+        employeeType: employee?.employmentType || '',
         employmentStatus: employee?.employmentStatus || '',
-        dateOfJoin: employee?.dateOfJoin || '',
-        mobileNumber: employee?.mobileNumber || '',
-        personalEmail: employee?.personalEmail || '',
-        officialEmail: employee?.officialEmail || '',
-        bloodGroup: employee?.bloodGroup || '',
+        dateOfJoin: employee?.joiningDate || '',
+        mobileNumber: employee?.user.phone || '', // Not present; adjust if available elsewhere
+        personalEmail: employee?.user.email || '', // Not present; adjust if available elsewhere
+        officialEmail: employee?.email || '',
+        bloodGroup: employee?.bloodGroup || '', // Not present; stays as is
         inviteSent: employee?.inviteSent || false,
         confirmationDate: employee?.confirmationDate || '',
         resignationDate: employee?.resignationDate || '',
         relievedDate: employee?.relievedDate || '',
         reason: employee?.reason || '',
+        aadhaarNo: employee?.aadharNumber || '',
+        pan: employee?.panNumber || '',
     };
+
 
     const [formData, setFormData] = useState(initialFormData);
     const [formErrors, setFormErrors] = useState({});
@@ -51,11 +53,11 @@ export function OrgDetailsForm({ employee, onSave, darkMode }) {
         }));
     }, []);
 
+
     const validateForm = useCallback(() => {
         const errors = {};
         if (!formData.empCode) errors.empCode = 'Employee Code is required';
-        if (!formData.firstName) errors.name = 'First Name is required';
-        if (!formData.lastName) errors.name = 'Last Name is required';
+        if (!formData.name) errors.name = 'Name is required';
         if (!formData.gender) errors.gender = 'Gender is required';
         if (!formData.dateOfBirth) errors.dateOfBirth = 'Date of Birth is required';
         if (!formData.branch) errors.branch = 'Branch is required';
@@ -106,20 +108,12 @@ export function OrgDetailsForm({ employee, onSave, darkMode }) {
                     error={formErrors.empCode}
                 />
                 <FloatingInput
-                    id="firstName"
-                    label="First Name"
-                    value={formData.firstName}
+                    id="name"
+                    label="Name"
+                    value={formData.name}
                     onChange={handleInputChange}
                     required
-                    error={formErrors.firstName}
-                />
-                <FloatingInput
-                    id="lastName"
-                    label="Last Name"
-                    value={formData.lastName}
-                    onChange={handleInputChange}
-                    required
-                    error={formErrors.lastName}
+                    error={formErrors.name}
                 />
                 <SearchableSelect
                     id="gender"
@@ -127,9 +121,9 @@ export function OrgDetailsForm({ employee, onSave, darkMode }) {
                     value={formData.gender}
                     onChange={(e) => handleInputChange({ target: { name: 'gender', value: e.target.value } })}
                     staticOptions={[
-                        { value: 'male', label: 'Male' },
-                        { value: 'female', label: 'Female' },
-                        { value: 'other', label: 'Other' },
+                        { value: 'Male', label: 'Male' },
+                        { value: 'Female', label: 'Female' },
+                        { value: 'Other', label: 'Other' },
                     ]}
                     required
                 />
@@ -228,10 +222,10 @@ export function OrgDetailsForm({ employee, onSave, darkMode }) {
                     value={formData.employeeType}
                     onChange={(e) => handleInputChange({ target: { name: 'employeeType', value: e.target.value } })}
                     staticOptions={[
-                        { value: 'full-time', label: 'Full-Time' },
-                        { value: 'part-time', label: 'Part-Time' },
-                        { value: 'contract', label: 'Contract' },
-                        { value: 'intern', label: 'Intern' },
+                        { value: 'Full-time', label: 'Full-Time' },
+                        { value: 'Part-time', label: 'Part-Time' },
+                        { value: 'Contract', label: 'Contract' },
+                        { value: 'Intern', label: 'Intern' },
                     ]}
                     required
                     error={formErrors.employeeType}
@@ -242,11 +236,11 @@ export function OrgDetailsForm({ employee, onSave, darkMode }) {
                     value={formData.employmentStatus}
                     onChange={(e) => handleInputChange({ target: { name: 'employmentStatus', value: e.target.value } })}
                     staticOptions={[
-                        { value: 'probation', label: 'Probation' },
-                        { value: 'confirmed', label: 'Confirmed' },
-                        { value: 'resigned', label: 'Resigned' },
-                        { value: 'relieved', label: 'Relieved' },
-                        { value: 'terminated', label: 'Terminated' },
+                        { value: 'Probation', label: 'Probation' },
+                        { value: 'Confirmed', label: 'Confirmed' },
+                        { value: 'Resigned', label: 'Resigned' },
+                        { value: 'Relieved', label: 'Relieved' },
+                        { value: 'Terminated', label: 'Terminated' },
                     ]}
                     darkMode={darkMode}
                     required

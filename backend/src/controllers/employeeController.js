@@ -8,8 +8,7 @@ exports.createEmployee = async (req, res) => {
   try {
     const {
       empCode,
-      firstName,
-      lastName,
+      name, // Map 'name' to 'firstName' for User model
       gender,
       dateOfBirth,
       branch: branchId,
@@ -22,7 +21,7 @@ exports.createEmployee = async (req, res) => {
       employeeType: employmentType,
       employmentStatus,
       dateOfJoin: joiningDate,
-      mobileNumber: phoneNumber,
+      mobileNumber: phone, // Map to 'phone' for User model
       personalEmail, // Not stored, using officialEmail as email
       officialEmail: email,
       inviteSent,
@@ -40,67 +39,54 @@ exports.createEmployee = async (req, res) => {
       throw new Error('Models not initialized');
     }
 
+    // Input validation
+    if (!email || !branchId || !designationId || !departmentId || !joiningDate || !employmentType || !panNumber || !aadharNumber) {
+      throw new Error('Missing required fields: email, branchId, designationId, departmentId, joiningDate, employmentType, panNumber, or aadharNumber');
+    }
+
     // Start transaction
     const result = await sequelize.transaction(async (t) => {
       // Create user
       const user = await User.create(
         {
-          firstName,
-          lastName,
+          name, // Use 'name' from req.body as firstName
+          last_name: null, // 'last_name' not in req.body, set to null
           email,
           password: null, // No password provided
           role: 'employee',
           status: 'Active',
-          phone: phoneNumber,
+          phone,
+          dateOfBirth,
+          gender,
         },
         { transaction: t }
       );
 
       // Use provided empCode or generate one
       const employeeId = empCode || `EMP${String(user.id).padStart(5, '0')}`;
-
       // Create employee
       const employee = await Employee.create(
         {
-          userId: user.id,
-          employeeId,
-          firstName,
-          lastName,
+          user_id: user.id,
+          employee_id: employeeId,
+          department_id: departmentId,
+          designation_id: designationId,
+          branch_id: branchId,
+          sub_department_id: subDepartmentId,
+          grade_id: gradeId,
+          category_id: categoryId,
+          reporting_manager_id: reportingManagerId || 2,
+          joining_date: joiningDate,
+          employment_status: employmentStatus,
+          employment_type: employmentType,
+          pan_number: panNumber,
+          aadhar_number: aadharNumber,
           email,
-          phoneNumber,
-          dateOfBirth,
-          gender,
-          departmentId,
-          designationId,
-          branchId,
-          subDepartmentId,
-          gradeId,
-          categoryId,
-          reportingManagerId,
-          joiningDate,
-          employmentType,
-          employmentStatus,
-          inviteSent,
-          confirmationDate: confirmationDate || null,
-          resignationDate: resignationDate || null,
-          relievedDate: relievedDate || null,
-          reason: reason || null,
-          panNumber,
-          aadharNumber,
-          // Optional fields with defaults
-          address: null,
-          city: null,
-          state: null,
-          country: null,
-          pinCode: null,
-          workSchedule: 'Regular',
-          basicSalary: 0.0,
-          bankName: null,
-          accountNumber: null,
-          ifscCode: null,
-          emergencyContactName: null,
-          emergencyContactPhone: null,
-          emergencyContactRelation: null,
+          invite_sent: inviteSent,
+          confirmation_date: confirmationDate || null,
+          resignation_date: resignationDate || null,
+          relieved_date: relievedDate || null,
+          reason: reason ? parseInt(reason) : null,
         },
         { transaction: t }
       );
@@ -112,7 +98,7 @@ exports.createEmployee = async (req, res) => {
           {
             model: User,
             as: 'user',
-            attributes: ['id', 'firstName', 'lastName', 'email', 'role', 'status'],
+            attributes: ['id', 'name', 'last_name', 'email', 'role', 'status', 'phone', 'dateOfBirth', 'gender'],
           },
         ],
         transaction: t,
@@ -149,7 +135,7 @@ exports.getEmployees = async (req, res) => {
       include: [{
         model: User,
         as: 'user',
-        attributes: ['id', 'firstName', 'lastName', 'email', 'role', 'status']
+        attributes: ['id', 'name', 'lastName', 'email', 'role', 'status', 'phone', 'date_of_birth', 'gender']
       }]
     });
 

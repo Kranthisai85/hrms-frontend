@@ -10,14 +10,15 @@ module.exports = async (sequelize) => {
         primaryKey: true,
         autoIncrement: true,
       },
-      firstName: {
+      name: {
         type: DataTypes.STRING,
         allowNull: false,
-        field: 'first_name',
+        field: 'name',
       },
       lastName: {
         type: DataTypes.STRING,
-        allowNull: false,
+        allowNull: true,
+        defaultValue: null,
         field: 'last_name',
       },
       email: {
@@ -39,6 +40,15 @@ module.exports = async (sequelize) => {
         validate: {
           isIn: [['employee', 'admin', 'super_admin']],
         },
+      },
+      dateOfBirth: {
+        type: DataTypes.DATEONLY,
+        field: 'date_of_birth',
+        allowNull: true, // Moved from Employee
+      },
+      gender: {
+        type: DataTypes.ENUM('Male', 'Female', 'Other'),
+        allowNull: true, // Moved from Employee
       },
       phone: {
         type: DataTypes.STRING,

@@ -12,19 +12,101 @@ module.exports = async (sequelize) => {
             userId: {
                 type: DataTypes.INTEGER,
                 allowNull: false,
+                field: 'user_id',
             },
             employeeId: {
                 type: DataTypes.STRING,
                 allowNull: false,
                 unique: true,
+                field: 'employee_id',
             },
-            firstName: {
+            departmentId: {
+                type: DataTypes.INTEGER,
+                allowNull: false,
+                field: 'department_id',
+            },
+            designationId: {
+                type: DataTypes.INTEGER,
+                allowNull: false,
+                field: 'designation_id',
+            },
+            branchId: {
+                type: DataTypes.INTEGER,
+                allowNull: false,
+                field: 'branch_id',
+            },
+            subDepartmentId: {
+                type: DataTypes.INTEGER,
+                allowNull: true,
+                field: 'sub_department_id',
+            },
+            gradeId: {
+                type: DataTypes.INTEGER,
+                allowNull: true,
+                field: 'grade_id',
+            },
+            categoryId: {
+                type: DataTypes.INTEGER,
+                allowNull: true,
+                field: 'category_id',
+            },
+            reportingManagerId: {
+                type: DataTypes.INTEGER,
+                allowNull: true,
+                field: 'reporting_manager_id',
+            },
+            joiningDate: {
+                type: DataTypes.DATEONLY,
+                allowNull: false,
+                field: 'joining_date',
+            },
+            employmentStatus: {
+                type: DataTypes.ENUM('Active', 'Inactive', 'On Leave', 'Terminated', 'Probation', 'Confirmed'),
+                allowNull: false,
+                defaultValue: 'Probation',
+                field: 'employment_status',
+            },
+            employmentType: {
+                type: DataTypes.ENUM('Full-time', 'Part-time', 'Contract', 'Intern'),
+                allowNull: false,
+                field: 'employment_type',
+            },
+            workSchedule: {
+                type: DataTypes.ENUM('Regular', 'Shift', 'Flexible'),
+                allowNull: true,
+                defaultValue: 'Regular',
+                field: 'work_schedule',
+            },
+            basicSalary: {
+                type: DataTypes.DECIMAL(10, 2),
+                allowNull: true,
+                defaultValue: 0.0,
+                field: 'basic_salary',
+            },
+            bankName: {
+                type: DataTypes.STRING,
+                allowNull: true,
+                field: 'bank_name',
+            },
+            accountNumber: {
+                type: DataTypes.STRING,
+                allowNull: true,
+                field: 'account_number',
+            },
+            ifscCode: {
+                type: DataTypes.STRING,
+                allowNull: true,
+                field: 'ifsc_code',
+            },
+            panNumber: {
                 type: DataTypes.STRING,
                 allowNull: false,
+                field: 'pan_number',
             },
-            lastName: {
+            aadharNumber: {
                 type: DataTypes.STRING,
                 allowNull: false,
+                field: 'aadhar_number',
             },
             email: {
                 type: DataTypes.STRING,
@@ -34,149 +116,29 @@ module.exports = async (sequelize) => {
                     isEmail: true,
                 },
             },
-            phoneNumber: {
-                type: DataTypes.STRING,
-                allowNull: false,
-            },
-            dateOfBirth: {
-                type: DataTypes.DATEONLY,
-                allowNull: false,
-            },
-            gender: {
-                type: DataTypes.ENUM('Male', 'Female', 'Other'),
-                allowNull: false,
-            },
-            address: {
-                type: DataTypes.TEXT,
-                allowNull: true, // Changed to allow null
-            },
-            city: {
-                type: DataTypes.STRING,
-                allowNull: true, // Changed to allow null
-            },
-            state: {
-                type: DataTypes.STRING,
-                allowNull: true, // Changed to allow null
-            },
-            country: {
-                type: DataTypes.STRING,
-                allowNull: true, // Changed to allow null
-            },
-            pinCode: {
-                type: DataTypes.STRING,
-                allowNull: true, // Changed to allow null
-            },
-            departmentId: {
-                type: DataTypes.INTEGER,
-                allowNull: false,
-            },
-            designationId: {
-                type: DataTypes.INTEGER,
-                allowNull: false,
-            },
-            branchId: {
-                type: DataTypes.INTEGER,
-                allowNull: false,
-            },
-            subDepartmentId: {
-                // New field
-                type: DataTypes.INTEGER,
-                allowNull: true,
-            },
-            gradeId: {
-                // New field
-                type: DataTypes.INTEGER,
-                allowNull: true,
-            },
-            categoryId: {
-                // New field
-                type: DataTypes.INTEGER,
-                allowNull: true,
-            },
-            reportingManagerId: {
-                // New field
-                type: DataTypes.INTEGER,
-                allowNull: true,
-            },
-            joiningDate: {
-                type: DataTypes.DATEONLY,
-                allowNull: false,
-            },
-            employmentStatus: {
-                type: DataTypes.ENUM('Active', 'Inactive', 'On Leave', 'Terminated', 'Probation'), // Added Probation
-                allowNull: false,
-                defaultValue: 'Probation',
-            },
-            employmentType: {
-                type: DataTypes.ENUM('Full-time', 'Part-time', 'Contract', 'Intern'),
-                allowNull: false,
-            },
-            workSchedule: {
-                type: DataTypes.ENUM('Regular', 'Shift', 'Flexible'),
-                allowNull: true, // Changed to allow null
-                defaultValue: 'Regular',
-            },
-            basicSalary: {
-                type: DataTypes.DECIMAL(10, 2),
-                allowNull: true, // Changed to allow null
-                defaultValue: 0.0,
-            },
-            bankName: {
-                type: DataTypes.STRING,
-                allowNull: true, // Changed to allow null
-            },
-            accountNumber: {
-                type: DataTypes.STRING,
-                allowNull: true, // Changed to allow null
-            },
-            ifscCode: {
-                type: DataTypes.STRING,
-                allowNull: true, // Changed to allow null
-            },
-            panNumber: {
-                type: DataTypes.STRING,
-                allowNull: false,
-            },
-            aadharNumber: {
-                type: DataTypes.STRING,
-                allowNull: false,
-            },
-            emergencyContactName: {
-                type: DataTypes.STRING,
-                allowNull: true, // Changed to allow null
-            },
-            emergencyContactPhone: {
-                type: DataTypes.STRING,
-                allowNull: true, // Changed to allow null
-            },
-            emergencyContactRelation: {
-                type: DataTypes.STRING,
-                allowNull: true, // Changed to allow null
-            },
             inviteSent: {
-                // New field
                 type: DataTypes.BOOLEAN,
                 allowNull: false,
                 defaultValue: false,
+                field: 'invite_sent',
             },
             confirmationDate: {
-                // New field
                 type: DataTypes.DATEONLY,
                 allowNull: true,
+                field: 'confirmation_date',
             },
             resignationDate: {
-                // New field
                 type: DataTypes.DATEONLY,
                 allowNull: true,
+                field: 'resignation_date',
             },
             relievedDate: {
-                // New field
                 type: DataTypes.DATEONLY,
                 allowNull: true,
+                field: 'relieved_date',
             },
             reason: {
-                // New field
-                type: DataTypes.TEXT,
+                type: DataTypes.INTEGER,
                 allowNull: true,
             },
         },
@@ -187,41 +149,15 @@ module.exports = async (sequelize) => {
         }
     );
 
-    // Define associations
     Employee.associate = (models) => {
-        Employee.belongsTo(models.User, {
-            foreignKey: 'userId',
-            as: 'user',
-        });
-        // Add associations for new fields if needed
-        Employee.belongsTo(models.Department, {
-            foreignKey: 'departmentId',
-            as: 'department',
-        });
-        Employee.belongsTo(models.Designation, {
-            foreignKey: 'designationId',
-            as: 'designation',
-        });
-        Employee.belongsTo(models.Branch, {
-            foreignKey: 'branchId',
-            as: 'branch',
-        });
-        Employee.belongsTo(models.SubDepartment, {
-            foreignKey: 'subDepartmentId',
-            as: 'subDepartment',
-        });
-        Employee.belongsTo(models.Grade, {
-            foreignKey: 'gradeId',
-            as: 'grade',
-        });
-        Employee.belongsTo(models.Category, {
-            foreignKey: 'categoryId',
-            as: 'category',
-        });
-        Employee.belongsTo(models.Employee, {
-            foreignKey: 'reportingManagerId',
-            as: 'reportingManager',
-        });
+        Employee.belongsTo(models.User, { foreignKey: 'user_id', as: 'user' });
+        Employee.belongsTo(models.Department, { foreignKey: 'department_id', as: 'department' });
+        Employee.belongsTo(models.Designation, { foreignKey: 'designation_id', as: 'designation' });
+        Employee.belongsTo(models.Branch, { foreignKey: 'branch_id', as: 'branch' });
+        Employee.belongsTo(models.SubDepartment, { foreignKey: 'sub_department_id', as: 'subDepartment' });
+        Employee.belongsTo(models.Grade, { foreignKey: 'grade_id', as: 'grade' });
+        Employee.belongsTo(models.Category, { foreignKey: 'category_id', as: 'category' });
+        Employee.belongsTo(models.Employee, { foreignKey: 'reporting_manager_id', as: 'reportingManager' });
     };
 
     return Employee;

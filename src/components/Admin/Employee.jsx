@@ -1,7 +1,7 @@
 import { ChevronLeft, ChevronRight, Edit, Eye, FileUp, Search, Trash2, Upload, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import { employeeService } from '../../services/api';
-// import EmployeeProfileDetails from './EmployeeProfileDetails';
+import toast from 'react-hot-toast';
+import { branchService, departmentService, designationService, employeeService } from '../../services/api';
 import EmployeeProfileDetails from './create-employee/EmployeeProfileDetails';
 
 
@@ -18,23 +18,16 @@ export default function Employee({ darkMode }) {
   const [department, setDepartment] = useState('All');
   const [dateOfJoiningFilter, setDateOfJoiningFilter] = useState('');
   const [dateOfLeavingFilter, setDateOfLeavingFilter] = useState('');
+  const [departmentsList, setDepartments] = useState([])
+  const [branchesList, setBranches] = useState([])
+  const [designationsList, setDesignations] = useState([])
 
   // Fetch employees on component mount
   useEffect(() => {
-    const fetchEmployees = async () => {
-      try {
-        setLoading(true);
-        const response = await employeeService.getEmployees();
-        setEmployees(response.data || []);
-        setError(null);
-      } catch (err) {
-        setError(err.message || 'Failed to fetch employees');
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchEmployees();
+    fetchDepartments();
+    fetchBranches();
+    fetchDesignations();
   }, []);
 
   const filteredEmployees = employees.filter(employee =>
@@ -140,6 +133,72 @@ export default function Employee({ darkMode }) {
       setError(err.message || 'Failed to export employees');
     }
   };
+
+  const fetchEmployees = async () => {
+    try {
+      setLoading(true);
+      const response = await employeeService.getEmployees();
+      setEmployees(response.data || []);
+      setError(null);
+    } catch (err) {
+      setError(err.message || 'Failed to fetch employees');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchDepartments = async () => {
+    try {
+      setLoading(true)
+      const response = await departmentService.getDepartments()
+      if (response.success) {
+        setDepartments(response.data)
+      } else {
+        toast.error(response.message || 'Failed to fetch departments')
+      }
+    } catch (error) {
+      toast.error('Error fetching departments')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const fetchBranches = async () => {
+    try {
+      setLoading(true)
+      const response = await branchService.getBranches()
+      if (response.success) {
+        setBranches(response.data)
+      } else {
+        toast.error(response.message || 'Failed to fetch branches')
+      }
+    } catch (error) {
+      toast.error('Error fetching branches')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const fetchDesignations = async () => {
+    try {
+      setLoading(true)
+      const response = await designationService.getDesignations()
+      if (response.success) {
+        setDesignations(response.data)
+      } else {
+        toast.error(response.message || 'Failed to fetch departments')
+      }
+    } catch (error) {
+      toast.error('Error fetching departments')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  function getNameByIdFromList(id, list) {
+    const item = list.find(obj => obj.id === id);
+    return item ? item.name.trim() : null;
+  }
 
   const handleInvite = () => {
     console.log('Invite functionality to be implemented');
@@ -253,7 +312,7 @@ export default function Employee({ darkMode }) {
                   <th className="px-4 py-2 text-left">Branch</th>
                   <th className="px-4 py-2 text-left">Date of Join</th>
                   <th className="px-4 py-2 text-left">Email</th>
-                  <th className="px-4 py-2 text-left">Mobile</th>
+                  {/* <th className="px-4 py-2 text-left">Mobile</th> */}
                   <th className="px-4 py-2 text-left">Status</th>
                   <th className="px-4 py-2 text-left">Action</th>
                 </tr>
@@ -263,13 +322,13 @@ export default function Employee({ darkMode }) {
                   <tr key={employee.id} className={`border-b ${darkMode ? 'hover:bg-[#3C3C3C] border-[#4C4C4C]' : 'hover:bg-gray-50 border-gray-200'}`}>
                     <td className="px-4 py-2">{(currentPage - 1) * itemsPerPage + index + 1}</td>
                     <td className="px-4 py-2">{employee.employeeId}</td>
-                    <td className="px-4 py-2">{`${employee.firstName} ${employee.lastName}`}</td>
-                    <td className="px-4 py-2">{employee.designationId}</td>
-                    <td className="px-4 py-2">{employee.departmentId}</td>
-                    <td className="px-4 py-2">{employee.branchId}</td>
+                    <td className="px-4 py-2">{`${employee.user.name} ${employee.user.lastName != undefined ? employee.user.lastName : ''}`}</td>
+                    <td className="px-4 py-2">{getNameByIdFromList(employee.designationId, designationsList)}</td>
+                    <td className="px-4 py-2">{getNameByIdFromList(employee.departmentId, departmentsList)}</td>
+                    <td className="px-4 py-2">{getNameByIdFromList(employee.branchId, branchesList)}</td>
                     <td className="px-4 py-2">{formatDate(employee.joiningDate)}</td>
                     <td className="px-4 py-2">{employee.email}</td>
-                    <td className="px-4 py-2">{employee.phoneNumber}</td>
+                    {/* <td className="px-4 py-2">{employee.user.phone}</td> */}
                     <td className="px-4 py-2">
                       <span className={`px-2 py-1 rounded-full text-xs ${employee.employmentStatus === 'Probation' ? 'bg-yellow-200 text-yellow-800' :
                         employee.employmentStatus === 'Confirmed' ? 'bg-green-200 text-green-800' :
@@ -339,29 +398,6 @@ export default function Employee({ darkMode }) {
                     {selectedEmployee ? 'Edit Employee' : 'Create Employee'}
                   </h2>
                 </div>
-                {/* <div className="flex items-center space-x-3">
-                  <button
-                    onClick={() => setShowForm(false)}
-                    className={`px-3 py-1.5 rounded-md border ${
-                      darkMode 
-                        ? 'border-gray-600 hover:bg-gray-800' 
-                        : 'border-gray-300 hover:bg-gray-50'
-                    }`}
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    form="employee-form"
-                    className={`px-3 py-1.5 rounded-md ${
-                      darkMode
-                        ? 'bg-[#BB86FC] text-[#1C1C1C] hover:bg-opacity-90'
-                        : 'bg-blue-600 text-white hover:bg-blue-700'
-                    }`}
-                  >
-                    {selectedEmployee ? 'Update Employee' : 'Create Employee'}
-                  </button>
-                </div> */}
               </div>
             </div>
           </div>
