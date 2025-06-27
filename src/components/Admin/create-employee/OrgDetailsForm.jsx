@@ -246,7 +246,7 @@ export function OrgDetailsForm({ employee, onSave, darkMode }) {
                     required
                     error={formErrors.employmentStatus}
                 />
-                {formData.employmentStatus === 'confirmed' && (
+                {formData.employmentStatus === 'Confirmed' && (
                     <FloatingInput
                         id="confirmationDate"
                         label="Confirmation Date"
@@ -257,7 +257,7 @@ export function OrgDetailsForm({ employee, onSave, darkMode }) {
                         error={formErrors.confirmationDate}
                     />
                 )}
-                {(formData.employmentStatus === 'resigned' || formData.employmentStatus === 'relieved') && (
+                {(formData.employmentStatus === 'Resigned' || formData.employmentStatus === 'Relieved') && (
                     <>
                         <FloatingInput
                             id="resignationDate"
@@ -289,7 +289,7 @@ export function OrgDetailsForm({ employee, onSave, darkMode }) {
                         />
                     </>
                 )}
-                {formData.employmentStatus === 'terminated' && (
+                {formData.employmentStatus === 'Terminated' && (
                     <>
                         <FloatingInput
                             id="relievedDate"
@@ -343,30 +343,15 @@ export function OrgDetailsForm({ employee, onSave, darkMode }) {
                     label="Blood Group"
                     value={formData.bloodGroup}
                     onChange={(e) => handleInputChange({ target: { name: 'bloodGroup', value: e.target.value } })}
-                    staticOptions={[{
-                        label: 'A+', id: 'A+'
-                    },
-                    { label: 'A-', id: 'A-' },
-                    { label: 'B+', id: 'B+' },
-                    {
-                        label: 'B-',
-                        id: 'B-',
-                    }, {
-                        label: 'AB+',
-                        id: 'AB+',
-                    },
-                    {
-                        label: 'AB-',
-                        id: 'AB-',
-                    },
-                    {
-                        label: 'O+',
-                        id: 'O+',
-                    },
-                    {
-                        label: 'O-',
-                        id: 'O-',
-                    }
+                    staticOptions={[
+                        { label: 'A+', value: 'A+' },
+                        { label: 'A-', value: 'A-' },
+                        { label: 'B+', value: 'B+' },
+                        { label: 'B-', value: 'B-' },
+                        { label: 'AB+', value: 'AB+' },
+                        { label: 'AB-', value: 'AB-' },
+                        { label: 'O+', value: 'O+' },
+                        { label: 'O-', value: 'O-' }
                     ]}
                     required
                 />

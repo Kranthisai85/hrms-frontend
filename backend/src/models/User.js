@@ -54,6 +54,11 @@ module.exports = async (sequelize) => {
         type: DataTypes.STRING,
         allowNull: true,
       },
+      bloodGroup: {
+        type: DataTypes.ENUM('A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'),
+        field: 'blood_group',
+        allowNull: true,
+      },
       status: {
         type: DataTypes.STRING(20),
         allowNull: false,

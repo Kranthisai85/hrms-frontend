@@ -21,7 +21,10 @@ const reasonsRoutes = require('./routes/reasons');
 const app = express();
 
 // Middleware
-app.use(cors());
+app.use(cors({
+  origin: ['http://localhost:3000', 'http://82.112.236.201', 'http://localhost:3001', 'https://pss.pacehrm.com']
+}));
+
 app.use(express.json());
 app.use(fileUpload({
   limits: { fileSize: 50 * 1024 * 1024 }, // 50MB max file size
