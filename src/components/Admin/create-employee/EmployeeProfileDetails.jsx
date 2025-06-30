@@ -13,6 +13,7 @@ export default function EmployeeProfileDetails({
     employee,
     darkMode,
     onSave,
+    onCancel
 }) {
 
     const [activeTab, setActiveTab] = useState('org');
@@ -59,27 +60,29 @@ export default function EmployeeProfileDetails({
                         employee={employee}
                         onSave={onSave}
                         darkMode={darkMode}
+                        onCancel={onCancel}
                     />
                 )}
                 {activeTab === 'personal' && (
-                    <PersonalDetailsForm employee={employee} onSave={onSave} />
+                    <PersonalDetailsForm employee={employee} onSave={onSave} onCancel={onCancel} />
                 )}
                 {activeTab === 'family' && (
-                    <FamilyDetailsForm employee={employee} onSave={onSave} />
+                    <FamilyDetailsForm employee={employee} onSave={onSave} onCancel={onCancel} />
                 )}
                 {activeTab === 'bank' && (
-                    <BankDetailsForm employee={employee} onSave={onSave} />
+                    <BankDetailsForm employee={employee} onSave={onSave} onCancel={onCancel} />
                 )}
                 {activeTab === 'educational' && (
-                    <QualificationDetailsForm employee={employee} onSave={onSave} />
+                    <QualificationDetailsForm employee={employee} onSave={onSave} onCancel={onCancel} />
                 )}
                 {activeTab === 'professional' && (
-                    <ProfessionalDetailsForm employee={employee} onSave={onSave} />
+                    <ProfessionalDetailsForm employee={employee} onSave={onSave} onCancel={onCancel} />
                 )}
                 {activeTab === 'documents' && (
                     <DocumentsTab
                         uploadedDocuments={uploadedDocuments}
                         setIsUploadModalOpen={setIsUploadModalOpen}
+                        onCancel={onCancel}
                     />
                 )}
             </div>
@@ -87,6 +90,7 @@ export default function EmployeeProfileDetails({
                 isOpen={isUploadModalOpen}
                 onClose={() => setIsUploadModalOpen(false)}
                 onUpload={handleDocumentUpload}
+                onCancel={onCancel}
             />
         </div>
     );

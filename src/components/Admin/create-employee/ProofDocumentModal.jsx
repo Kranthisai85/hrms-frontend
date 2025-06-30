@@ -1,7 +1,7 @@
 import { X } from 'lucide-react';
 import { useState } from 'react';
 
-export function ProofDocumentModal({ isOpen, onClose, onUpload }) {
+export function ProofDocumentModal({ isOpen, onClose, onUpload, onCancel }) {
     const [selectedDocument, setSelectedDocument] = useState('');
     const [file, setFile] = useState(null);
     const [comment, setComment] = useState('');
@@ -88,6 +88,12 @@ export function ProofDocumentModal({ isOpen, onClose, onUpload }) {
                         className="w-full bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
                     >
                         Upload
+                    </button>
+                    <button
+                        onClick={onCancel}
+                        className="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
+                    >
+                        Cancel
                     </button>
                 </div>
             </div>

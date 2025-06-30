@@ -31,7 +31,7 @@ export default function Employee({ darkMode }) {
   }, []);
 
   const filteredEmployees = employees.filter(employee =>
-    (employee.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (employee.user.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       employee.id?.toString().toLowerCase().includes(searchTerm.toLowerCase())) &&
 
     (status === 'All' || employee.employmentStatus === status) &&
@@ -319,7 +319,7 @@ export default function Employee({ darkMode }) {
               </thead>
               <tbody>
                 {currentEmployees.map((employee, index) => (
-                  <tr key={employee.id} className={`border-b ${darkMode ? 'hover:bg-[#3C3C3C] border-[#4C4C4C]' : 'hover:bg-gray-50 border-gray-200'}`}>
+                  <tr key={employee.id} className={`border-b ${darkMode ? 'hover:bg-[#3C3C3C] border-[#4C4C4C]' : 'hover:bg-gray-50 border-gray-200'} hover:cursor-pointer`} onClick={() => handleEdit(employee)}>
                     <td className="px-4 py-2">{(currentPage - 1) * itemsPerPage + index + 1}</td>
                     <td className="px-4 py-2">{employee.employeeId}</td>
                     <td className="px-4 py-2">{`${employee.user.name} ${employee.user.lastName != undefined ? employee.user.lastName : ''}`}</td>

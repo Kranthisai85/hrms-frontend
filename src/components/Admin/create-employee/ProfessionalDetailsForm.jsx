@@ -2,7 +2,7 @@ import { PlusCircle } from 'lucide-react';
 import { useCallback, useState } from 'react';
 import FloatingInput from '../FloatingInput.jsx';
 
-export function ProfessionalDetailsForm({ employee, onSave }) {
+export function ProfessionalDetailsForm({ employee, onSave, onCancel }) {
     const initialFormData = {
         isFresher: employee?.isFresher || false,
         experiences: employee?.experiences || [],
@@ -140,6 +140,12 @@ export function ProfessionalDetailsForm({ employee, onSave }) {
                     className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
                 >
                     {employee ? 'Update' : 'Save'}
+                </button>
+                <button
+                    onClick={onCancel}
+                    className="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
+                >
+                    Cancel
                 </button>
             </div>
         </div>

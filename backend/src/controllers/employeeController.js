@@ -86,9 +86,9 @@ exports.createEmployee = async (req, res) => {
           aadharNumber: aadharNumber,
           email: officialEmail,
           invite_sent: inviteSent,
-          confirmation_date: confirmationDate || null,
-          resignation_date: resignationDate || null,
-          relieved_date: relievedDate || null,
+          confirmationDate: confirmationDate || null,
+          resignationDate: resignationDate || null,
+          relievedDate: relievedDate || null,
           reason: reason ? parseInt(reason) : null,
         },
         { transaction: t }
@@ -169,7 +169,7 @@ exports.getEmployee = async (req, res) => {
       include: [{
         model: User,
         as: 'user',
-        attributes: ['id', 'firstName', 'lastName', 'email', 'role', 'status']
+        attributes: ['id', 'name', 'lastName', 'email', 'role', 'status', 'phone', 'date_of_birth', 'gender', 'blood_group']
       }]
     });
 
@@ -248,7 +248,7 @@ exports.updateEmployee = async (req, res) => {
         include: [{
           model: User,
           as: 'user',
-          attributes: ['id', 'firstName', 'lastName', 'email', 'role', 'status']
+          attributes: ['id', 'name', 'lastName', 'email', 'role', 'status', 'phone', 'date_of_birth', 'gender', 'blood_group']
         }],
         transaction: t
       });
@@ -360,7 +360,7 @@ exports.importEmployees = async (req, res) => {
           include: [{
             model: User,
             as: 'user',
-            attributes: ['id', 'firstName', 'lastName', 'email', 'role', 'status']
+            attributes: ['id', 'name', 'lastName', 'email', 'role', 'status', 'phone', 'date_of_birth', 'gender', 'blood_group']
           }],
           transaction: t
         });
@@ -400,7 +400,7 @@ exports.exportEmployees = async (req, res) => {
       include: [{
         model: User,
         as: 'user',
-        attributes: ['firstName', 'lastName', 'email', 'role', 'status']
+        attributes: ['id', 'name', 'lastName', 'email', 'role', 'status', 'phone', 'date_of_birth', 'gender', 'blood_group']
       }]
     });
 

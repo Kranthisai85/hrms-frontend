@@ -12,7 +12,7 @@ import {
 import FloatingInput from '../FloatingInput.jsx';
 import SearchableSelect from '../SearchableSelect.jsx';
 
-export function OrgDetailsForm({ employee, onSave, darkMode }) {
+export function OrgDetailsForm({ employee, onSave, darkMode, onCancel }) {
     const initialFormData = {
         empCode: employee?.employeeId || '',
         name: employee?.user?.name || '',
@@ -31,7 +31,7 @@ export function OrgDetailsForm({ employee, onSave, darkMode }) {
         mobileNumber: employee?.user.phone || '', // Not present; adjust if available elsewhere
         personalEmail: employee?.user.email || '', // Not present; adjust if available elsewhere
         officialEmail: employee?.email || '',
-        bloodGroup: employee?.bloodGroup || '', // Not present; stays as is
+        bloodGroup: employee?.user?.blood_group || '', // Not present; stays as is
         inviteSent: employee?.inviteSent || false,
         confirmationDate: employee?.confirmationDate || '',
         resignationDate: employee?.resignationDate || '',
@@ -40,6 +40,7 @@ export function OrgDetailsForm({ employee, onSave, darkMode }) {
         aadhaarNo: employee?.aadharNumber || '',
         pan: employee?.panNumber || '',
     };
+
 
 
     const [formData, setFormData] = useState(initialFormData);
@@ -391,6 +392,12 @@ export function OrgDetailsForm({ employee, onSave, darkMode }) {
                     className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
                 >
                     {employee ? 'Update ' : 'Create '} {"Employee"}
+                </button>
+                <button
+                    onClick={onCancel}
+                    className="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
+                >
+                    Cancel
                 </button>
             </div>
         </div>
