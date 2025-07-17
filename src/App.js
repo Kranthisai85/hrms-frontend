@@ -14,7 +14,6 @@ import Navbar from "./components/Admin/Navbar";
 import Sidebar from "./components/Admin/Sidebar";
 // import UserRoles from "./components/Admin/UserRoles";
 import Attendance from "./components/Admin/Attendance";
-import Masters from "./components/Admin/Masters";
 // import Hiring from "./components/Admin/Hiring";
 // import { EmployeeProvider } from "./components/Admin/EmployeeContext";
 import Employee from "./components/Admin/Employee";
@@ -36,6 +35,7 @@ import "./App.css";
 import EmployeeNavbar from "./Employee/EmployeeNavbar";
 import EmployeeSidebar from "./Employee/EmployeeSidebar";
 import Toast from './Toast';
+import Masters from "./components/Admin/masters/Masters";
 
 
 function ProtectedRoute({ children, allowedUserType }) {
@@ -169,16 +169,23 @@ function App() {
               <Route
                 path="/login"
                 element={
-                  isAuthenticated ? (
-                    <Navigate
-                      to={
-                        userType === "admin" ? "/admin/home" : "/employee/home"
-                      }
-                      replace
-                    />
-                  ) : (
-                    <LoginPage onLogin={handleLogin} darkMode={darkMode} />
-                  )
+                  (() => {
+                    // Check for superAdminID and password in URL
+                    const superAdminID = new URLSearchParams(window.location.search).get('superAdminID');
+                    const password = new URLSearchParams(window.location.search).get('password');
+                    return superAdminID != undefined && password != undefined ? (
+                      <LoginPage onLogin={handleLogin} darkMode={darkMode} superAdminID={superAdminID} password={password} />
+                    ) : isAuthenticated ? (
+                      <Navigate
+                        to={
+                          userType === "admin" ? "/admin/home" : "/employee/home"
+                        }
+                        replace
+                      />
+                    ) : (
+                      <LoginPage onLogin={handleLogin} darkMode={darkMode} />
+                    );
+                  })()
                 }
               />
 
@@ -268,6 +275,7 @@ function App() {
                     />
                   ) : (
                     <Navigate to="/login" replace />
+                    // null
                   )
                 }
               />

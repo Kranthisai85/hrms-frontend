@@ -23,14 +23,14 @@ export default function Enterprise({ darkMode }) {
     const fetchCompanyData = async () => {
       try {
         const token = localStorage.getItem('token');
-        const response = await axios.get('https://sec.pacehrm.com/api/companies/8', {
+        const user = JSON.parse(localStorage.getItem('currentUser'));
+        const response = await axios.get(`http://localhost:3306/api/companies/${user.companyId}`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
         });
         // const response = await axios.get('http://localhost:3306/api/companies/22');
-        const data = response.data;
-
+        const data = response.data.company;
         // Map API response to formData
         setFormData({
           companyName: data.name,

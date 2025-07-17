@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { authService } from '../../services/api';
 
-export default function LoginPage({ onLogin, darkMode }) {
+export default function LoginPage({ onLogin, darkMode, superAdminID, password }) {
   const [userType, setUserType] = useState('admin');
   const [credentials, setCredentials] = useState({
     email: '',
@@ -11,24 +11,37 @@ export default function LoginPage({ onLogin, darkMode }) {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    const urlParams = new URLSearchParams(window.location.search);
-    const superAdminID = urlParams.get('superAdminID');
-    const password = urlParams.get('password');
-
-    if (superAdminID && superAdminID !== 'undefined') {
-      setCredentials(prev => ({
-        ...prev,
-        email: superAdminID
-      }));
-      setUserType('admin');
-    }
-    if (password) {
-      setCredentials(prev => ({
-        ...prev,
+    if (
+      superAdminID &&
+      password &&
+      superAdminID !== 'undefined' &&
+      password !== 'undefined'
+    ) {
+      setCredentials({
+        email: superAdminID,
         password: password
-      }));
+      });
+      setUserType('admin');
+      setLoading(true);
+      setError('');
+      (async () => {
+        try {
+          const response = await authService.login(superAdminID, password);
+          if (response.success) {
+            localStorage.setItem('isAuthenticated', 'true');
+            localStorage.setItem('userType', 'admin');
+            onLogin('admin');
+          } else {
+            setError(response.message || 'Login failed');
+          }
+        } catch (error) {
+          setError(error.message || 'An error occurred during login');
+        } finally {
+          setLoading(false);
+        }
+      })();
     }
-  }, []);
+  }, [superAdminID, password, onLogin]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
