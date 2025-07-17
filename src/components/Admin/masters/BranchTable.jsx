@@ -28,7 +28,6 @@ export default function BranchTable({ darkMode, branches, searchTerm, setSearchT
       const response = await branchService.createBranch({
         name: newBranch.name,
         address: newBranch.address || 'No Address Provided',
-        companyId: 1
       });
       if (response.success) {
         setBranches([...branches, response.data]);

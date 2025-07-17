@@ -27,7 +27,6 @@ export default function DepartmentTable({ darkMode, departments, searchTerm, set
       setLocalLoading(true);
       const response = await departmentService.createDepartment({
         name: newDepartment.name,
-        companyId: 1
       });
       if (response.success) {
         setDepartments([...departments, response.data]);
