@@ -24,7 +24,7 @@ export default function Enterprise({ darkMode }) {
       try {
         const token = localStorage.getItem('token');
         const user = JSON.parse(localStorage.getItem('currentUser'));
-        const response = await axios.get(`http://localhost:3306/api/companies/${user.companyId}`, {
+        const response = await axios.get(`https://admin.pacehrm.com/api/companies/${user.companyId}`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
