@@ -1,51 +1,40 @@
 import { PlusCircle } from 'lucide-react';
-import { useCallback, useState } from 'react';
-import { v4 as uuidv4 } from 'uuid'; // Import uuid for unique keys
+import { useCallback } from 'react';
+import { v4 as uuidv4 } from 'uuid';
 import FloatingInput from '../FloatingInput.jsx';
 import SearchableSelect from '../SearchableSelect.jsx';
 
-export function FamilyDetailsForm({ employee, onSave, onCancel }) {
-    // Initialize form data with employee data or defaults
-    const initialFormData = {
-        isOrphan: employee?.isOrphan || false,
-        familyMembers: employee?.familyMembers?.map((member) => ({
-            ...member,
-            id: member.id || uuidv4(), // Ensure each family member has a unique ID
-        })) || [],
+export function FamilyDetailsForm({ employeeData, setEmployeeData, onSaveSection, loading, feedback, darkMode, onCancel }) {
+    // Ensure familyMembers is always an array
+    const formData = {
+        ...employeeData,
+        familyMembers: employeeData.familyMembers || []
     };
+    // (You can add validation logic here if needed)
 
-    const [formData, setFormData] = useState(initialFormData);
-    const [formErrors, setFormErrors] = useState({});
-
-    // Handle checkbox changes (e.g., isOrphan)
     const handleInputChange = useCallback((e) => {
         const { name, checked } = e.target;
-        setFormData((prev) => ({
+        setEmployeeData(prev => ({
             ...prev,
             [name]: checked,
-            // Clear family members if isOrphan is checked
             familyMembers: checked ? [] : prev.familyMembers,
         }));
-        // Clear errors when isOrphan changes
-        setFormErrors({});
-    }, []);
+    }, [setEmployeeData]);
 
-    // Handle changes to nested family member fields
     const handleNestedInputChange = useCallback((index, field, value) => {
-        setFormData((prev) => ({
+        setEmployeeData(prev => ({
             ...prev,
             familyMembers: prev.familyMembers.map((item, i) =>
                 i === index ? { ...item, [field]: value } : item
             ),
         }));
-    }, []);
+    }, [setEmployeeData]);
 
-    // Add a new family member with a unique ID
     const handleAddItem = useCallback(() => {
-        setFormData((prev) => ({
+        setEmployeeData(prev => ({
             ...prev,
             familyMembers: [
-                ...prev.familyMembers,
+                ...(prev.familyMembers || []),
                 {
                     id: uuidv4(),
                     name: '',
@@ -57,66 +46,22 @@ export function FamilyDetailsForm({ employee, onSave, onCancel }) {
                 },
             ],
         }));
-    }, []);
+    }, [setEmployeeData]);
 
-    // Remove a family member by index
     const handleRemoveItem = useCallback((index) => {
-        setFormData((prev) => ({
+        setEmployeeData(prev => ({
             ...prev,
             familyMembers: prev.familyMembers.filter((_, i) => i !== index),
         }));
-        // Clear errors for the removed member
-        setFormErrors((prev) => {
-            const newErrors = { ...prev };
-            if (newErrors.familyMembers) {
-                newErrors.familyMembers = newErrors.familyMembers.filter((_, i) => i !== index);
-            }
-            return newErrors;
-        });
-    }, []);
+    }, [setEmployeeData]);
 
-    // Validate form data
-    const validateForm = useCallback(() => {
-        const errors = { familyMembers: [] };
-        if (!formData.isOrphan && formData.familyMembers.length === 0) {
-            errors.familyMembersGeneral = 'At least one family member (Father, Mother, Spouse, or Child) is required if not orphan.';
-        }
-
-        // Validate each family member
-        formData.familyMembers.forEach((member, index) => {
-            const memberErrors = {};
-            if (!member.name) memberErrors.name = 'Name is required';
-            if (!member.dateOfBirth) memberErrors.dateOfBirth = 'Date of Birth is required';
-            if (!member.relationship) memberErrors.relationship = 'Relationship is required';
-            if (!member.gender) memberErrors.gender = 'Gender is required';
-            if (member.nominee && !member.sharePercentage) {
-                memberErrors.sharePercentage = 'Share Percentage is required for nominees';
-            }
-            if (Object.keys(memberErrors).length > 0) {
-                errors.familyMembers[index] = memberErrors;
-            }
-        });
-
-        // Return empty object if no errors
-        return Object.keys(errors.familyMembers).length > 0 || errors.familyMembersGeneral
-            ? errors
-            : {};
-    }, [formData]);
-
-    // Handle form submission
     const handleSave = () => {
-        const errors = validateForm();
-        if (Object.keys(errors).length === 0) {
-            // Remove temporary IDs before saving
-            const cleanedFormData = {
-                ...formData,
-                familyMembers: formData.familyMembers.map(({ id, ...rest }) => rest),
-            };
-            onSave(cleanedFormData);
-            setFormErrors({});
-        } else {
-            setFormErrors(errors);
-        }
+        // Only send family section fields
+        const sectionData = {
+            isOrphan: formData.isOrphan,
+            familyMembers: (formData.familyMembers || []).map(({ id, ...rest }) => rest),
+        };
+        onSaveSection(sectionData);
     };
 
     return (
@@ -135,9 +80,9 @@ export function FamilyDetailsForm({ employee, onSave, onCancel }) {
             </div>
             {!formData.isOrphan && (
                 <div>
-                    {formErrors.familyMembersGeneral && (
-                        <p className="text-red-500 text-sm">{formErrors.familyMembersGeneral}</p>
-                    )}
+                    {/* The original code had formErrors, but it's removed from the new_code.
+                        Assuming the validation logic is now handled by onSaveSection or removed.
+                        For now, we'll keep the structure but remove the error display. */}
                     {formData.familyMembers.map((member, index) => (
                         <div key={member.id} className="p-4 bg-gray-50 rounded-lg mb-4">
                             <div className="grid grid-cols-1 md:grid-cols-6 gap-3">
@@ -147,7 +92,7 @@ export function FamilyDetailsForm({ employee, onSave, onCancel }) {
                                     value={member.name}
                                     onChange={(e) => handleNestedInputChange(index, 'name', e.target.value)}
                                     required
-                                    error={formErrors.familyMembers?.[index]?.name}
+                                    // error={formErrors.familyMembers?.[index]?.name} // Removed as per new_code
                                 />
                                 <FloatingInput
                                     id={`familyDOB-${index}`}
@@ -156,7 +101,7 @@ export function FamilyDetailsForm({ employee, onSave, onCancel }) {
                                     value={member.dateOfBirth}
                                     onChange={(e) => handleNestedInputChange(index, 'dateOfBirth', e.target.value)}
                                     required
-                                    error={formErrors.familyMembers?.[index]?.dateOfBirth}
+                                    // error={formErrors.familyMembers?.[index]?.dateOfBirth} // Removed as per new_code
                                 />
                                 <SearchableSelect
                                     id={`familyRelationship-${index}`}
@@ -170,7 +115,7 @@ export function FamilyDetailsForm({ employee, onSave, onCancel }) {
                                         { value: 'Child', label: 'Child' },
                                     ]}
                                     required
-                                    error={formErrors.familyMembers?.[index]?.relationship}
+                                    // error={formErrors.familyMembers?.[index]?.relationship} // Removed as per new_code
                                 />
                                 <SearchableSelect
                                     id={`familyGender-${index}`}
@@ -183,7 +128,7 @@ export function FamilyDetailsForm({ employee, onSave, onCancel }) {
                                         { value: 'other', label: 'Other' },
                                     ]}
                                     required
-                                    error={formErrors.familyMembers?.[index]?.gender}
+                                    // error={formErrors.familyMembers?.[index]?.gender} // Removed as per new_code
                                 />
                                 <div className="flex items-center space-x-2">
                                     <input
@@ -205,7 +150,7 @@ export function FamilyDetailsForm({ employee, onSave, onCancel }) {
                                         value={member.sharePercentage}
                                         onChange={(e) => handleNestedInputChange(index, 'sharePercentage', e.target.value)}
                                         required
-                                        error={formErrors.familyMembers?.[index]?.sharePercentage}
+                                        // error={formErrors.familyMembers?.[index]?.sharePercentage} // Removed as per new_code
                                     />
                                 )}
                             </div>
@@ -229,16 +174,21 @@ export function FamilyDetailsForm({ employee, onSave, onCancel }) {
                 <button
                     onClick={handleSave}
                     className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                    disabled={loading}
                 >
-                    {employee ? 'Update' : 'Save'}
+                    {employeeData.id ? 'Update' : 'Save'}
                 </button>
                 <button
                     onClick={onCancel}
                     className="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
+                    disabled={loading}
                 >
                     Cancel
                 </button>
             </div>
+            {feedback && (
+                <div className={`mt-2 ${feedback.type === 'success' ? 'text-green-600' : 'text-red-600'}`}>{feedback.message}</div>
+            )}
         </div>
     );
 }

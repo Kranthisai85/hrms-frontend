@@ -1,36 +1,21 @@
-import { useCallback, useState } from 'react';
+import { useCallback } from 'react';
 import FloatingInput from '../FloatingInput.jsx';
 
-export function BankDetailsForm({ employee, onSave, onCancel }) {
-    const initialFormData = {
-        bankName: employee?.bankName || '',
-        bankAccountNo: employee?.bankAccountNo || '',
-        ifscCode: employee?.ifscCode || '',
-    };
-
-    const [formData, setFormData] = useState(initialFormData);
-    const [formErrors, setFormErrors] = useState({});
+export function BankDetailsForm({ employeeData, setEmployeeData, onSaveSection, loading, feedback, darkMode, onCancel }) {
+    const formData = employeeData;
+    // (You can add validation logic here if needed)
 
     const handleInputChange = useCallback((e) => {
         const { name, value } = e.target;
-        setFormData((prev) => ({ ...prev, [name]: value }));
-    }, []);
-
-    const validateForm = useCallback(() => {
-        const errors = {};
-        if (!formData.bankName) errors.bankName = 'Bank Name is required';
-        if (!formData.bankAccountNo) errors.bankAccountNo = 'Bank Account No is required';
-        if (!formData.ifscCode) errors.ifscCode = 'IFSC Code is required';
-        return errors;
-    }, [formData]);
+        setEmployeeData(prev => ({ ...prev, [name]: value }));
+    }, [setEmployeeData]);
 
     const handleSave = () => {
-        const errors = validateForm();
-        if (Object.keys(errors).length === 0) {
-            onSave(formData);
-        } else {
-            setFormErrors(errors);
-        }
+        // Only send bank section fields
+        const bankFields = ['bankName', 'bankAccountNo', 'ifscCode'];
+        const sectionData = {};
+        bankFields.forEach(f => { if (formData[f] !== undefined) sectionData[f] = formData[f]; });
+        onSaveSection(sectionData);
     };
 
     return (
@@ -42,7 +27,7 @@ export function BankDetailsForm({ employee, onSave, onCancel }) {
                     value={formData.bankName}
                     onChange={handleInputChange}
                     required
-                    error={formErrors.bankName}
+                    error={formData.bankNameError}
                 />
                 <FloatingInput
                     id="bankAccountNo"
@@ -50,7 +35,7 @@ export function BankDetailsForm({ employee, onSave, onCancel }) {
                     value={formData.bankAccountNo}
                     onChange={handleInputChange}
                     required
-                    error={formErrors.bankAccountNo}
+                    error={formData.bankAccountNoError}
                 />
                 <FloatingInput
                     id="ifscCode"
@@ -58,23 +43,28 @@ export function BankDetailsForm({ employee, onSave, onCancel }) {
                     value={formData.ifscCode}
                     onChange={handleInputChange}
                     required
-                    error={formErrors.ifscCode}
+                    error={formData.ifscCodeError}
                 />
             </div>
             <div className="mt-6 flex justify-end space-x-2">
                 <button
                     onClick={handleSave}
                     className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                    disabled={loading}
                 >
-                    {employee ? 'Update' : 'Save'}
+                    {employeeData.id ? 'Update' : 'Save'}
                 </button>
                 <button
                     onClick={onCancel}
                     className="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
+                    disabled={loading}
                 >
                     Cancel
                 </button>
             </div>
+            {feedback && (
+                <div className={`mt-2 ${feedback.type === 'success' ? 'text-green-600' : 'text-red-600'}`}>{feedback.message}</div>
+            )}
         </div>
     );
 }

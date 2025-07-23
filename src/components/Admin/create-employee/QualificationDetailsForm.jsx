@@ -1,56 +1,54 @@
 import { PlusCircle } from 'lucide-react';
-import { useCallback, useState } from 'react';
+import { useCallback } from 'react';
 import FloatingInput from '../FloatingInput.jsx';
 import SearchableSelect from '../SearchableSelect.jsx';
 
-export function QualificationDetailsForm({ employee, onSave, onCancel }) {
-    const initialFormData = {
-        lessThanPrimary: employee?.lessThanPrimary || false,
-        qualifications: employee?.qualifications || [],
+export function QualificationDetailsForm({ employeeData, setEmployeeData, onSaveSection, loading, feedback, darkMode, onCancel }) {
+    // Ensure qualifications is always an array
+    const formData = {
+        ...employeeData,
+        qualifications: employeeData.qualifications || []
     };
-
-    const [formData, setFormData] = useState(initialFormData);
-    const [formErrors, setFormErrors] = useState({});
+    // (You can add validation logic here if needed)
 
     const handleInputChange = useCallback((e) => {
         const { name, checked } = e.target;
-        setFormData((prev) => ({ ...prev, [name]: checked }));
-    }, []);
+        setEmployeeData(prev => ({ ...prev, [name]: checked }));
+    }, [setEmployeeData]);
 
     const handleNestedInputChange = useCallback((index, field, value) => {
-        setFormData((prev) => ({
+        setEmployeeData(prev => ({
             ...prev,
             qualifications: prev.qualifications.map((item, i) =>
                 i === index ? { ...item, [field]: value } : item
             ),
         }));
-    }, []);
+    }, [setEmployeeData]);
 
     const handleAddItem = useCallback(() => {
-        setFormData((prev) => ({
+        setEmployeeData(prev => ({
             ...prev,
             qualifications: [
-                ...prev.qualifications,
+                ...(prev.qualifications || []),
                 { qualification: '', yearOfPassing: '', institution: '' },
             ],
         }));
-    }, []);
+    }, [setEmployeeData]);
 
     const handleRemoveItem = useCallback((index) => {
-        setFormData((prev) => ({
+        setEmployeeData(prev => ({
             ...prev,
             qualifications: prev.qualifications.filter((_, i) => i !== index),
         }));
-    }, []);
+    }, [setEmployeeData]);
 
     const handleSave = () => {
-        const errors = {};
-        // Add validation if needed
-        if (Object.keys(errors).length === 0) {
-            onSave(formData);
-        } else {
-            setFormErrors(errors);
-        }
+        // Only send qualification section fields
+        const sectionData = {
+            lessThanPrimary: formData.lessThanPrimary,
+            qualifications: formData.qualifications,
+        };
+        onSaveSection(sectionData);
     };
 
     return (
@@ -87,7 +85,6 @@ export function QualificationDetailsForm({ employee, onSave, onCancel }) {
                                 { value: 'others', label: 'Others' },
                             ]}
                             required
-                            error={formErrors.qualifications?.[index]?.qualification}
                         />
                         <FloatingInput
                             id={`yearOfPassing-${index}`}
@@ -96,7 +93,6 @@ export function QualificationDetailsForm({ employee, onSave, onCancel }) {
                             value={qualification.yearOfPassing}
                             onChange={(e) => handleNestedInputChange(index, 'yearOfPassing', e.target.value)}
                             required
-                            error={formErrors.qualifications?.[index]?.yearOfPassing}
                         />
                         <FloatingInput
                             id={`institution-${index}`}
@@ -104,7 +100,6 @@ export function QualificationDetailsForm({ employee, onSave, onCancel }) {
                             value={qualification.institution}
                             onChange={(e) => handleNestedInputChange(index, 'institution', e.target.value)}
                             required
-                            error={formErrors.qualifications?.[index]?.institution}
                         />
                     </div>
                     <button
@@ -125,16 +120,21 @@ export function QualificationDetailsForm({ employee, onSave, onCancel }) {
                 <button
                     onClick={handleSave}
                     className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                    disabled={loading}
                 >
-                    {employee ? 'Update' : 'Save'}
+                    {employeeData.id ? 'Update' : 'Save'}
                 </button>
                 <button
                     onClick={onCancel}
                     className="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
+                    disabled={loading}
                 >
                     Cancel
                 </button>
             </div>
+            {feedback && (
+                <div className={`mt-2 ${feedback.type === 'success' ? 'text-green-600' : 'text-red-600'}`}>{feedback.message}</div>
+            )}
         </div>
     );
 }

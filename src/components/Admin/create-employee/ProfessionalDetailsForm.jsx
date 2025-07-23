@@ -1,62 +1,53 @@
 import { PlusCircle } from 'lucide-react';
-import { useCallback, useState } from 'react';
+import { useCallback } from 'react';
 import FloatingInput from '../FloatingInput.jsx';
 
-export function ProfessionalDetailsForm({ employee, onSave, onCancel }) {
-    const initialFormData = {
-        isFresher: employee?.isFresher || false,
-        experiences: employee?.experiences || [],
+export function ProfessionalDetailsForm({ employeeData, setEmployeeData, onSaveSection, loading, feedback, darkMode, onCancel }) {
+    // Ensure experiences is always an array
+    const formData = {
+        ...employeeData,
+        experiences: employeeData.experiences || []
     };
-
-    const [formData, setFormData] = useState(initialFormData);
-    const [formErrors, setFormErrors] = useState({});
+    // (You can add validation logic here if needed)
 
     const handleInputChange = useCallback((e) => {
         const { name, checked } = e.target;
-        setFormData((prev) => ({ ...prev, [name]: checked }));
-    }, []);
+        setEmployeeData(prev => ({ ...prev, [name]: checked }));
+    }, [setEmployeeData]);
 
     const handleNestedInputChange = useCallback((index, field, value) => {
-        setFormData((prev) => ({
+        setEmployeeData(prev => ({
             ...prev,
             experiences: prev.experiences.map((item, i) =>
                 i === index ? { ...item, [field]: value } : item
             ),
         }));
-    }, []);
+    }, [setEmployeeData]);
 
     const handleAddItem = useCallback(() => {
-        setFormData((prev) => ({
+        setEmployeeData(prev => ({
             ...prev,
             experiences: [
-                ...prev.experiences,
+                ...(prev.experiences || []),
                 { companyName: '', designation: '', fromDate: '', toDate: '' },
             ],
         }));
-    }, []);
+    }, [setEmployeeData]);
 
     const handleRemoveItem = useCallback((index) => {
-        setFormData((prev) => ({
+        setEmployeeData(prev => ({
             ...prev,
             experiences: prev.experiences.filter((_, i) => i !== index),
         }));
-    }, []);
-
-    const validateForm = useCallback(() => {
-        const errors = {};
-        if (!formData.isFresher && formData.experiences.length === 0) {
-            errors.experiences = 'At least one experience is required if not a fresher.';
-        }
-        return errors;
-    }, [formData]);
+    }, [setEmployeeData]);
 
     const handleSave = () => {
-        const errors = validateForm();
-        if (Object.keys(errors).length === 0) {
-            onSave(formData);
-        } else {
-            setFormErrors(errors);
-        }
+        // Only send professional section fields
+        const sectionData = {
+            isFresher: formData.isFresher,
+            experiences: formData.experiences,
+        };
+        onSaveSection(sectionData);
     };
 
     return (
@@ -89,7 +80,6 @@ export function ProfessionalDetailsForm({ employee, onSave, onCancel }) {
                                     value={experience.companyName}
                                     onChange={(e) => handleNestedInputChange(index, 'companyName', e.target.value)}
                                     required
-                                    error={formErrors.experiences?.[index]?.companyName}
                                 />
                                 <FloatingInput
                                     id={`designation-${index}`}
@@ -97,7 +87,6 @@ export function ProfessionalDetailsForm({ employee, onSave, onCancel }) {
                                     value={experience.designation}
                                     onChange={(e) => handleNestedInputChange(index, 'designation', e.target.value)}
                                     required
-                                    error={formErrors.experiences?.[index]?.designation}
                                 />
                                 <FloatingInput
                                     id={`fromDate-${index}`}
@@ -106,7 +95,6 @@ export function ProfessionalDetailsForm({ employee, onSave, onCancel }) {
                                     value={experience.fromDate}
                                     onChange={(e) => handleNestedInputChange(index, 'fromDate', e.target.value)}
                                     required
-                                    error={formErrors.experiences?.[index]?.fromDate}
                                 />
                                 <FloatingInput
                                     id={`toDate-${index}`}
@@ -115,7 +103,6 @@ export function ProfessionalDetailsForm({ employee, onSave, onCancel }) {
                                     value={experience.toDate}
                                     onChange={(e) => handleNestedInputChange(index, 'toDate', e.target.value)}
                                     required
-                                    error={formErrors.experiences?.[index]?.toDate}
                                 />
                             </div>
                             <button
@@ -138,16 +125,21 @@ export function ProfessionalDetailsForm({ employee, onSave, onCancel }) {
                 <button
                     onClick={handleSave}
                     className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                    disabled={loading}
                 >
-                    {employee ? 'Update' : 'Save'}
+                    {employeeData.id ? 'Update' : 'Save'}
                 </button>
                 <button
                     onClick={onCancel}
                     className="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
+                    disabled={loading}
                 >
                     Cancel
                 </button>
             </div>
+            {feedback && (
+                <div className={`mt-2 ${feedback.type === 'success' ? 'text-green-600' : 'text-red-600'}`}>{feedback.message}</div>
+            )}
         </div>
     );
 }

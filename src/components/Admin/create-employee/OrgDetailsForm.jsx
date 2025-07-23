@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { useCallback } from 'react';
 import {
     branchService,
     categoryService,
@@ -12,89 +12,28 @@ import {
 import FloatingInput from '../FloatingInput.jsx';
 import SearchableSelect from '../SearchableSelect.jsx';
 
-export function OrgDetailsForm({ employee, onSave, darkMode, onCancel }) {
-    const initialFormData = {
-        empCode: employee?.employeeId || '',
-        name: employee?.user?.name || '',
-        gender: employee?.user.gender || '', // Not present in employee object; stays as is
-        dateOfBirth: employee?.user.date_of_birth || '', // Not present in employee object; stays as is
-        branch: employee?.branchId || '',
-        designation: employee?.designationId || '',
-        department: employee?.departmentId || '',
-        subDepartment: employee?.subDepartmentId || '',
-        grade: employee?.gradeId || '',
-        category: employee?.categoryId || '',
-        reportingManager: employee?.reportingManagerId || '',
-        employeeType: employee?.employmentType || '',
-        employmentStatus: employee?.employmentStatus || '',
-        dateOfJoin: employee?.joiningDate || '',
-        mobileNumber: employee?.user.phone || '', // Not present; adjust if available elsewhere
-        personalEmail: employee?.user.email || '', // Not present; adjust if available elsewhere
-        officialEmail: employee?.email || '',
-        bloodGroup: employee?.user?.blood_group || '', // Not present; stays as is
-        inviteSent: employee?.inviteSent || false,
-        confirmationDate: employee?.confirmationDate || '',
-        resignationDate: employee?.resignationDate || '',
-        relievedDate: employee?.relievedDate || '',
-        reason: employee?.reason || '',
-        aadhaarNo: employee?.aadharNumber || '',
-        pan: employee?.panNumber || '',
-    };
-
-
-
-    const [formData, setFormData] = useState(initialFormData);
-    const [formErrors, setFormErrors] = useState({});
+export function OrgDetailsForm({ employeeData, setEmployeeData, onSaveSection, loading, feedback, darkMode, onCancel }) {
+    // Use employeeData for form values
+    const formData = employeeData;
+    const formErrors = {};
+    // (You can add validation logic here if needed)
 
     const handleInputChange = useCallback((e) => {
         const { name, value, type, checked } = e.target;
-        setFormData((prev) => ({
+        setEmployeeData(prev => ({
             ...prev,
             [name]: type === 'checkbox' ? checked : value,
         }));
-    }, []);
-
-
-    const validateForm = useCallback(() => {
-        const errors = {};
-        if (!formData.empCode) errors.empCode = 'Employee Code is required';
-        if (!formData.name) errors.name = 'Name is required';
-        if (!formData.gender) errors.gender = 'Gender is required';
-        if (!formData.dateOfBirth) errors.dateOfBirth = 'Date of Birth is required';
-        if (!formData.branch) errors.branch = 'Branch is required';
-        if (!formData.designation) errors.designation = 'Designation is required';
-        if (!formData.department) errors.department = 'Department is required';
-        if (!formData.subDepartment) errors.subDepartment = 'Sub Department is required';
-        if (!formData.grade) errors.grade = 'Grade is required';
-        if (!formData.category) errors.category = 'Category is required';
-        if (!formData.reportingManager) errors.reportingManager = 'Reporting Manager is required';
-        if (!formData.employeeType) errors.employeeType = 'Employee Type is required';
-        if (!formData.employmentStatus) errors.employmentStatus = 'Employment Status is required';
-        if (!formData.dateOfJoin) errors.dateOfJoin = 'Date of Join is required';
-        if (formData.employmentStatus === 'confirmed' && !formData.confirmationDate) {
-            errors.confirmationDate = 'Confirmation Date is required';
-        }
-        if (
-            (formData.employmentStatus === 'resigned' || formData.employmentStatus === 'relieved') &&
-            !formData.resignationDate
-        ) {
-            errors.resignationDate = 'Date of Resignation is required';
-        }
-        if (formData.employmentStatus === 'relieved' && !formData.relievedDate) {
-            errors.relievedDate = 'Date of Relieved is required';
-        }
-        if (!formData.mobileNumber) errors.mobileNumber = 'Mobile Number is required';
-        if (!formData.officialEmail) errors.officialEmail = 'Official Email is required';
-        return errors;
-    }, [formData]);
+    }, [setEmployeeData]);
 
     const handleSave = () => {
-        const errors = validateForm();
-        if (Object.keys(errors).length === 0) {
-            onSave(formData);
-        } else {
-            setFormErrors(errors);
-        }
+        // Only send org section fields
+        const orgFields = [
+            'empCode','name','gender','dateOfBirth','branch','designation','department','subDepartment','grade','category','reportingManager','employeeType','employmentStatus','dateOfJoin','mobileNumber','personalEmail','officialEmail','bloodGroup','inviteSent','confirmationDate','resignationDate','relievedDate','reason','aadhaarNo','pan'
+        ];
+        const sectionData = {};
+        orgFields.forEach(f => { if (formData[f] !== undefined) sectionData[f] = formData[f]; });
+        onSaveSection(sectionData);
     };
 
     return (
@@ -390,16 +329,21 @@ export function OrgDetailsForm({ employee, onSave, darkMode, onCancel }) {
                 <button
                     onClick={handleSave}
                     className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                    disabled={loading}
                 >
-                    {employee ? 'Update ' : 'Create '} {"Employee"}
+                    {employeeData.id ? 'Update ' : 'Create '} {"Employee"}
                 </button>
                 <button
                     onClick={onCancel}
                     className="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
+                    disabled={loading}
                 >
                     Cancel
                 </button>
             </div>
+            {feedback && (
+                <div className={`mt-2 ${feedback.type === 'success' ? 'text-green-600' : 'text-red-600'}`}>{feedback.message}</div>
+            )}
         </div>
     );
 }

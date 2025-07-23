@@ -1,27 +1,20 @@
 import { Upload } from 'lucide-react';
-import { useCallback, useState } from 'react';
+import { useCallback } from 'react';
 import FloatingInput from '../FloatingInput.jsx';
 
-export function PersonalDetailsForm({ employee, onSave, onCancel }) {
-    const initialFormData = {
-        photo: employee?.photo || null,
-        address: employee?.address || '',
-
-        emergencyContact: {
-            name: employee?.emergencyContact?.name || '',
-            number: employee?.emergencyContact?.number || '',
-            relationship: employee?.emergencyContact?.relationship || '',
-        },
+export function PersonalDetailsForm({ employeeData, setEmployeeData, onSaveSection, loading, feedback, darkMode, onCancel }) {
+    // Ensure emergencyContact is always defined
+    const formData = {
+        ...employeeData,
+        emergencyContact: employeeData.emergencyContact || { name: '', number: '', relationship: '' }
     };
-
-    const [formData, setFormData] = useState(initialFormData);
-    const [formErrors, setFormErrors] = useState({});
+    // (You can add validation logic here if needed)
 
     const handleInputChange = useCallback((e) => {
         const { name, value } = e.target;
         if (name.includes('.')) {
             const [parent, child] = name.split('.');
-            setFormData((prev) => ({
+            setEmployeeData(prev => ({
                 ...prev,
                 [parent]: {
                     ...prev[parent],
@@ -29,35 +22,31 @@ export function PersonalDetailsForm({ employee, onSave, onCancel }) {
                 },
             }));
         } else {
-            setFormData((prev) => ({ ...prev, [name]: value }));
+            setEmployeeData(prev => ({ ...prev, [name]: value }));
         }
-    }, []);
+    }, [setEmployeeData]);
 
     const handlePhotoUpload = useCallback((e) => {
         const file = e.target.files[0];
         if (file) {
             const reader = new FileReader();
             reader.onloadend = () => {
-                setFormData((prev) => ({ ...prev, photo: reader.result }));
+                setEmployeeData(prev => ({ ...prev, photo: reader.result }));
             };
             reader.readAsDataURL(file);
         }
-    }, []);
-
-    const validateForm = useCallback(() => {
-        const errors = {};
-        if (!formData.aadhaarNo) errors.aadhaarNo = 'Aadhaar No is required';
-        if (!formData.pan) errors.pan = 'PAN is required';
-        return errors;
-    }, [formData]);
+    }, [setEmployeeData]);
 
     const handleSave = () => {
-        const errors = validateForm();
-        if (Object.keys(errors).length === 0) {
-            onSave(formData);
-        } else {
-            setFormErrors(errors);
-        }
+        // Only send personal and address fields
+        const personalFields = [
+            'photo', 'maritalStatus', 'emergencyContactName', 'emergencyContactNumber', 'emergencyContactRelationship',
+            'address', 'city', 'state', 'country', 'pincode',
+            'permanentAddress', 'permanentCity', 'permanentState', 'permanentCountry', 'permanentPincode'
+        ];
+        const sectionData = {};
+        personalFields.forEach(f => { if (formData[f] !== undefined) sectionData[f] = formData[f]; });
+        onSaveSection(sectionData);
     };
 
     return (
@@ -97,33 +86,25 @@ export function PersonalDetailsForm({ employee, onSave, onCancel }) {
                         label="House Number/Street/Flat No"
                         value={formData.presentHouseNumber || ''}
                         onChange={handleInputChange}
-                        error={formErrors.presentHouseNumber}
-                    // darkMode={darkMode}
                     />
                     <FloatingInput
                         id="presentCity"
                         label="City"
                         value={formData.presentCity || ''}
                         onChange={handleInputChange}
-                        error={formErrors.presentCity}
-                    // darkMode={darkMode}
                     />
                     <FloatingInput
                         id="presentState"
                         label="State"
                         value={formData.presentState || ''}
                         onChange={handleInputChange}
-                        error={formErrors.presentState}
-                    // darkMode={darkMode}
                     />
                     <FloatingInput
                         id="presentPincode"
                         label="Pincode"
                         value={formData.presentPincode || ''}
                         onChange={handleInputChange}
-                        error={formErrors.presentPincode}
                         type="text" // Using text to allow flexibility, can change to 'number' if only digits are needed
-                    // darkMode={darkMode}
                     />
                 </div>
             </div>
@@ -137,33 +118,25 @@ export function PersonalDetailsForm({ employee, onSave, onCancel }) {
                         label="House Number/Street/Flat No"
                         value={formData.permanentHouseNumber || ''}
                         onChange={handleInputChange}
-                        error={formErrors.permanentHouseNumber}
-                    // darkMode={darkMode}
                     />
                     <FloatingInput
                         id="permanentCity"
                         label="City"
                         value={formData.permanentCity || ''}
                         onChange={handleInputChange}
-                        error={formErrors.permanentCity}
-                    // darkMode={darkMode}
                     />
                     <FloatingInput
                         id="permanentState"
                         label="State"
                         value={formData.permanentState || ''}
                         onChange={handleInputChange}
-                        error={formErrors.permanentState}
-                    // darkMode={darkMode}
                     />
                     <FloatingInput
                         id="permanentPincode"
                         label="Pincode"
                         value={formData.permanentPincode || ''}
                         onChange={handleInputChange}
-                        error={formErrors.permanentPincode}
                         type="text" // Using text, can change to 'number' if needed
-                    // darkMode={darkMode}
                     />
                 </div>
             </div>
@@ -176,7 +149,6 @@ export function PersonalDetailsForm({ employee, onSave, onCancel }) {
                         name="emergencyContact.name"
                         value={formData.emergencyContact.name}
                         onChange={handleInputChange}
-                        error={formErrors.emergencyContact?.name}
                     />
                     <FloatingInput
                         id="emergencyContactNumber"
@@ -184,7 +156,6 @@ export function PersonalDetailsForm({ employee, onSave, onCancel }) {
                         name="emergencyContact.number"
                         value={formData.emergencyContact.number}
                         onChange={handleInputChange}
-                        error={formErrors.emergencyContact?.number}
                     />
                     <FloatingInput
                         id="emergencyContactRelationship"
@@ -192,7 +163,6 @@ export function PersonalDetailsForm({ employee, onSave, onCancel }) {
                         name="emergencyContact.relationship"
                         value={formData.emergencyContact.relationship}
                         onChange={handleInputChange}
-                        error={formErrors.emergencyContact?.relationship}
                     />
                 </div>
             </div>
@@ -200,16 +170,21 @@ export function PersonalDetailsForm({ employee, onSave, onCancel }) {
                 <button
                     onClick={handleSave}
                     className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                    disabled={loading}
                 >
-                    {employee ? 'Update' : 'Save'}
+                    {employeeData.id ? 'Update' : 'Save'}
                 </button>
                 <button
                     onClick={onCancel}
                     className="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
+                    disabled={loading}
                 >
                     Cancel
                 </button>
             </div>
+            {feedback && (
+                <div className={`mt-2 ${feedback.type === 'success' ? 'text-green-600' : 'text-red-600'}`}>{feedback.message}</div>
+            )}
         </div>
     );
 }
