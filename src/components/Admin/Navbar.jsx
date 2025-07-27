@@ -4,8 +4,14 @@ import { User, LogOut, ChevronDown } from 'lucide-react'
 export default function Navbar({ currentPage, darkMode, handleLogout }) {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
   const dropdownRef = useRef(null)
+  const [user, setUser] = useState(null)
+  const [companyData, setCompanyData] = useState(null)
 
   useEffect(() => {
+    const user = JSON.parse(localStorage.getItem('currentUser'))
+    setUser(user)
+    const companyData = JSON.parse(localStorage.getItem('companyData'))
+    setCompanyData(companyData)
     function handleClickOutside(event) {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
         setIsDropdownOpen(false)
@@ -27,7 +33,7 @@ export default function Navbar({ currentPage, darkMode, handleLogout }) {
           <div className="flex flex-col justify-center">
             <div className="flex-shrink-0">
               <h2 className={`text-xl font-bold truncate ${darkMode ? 'text-[#dbdadd]' : 'text-[#1A1918]'}`}>
-                Paytiemp Smartech Solutions
+                {companyData?.name}
               </h2>
             </div>
             <div className={`flex items-center text-sm ${darkMode ? 'text-[#C0BFBD]' : 'text-[#1A1918]'}`}>
@@ -46,10 +52,10 @@ export default function Navbar({ currentPage, darkMode, handleLogout }) {
                 onClick={toggleDropdown}
                 className="flex items-center focus:outline-none"
                 aria-label="User menu"
-                aria-haspopup="true"
+                aria-haspopup="true"s
               >
                 <span className={`text-sm mr-2 hidden sm:inline ${darkMode ? 'text-[#C0BFBD]' : 'text-[#1A1918]'}`}>
-                  Vinutha G
+                  {user?.name}
                 </span>
                 <User className={`h-8 w-8 rounded-full p-1 ${darkMode ? 'bg-[#1F1F22] text-[#C8BCF6]' : 'bg-[#EFEFEF] text-[#1A1918]'}`} />
                 <ChevronDown className={`ml-1 h-4 w-4 ${darkMode ? 'text-[#C0BFBD]' : 'text-[#1A1918]'}`} />

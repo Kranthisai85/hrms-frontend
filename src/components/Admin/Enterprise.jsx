@@ -31,6 +31,7 @@ export default function Enterprise({ darkMode }) {
         });
         // const response = await axios.get('http://localhost:3306/api/companies/22');
         const data = response.data.company;
+        localStorage.setItem("companyData", JSON.stringify(data));
         // Map API response to formData
         setFormData({
           companyName: data.name,
