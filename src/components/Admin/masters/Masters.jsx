@@ -10,6 +10,7 @@ import CategoryTable from "./CategoryTable";
 import ReasonsTable from "./ReasonsTable";
 import CompanyModal from "./CompanyTable";
 import Enterprise from "../Enterprise";
+import Sidebar from "../Sidebar";
 
 const initialCompanies = [
   { id: 1, code: "C001", name: "ABC Pvt Ltd", email: "abc@example.com", password: "password123", phone: "1234567890" },
@@ -24,7 +25,7 @@ const initialCompanies = [
   })),
 ];
 
-export default function Masters({ darkMode }) {
+export default function Masters({ darkMode, setCurrentPage, toggleDarkMode }) {
   const [activeTab, setActiveTab] = useState("enterprise");
   const [companies, setCompanies] = useState(initialCompanies);
   const [branches, setBranches] = useState([]);
@@ -142,108 +143,122 @@ export default function Masters({ darkMode }) {
   ];
 
   return (
-    <div className={`p-2 ${darkMode ? "bg-gray-900 text-gray-200" : "bg-white text-gray-800"}`}>
-      <div className="mb-4 space-x-1 flex flex-wrap">
-        {tabs.map(tab => (
-          <button
-            key={tab}
-            className={`px-4 py-1 ${activeTab === tab ? 'bg-gray-100 font-semibold border-b-2 border-blue-500' : 'text-gray-600 hover:bg-gray-50'}`}
-            onClick={() => setActiveTab(tab)}
-          >
-            {tab.split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}
-          </button>
-        ))}
+    <div className="flex h-full">
+      {/* Sidebar */}
+      <Sidebar
+        setCurrentPage={setCurrentPage}
+        darkMode={darkMode}
+        toggleDarkMode={toggleDarkMode}
+      />
+      
+      {/* Main Content */}
+      <div className="flex-1 overflow-auto">
+        <div className={`h-full ${darkMode ? "bg-gray-900 text-gray-200" : "bg-white text-gray-800"}`}>
+          <div className="mb-4 space-x-1 flex flex-wrap p-4">
+            {tabs.map(tab => (
+              <button
+                key={tab}
+                className={`px-4 py-1 ${activeTab === tab ? 'bg-gray-100 font-semibold border-b-2 border-blue-500' : 'text-gray-600 hover:bg-gray-50'}`}
+                onClick={() => setActiveTab(tab)}
+              >
+                {tab.split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}
+              </button>
+            ))}
+          </div>
+
+          <div className="px-4">
+            {activeTab === "enterprise" && <Enterprise />}
+            {activeTab === "branch" && (
+              <BranchTable
+                darkMode={darkMode}
+                branches={branches}
+                searchTerm={searchTerm}
+                setSearchTerm={handleSearchChange}
+                loading={loading}
+                setBranches={setBranches}
+                departments={departments}
+              />
+            )}
+            {activeTab === "department" && (
+              <DepartmentTable
+                darkMode={darkMode}
+                departments={departments}
+                searchTerm={searchTerm}
+                setSearchTerm={handleSearchChange}
+                loading={loading}
+                setDepartments={setDepartments}
+              />
+            )}
+            {activeTab === "designation" && (
+              <DesignationTable
+                darkMode={darkMode}
+                designations={designations}
+                departments={departments}
+                searchTerm={searchTerm}
+                setSearchTerm={handleSearchChange}
+                setDesignations={setDesignations}
+              />
+            )}
+            {activeTab === "sub Department" && (
+              <SubDepartmentTable
+                darkMode={darkMode}
+                subDepartments={subDepartments}
+                departments={departments}
+                searchTerm={searchTerm}
+                setSearchTerm={handleSearchChange}
+                setSubDepartments={setSubDepartments}
+              />
+            )}
+            {activeTab === "grade" && (
+              <GradeTable
+                darkMode={darkMode}
+                grades={grades}
+                searchTerm={searchTerm}
+                setSearchTerm={handleSearchChange}
+                setGrades={setGrades}
+              />
+            )}
+            {activeTab === "category" && (
+              <CategoryTable
+                darkMode={darkMode}
+                categories={categories}
+                searchTerm={searchTerm}
+                setSearchTerm={handleSearchChange}
+                setCategories={setCategories}
+              />
+            )}
+            {activeTab === "reasons" && (
+              <ReasonsTable
+                darkMode={darkMode}
+                resignationReasons={resignationReasons}
+                terminationReasons={terminationReasons}
+                resignationSearchTerm={resignationSearchTerm}
+                terminationSearchTerm={terminationSearchTerm}
+                setResignationSearchTerm={setResignationSearchTerm}
+                setTerminationSearchTerm={setTerminationSearchTerm}
+                setResignationReasons={setResignationReasons}
+                setTerminationReasons={setTerminationReasons}
+              />
+            )}
+          </div>
+
+          {(isCreateCompanyOpen || isEditCompanyOpen) && (
+            <CompanyModal
+              darkMode={darkMode}
+              isEdit={isEditCompanyOpen}
+              formData={formData}
+              inviteAdmin={inviteAdmin}
+              handleInputChange={handleInputChange}
+              handleLogoUpload={handleUpdateCompany}
+              handleInviteAdminChange={handleInviteAdminChange}
+              handleSubmit={isEditCompanyOpen ? handleUpdateCompany : handleCreateCompanySubmit}
+              handleSaveNew={handleSaveNew}
+              handleReset={handleReset}
+              handleClose={() => isEditCompanyOpen ? setIsEditCompanyOpen(false) : handleCreateCompanyClose()}
+            />
+          )}
+        </div>
       </div>
-
-      {activeTab === "enterprise" && <Enterprise />}
-      {activeTab === "branch" && (
-        <BranchTable
-          darkMode={darkMode}
-          branches={branches}
-          searchTerm={searchTerm}
-          setSearchTerm={handleSearchChange}
-          loading={loading}
-          setBranches={setBranches}
-          departments={departments}
-        />
-      )}
-      {activeTab === "department" && (
-        <DepartmentTable
-          darkMode={darkMode}
-          departments={departments}
-          searchTerm={searchTerm}
-          setSearchTerm={handleSearchChange}
-          loading={loading}
-          setDepartments={setDepartments}
-        />
-      )}
-      {activeTab === "designation" && (
-        <DesignationTable
-          darkMode={darkMode}
-          designations={designations}
-          departments={departments}
-          searchTerm={searchTerm}
-          setSearchTerm={handleSearchChange}
-          setDesignations={setDesignations}
-        />
-      )}
-      {activeTab === "sub Department" && (
-        <SubDepartmentTable
-          darkMode={darkMode}
-          subDepartments={subDepartments}
-          departments={departments}
-          searchTerm={searchTerm}
-          setSearchTerm={handleSearchChange}
-          setSubDepartments={setSubDepartments}
-        />
-      )}
-      {activeTab === "grade" && (
-        <GradeTable
-          darkMode={darkMode}
-          grades={grades}
-          searchTerm={searchTerm}
-          setSearchTerm={handleSearchChange}
-          setGrades={setGrades}
-        />
-      )}
-      {activeTab === "category" && (
-        <CategoryTable
-          darkMode={darkMode}
-          categories={categories}
-          searchTerm={searchTerm}
-          setSearchTerm={handleSearchChange}
-          setCategories={setCategories}
-        />
-      )}
-      {activeTab === "reasons" && (
-        <ReasonsTable
-          darkMode={darkMode}
-          resignationReasons={resignationReasons}
-          terminationReasons={terminationReasons}
-          resignationSearchTerm={resignationSearchTerm}
-          terminationSearchTerm={terminationSearchTerm}
-          setResignationSearchTerm={setResignationSearchTerm}
-          setTerminationSearchTerm={setTerminationSearchTerm}
-          setResignationReasons={setResignationReasons}
-          setTerminationReasons={setTerminationReasons}
-        />
-      )}
-
-      {(isCreateCompanyOpen || isEditCompanyOpen) && (
-        <CompanyModal
-          darkMode={darkMode}
-          isEdit={isEditCompanyOpen}
-          formData={formData}
-          inviteAdmin={inviteAdmin}
-          handleInputChange={handleInputChange}
-          handleLogoUpload={handleUpdateCompany}
-          handleInviteAdminChange={handleInviteAdminChange}
-          handleSubmit={isEditCompanyOpen ? handleUpdateCompany : handleCreateCompanySubmit}
-          handleSaveNew={handleSaveNew}
-          handleReset={handleReset}
-          handleClose={() => isEditCompanyOpen ? setIsEditCompanyOpen(false) : handleCreateCompanyClose()}
-        />
-      )}
     </div>
   );
 }

@@ -1,5 +1,5 @@
-import axios from 'axios';
 import { useEffect, useState } from 'react';
+import { companyService } from '../../services/api';
 
 export default function Enterprise({ darkMode }) {
   const [formData, setFormData] = useState({
@@ -22,32 +22,52 @@ export default function Enterprise({ darkMode }) {
   useEffect(() => {
     const fetchCompanyData = async () => {
       try {
-        const token = localStorage.getItem('token');
+        // First check if company data is already in localStorage
+        const storedCompanyData = localStorage.getItem('companyData');
+        if (storedCompanyData) {
+          const data = JSON.parse(storedCompanyData);
+          setFormData({
+            companyName: data.name,
+            address: data.address,
+            email: data.email,
+            mobile: data.phone,
+            pfCode: data.pfCode,
+            esiCode: data.esiCode,
+            labourLicense: data.labourLicense,
+            domainName: data.domainName,
+            contactPerson: data.contactPerson,
+            website: data.website,
+            superAdminID: data.superAdminID,
+            password: data.password,
+            logo: data.logo || null, // Handle empty logo
+          });
+          return;
+        }
+
+        // If not in localStorage, fetch from API
         const user = JSON.parse(localStorage.getItem('currentUser'));
-        const response = await axios.get(`https://admin.pacehrm.com/api/companies/${user.companyId}`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-        // const response = await axios.get('http://localhost:3306/api/companies/22');
-        const data = response.data.company;
-        localStorage.setItem("companyData", JSON.stringify(data));
-        // Map API response to formData
-        setFormData({
-          companyName: data.name,
-          address: data.address,
-          email: data.email,
-          mobile: data.phone,
-          pfCode: data.pfCode,
-          esiCode: data.esiCode,
-          labourLicense: data.labourLicense,
-          domainName: data.domainName,
-          contactPerson: data.contactPerson,
-          website: data.website,
-          superAdminID: data.superAdminID,
-          password: data.password,
-          logo: data.logo || null, // Handle empty logo
-        });
+        if (user && user.companyId) {
+          const response = await companyService.getCompanyData(user.companyId);
+          if (response.success) {
+            const data = response.company;
+            localStorage.setItem("companyData", JSON.stringify(data));
+            setFormData({
+              companyName: data.name,
+              address: data.address,
+              email: data.email,
+              mobile: data.phone,
+              pfCode: data.pfCode,
+              esiCode: data.esiCode,
+              labourLicense: data.labourLicense,
+              domainName: data.domainName,
+              contactPerson: data.contactPerson,
+              website: data.website,
+              superAdminID: data.superAdminID,
+              password: data.password,
+              logo: data.logo || null, // Handle empty logo
+            });
+          }
+        }
       } catch (error) {
         console.error('Error fetching company data:', error);
       }

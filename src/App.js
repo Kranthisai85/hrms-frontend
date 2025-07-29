@@ -97,7 +97,11 @@ function App() {
   };
 
   const renderAdminContent = (pageName) => {
-    const props = { darkMode };
+    const props = { 
+      darkMode, 
+      setCurrentPage, 
+      toggleDarkMode 
+    };
     switch (pageName) {
       case "Home":
         return <Home {...props} />;
@@ -128,23 +132,6 @@ function App() {
     <Router>
       <Toast />
       <div className={`flex h-screen ${darkMode ? "dark" : ""}`}>
-        {isAuthenticated && (
-          <>
-            {userType === "admin" ? (
-              <Sidebar
-                setCurrentPage={setCurrentPage}
-                darkMode={darkMode}
-                toggleDarkMode={toggleDarkMode}
-              />
-            ) : (
-              <EmployeeSidebar
-                darkMode={darkMode}
-                toggleDarkMode={toggleDarkMode}
-                handleLogout={handleLogout} // Add this prop
-              />
-            )}
-          </>
-        )}
         <div className="flex flex-col flex-1 overflow-hidden">
           {isAuthenticated && (
             <>
@@ -163,7 +150,7 @@ function App() {
               )}
             </>
           )}
-          <main className="flex-1 overflow-x-hidden overflow-y-auto bg-gray-100 dark:bg-gray-900 p-2">
+          <main className="flex-1 overflow-x-hidden overflow-y-auto bg-gray-100 dark:bg-gray-900">
             <Routes>
               {/* Login Route */}
               <Route

@@ -25,6 +25,27 @@ api.interceptors.request.use(
   }
 );
 
+// Company services
+export const companyService = {
+  getCompanyData: async (companyId) => {
+    try {
+      const response = await api.get(`/companies/${companyId}`);
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || error.message;
+    }
+  },
+
+  updateCompanyData: async (companyId, companyData) => {
+    try {
+      const response = await api.put(`/companies/${companyId}`, companyData);
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || error.message;
+    }
+  }
+};
+
 // Auth services
 export const authService = {
   login: async (email, password) => {
@@ -33,6 +54,19 @@ export const authService = {
       if (response.data.success) {
         localStorage.setItem('token', response.data.token);
         localStorage.setItem('currentUser', JSON.stringify(response.data.user));
+        
+        // Fetch and store company data on successful login
+        if (response.data.user && response.data.user.companyId) {
+          try {
+            const companyResponse = await companyService.getCompanyData(response.data.user.companyId);
+            if (companyResponse.success) {
+              localStorage.setItem('companyData', JSON.stringify(companyResponse.company));
+            }
+          } catch (companyError) {
+            console.error('Failed to fetch company data:', companyError);
+            // Don't fail the login if company data fetch fails
+          }
+        }
       }
       return response.data;
     } catch (error) {
@@ -43,6 +77,7 @@ export const authService = {
   logout: () => {
     localStorage.removeItem('token');
     localStorage.removeItem('currentUser');
+    localStorage.removeItem('companyData');
     localStorage.removeItem('isAuthenticated');
     localStorage.removeItem('userType');
   },

@@ -30,29 +30,51 @@ export default function Navbar({ currentPage, darkMode, handleLogout }) {
     <nav className={`shadow-sm z-10 sticky top-0 ${darkMode ? 'bg-[#1A1918] text-[#C0BFBD]' : 'bg-[#F5F5F5] text-[#1A1918]'}`}>
       <div className="max-w-full mx-auto px-4 sm:px-6 lg:px-4">
         <div className="flex justify-between h-16">
-          <div className="flex flex-col justify-center">
+          <div className="flex items-center space-x-4">
+            {/* Power Logo */}
             <div className="flex-shrink-0">
-              <h2 className={`text-xl font-bold truncate ${darkMode ? 'text-[#dbdadd]' : 'text-[#1A1918]'}`}>
-                {companyData?.name}
-              </h2>
+              <svg
+                className="w-8 h-8"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M13 10V3L4 14h7v7l9-11h-7z"
+                />
+              </svg>
             </div>
-            <div className={`flex items-center text-sm ${darkMode ? 'text-[#C0BFBD]' : 'text-[#1A1918]'}`}>
-              <span className="font-medium"><b>Home</b></span>
-              {currentPage && (
-                <>
-                  <span className="mx-2">&gt;&gt;</span>
-                  <span>{currentPage}</span>
-                </>
-              )}
+            
+            {/* Company Info */}
+            <div className="flex flex-col justify-center">
+              <div className="flex-shrink-0">
+                <h2 className={`text-xl font-bold truncate ${darkMode ? 'text-[#dbdadd]' : 'text-[#1A1918]'}`}>
+                  {companyData?.name}
+                </h2>
+              </div>
+              <div className={`flex items-center text-sm ${darkMode ? 'text-[#C0BFBD]' : 'text-[#1A1918]'}`}>
+                <span className="font-medium"><b>Home</b></span>
+                {currentPage && (
+                  <>
+                    <span className="mx-2">&gt;&gt;</span>
+                    <span>{currentPage}</span>
+                  </>
+                )}
+              </div>
             </div>
           </div>
+          
           <div className="flex items-center">
             <div className="flex items-center relative" ref={dropdownRef}>
               <button
                 onClick={toggleDropdown}
                 className="flex items-center focus:outline-none"
                 aria-label="User menu"
-                aria-haspopup="true"s
+                aria-haspopup="true"
               >
                 <span className={`text-sm mr-2 hidden sm:inline ${darkMode ? 'text-[#C0BFBD]' : 'text-[#1A1918]'}`}>
                   {user?.name}

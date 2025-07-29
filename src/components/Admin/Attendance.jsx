@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { ChevronLeft, ChevronRight, Search, Filter, X, Download, Upload, Edit, Save, Lock, Unlock, FileUp } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import { attendanceService } from '../../services/api';
+import Sidebar from './Sidebar';
 
 const initialEmployees = [
   { id: 1, code: 'VL005', name: 'Chinne Gowda H M', joinDate: '2023-08-23', exitDate: '2024-11-18' },
@@ -379,8 +380,8 @@ const Alert = ({ message, type, onClose }) => {
   );
 };
 
-export default function Attendance({ darkMode }) {
-  const [currentPage, setCurrentPage] = useState(1);
+export default function Attendance({ darkMode, setCurrentPage, toggleDarkMode }) {
+  const [currentAttendancePage, setCurrentAttendancePage] = useState(1);
   const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -447,10 +448,10 @@ export default function Attendance({ darkMode }) {
   const totalPages = Math.ceil(filteredEmployees.length / itemsPerPage);
 
   const currentEmployees = useMemo(() => {
-    const start = (currentPage - 1) * itemsPerPage;
+    const start = (currentAttendancePage - 1) * itemsPerPage;
     const end = start + itemsPerPage;
     return filteredEmployees.slice(start, end);
-  }, [currentPage, filteredEmployees]);
+  }, [currentAttendancePage, filteredEmployees]);
 
   const handleMarkAll = (day, status) => {
     if (!isEditing) return;
@@ -467,7 +468,7 @@ export default function Attendance({ darkMode }) {
 
   const handleApplyFilters = (filters) => {
     setAppliedFilters(filters);
-    setCurrentPage(1);
+    setCurrentAttendancePage(1);
   };
 
   const showAlert = (message, type = 'success') => {
@@ -586,188 +587,200 @@ export default function Attendance({ darkMode }) {
   };
 
   return (
-    <div className={`w-full mx-auto px-2 py-2 ${darkMode ? 'bg-[#1C1C1C] text-[#E0E0E0]' : 'bg-white text-[#31293F]'}`}>
-      <div className="mb-4 flex justify-between items-center">
-        <div className="flex space-x-2">
-          <button className={`px-2 py-1 ${darkMode ? 'bg-[#2C2C2C] text-[#BB86FC]' : 'bg-[#F3F4F6] text-[#31293F]'} rounded`}>Attendance</button>
-          {/* <button className={`px-2 py-1 ${darkMode ? 'bg-[#1C1C1C] text-[#E0E0E0]' : 'bg-white text-[#31293F]'} rounded`} disabled>Leaves</button> */}
-        </div>
-        <div className="flex items-center space-x-2">
-          <button
-            onClick={() => setShowUploadPopup(true)}
-            className={`flex items-center space-x-2 px-4 py-1 rounded-lg ${
-              darkMode ? 'bg-purple-600 text-white' : 'bg-purple-100 text-purple-600'
-            } hover:bg-opacity-80 transition-colors duration-200`}
-              title="Upload Attendance"
-          >
-            <Upload size={16} />
-            <span className="ml-1">Upload</span>
-          </button>
-          <button
-            onClick={handleDownloadTemplate}
-            className={`flex items-center space-x-2 px-4 py-1 rounded-lg ${
-              darkMode ? 'bg-purple-600 text-white' : 'bg-purple-100 text-purple-600'
-            } hover:bg-opacity-80 transition-colors duration-200`}
-              title="Download Attendance Template"
-          >
-            <Download className="w-4 h-4" />
-            <span>Template</span>
-          </button>
-          <div className="relative">
-            <input
-              type="text"
-              placeholder="Search employee..."
-              value={searchTerm}
-              onChange={(e) => {
-                setSearchTerm(e.target.value);
-                setCurrentPage(1);
-              }}
-              className={`pl-8 pr-4 py-1 border rounded-md text-sm ${darkMode ? 'bg-[#2C2C2C] text-[#E0E0E0] border-[#3C3C3C]' : 'bg-white text-[#31293F] border-gray-300'}`}
-            />
-            <Search className={`absolute left-2 top-1/2 transform -translate-y-1/2 ${darkMode ? 'text-[#A6A9C8]' : 'text-gray-400'}`} size={16} />
-          </div>
-          <button
-            onClick={() => setShowFilters(true)}
-            className={`p-2 rounded ${darkMode ? 'bg-[#2C2C2C] text-[#BB86FC]' : 'bg-[#F3F4F6] text-[#31293F]'} hover:opacity-80`}
-          >
-            <Filter size={16} />
-          </button>
-          <input
-            type="month"
-            value={`${selectedYear}-${(selectedMonth + 1).toString().padStart(2, '0')}`}
-            onChange={(e) => {
-              const [year, month] = e.target.value.split('-');
-              setSelectedYear(parseInt(year));
-              setSelectedMonth(parseInt(month) - 1);
-            }}
-            className={`p-1 border rounded ${darkMode ? 'bg-[#2C2C2C] text-[#E0E0E0] border-[#3C3C3C]' : 'bg-white text-[#31293F] border-gray-300'}`}
-          />
-          <button
-            onClick={() => setShowMarkAllPopup(true)}
-            className={`px-3 py-1 ${darkMode ? 'bg-[#BB86FC] text-[#1C1C1C]' : 'bg-[#796EA8] text-white'} rounded text-xs hover:opacity-90`}
-            disabled={!isEditing}
-          >
-            Mark All
-          </button>
-        </div>
-      </div>
-
-      <AttendanceTable 
-        employees={currentEmployees} 
-        darkMode={darkMode} 
-        selectedMonth={selectedMonth}
-        selectedYear={selectedYear}
-        attendanceData={attendanceData}
-        setAttendanceData={setAttendanceData}
-        isEditing={isEditing}
+    <div className="flex h-full">
+      {/* Sidebar */}
+      <Sidebar
+        setCurrentPage={setCurrentPage}
+        darkMode={darkMode}
+        toggleDarkMode={toggleDarkMode}
       />
+      
+      {/* Main Content */}
+      <div className="flex-1 overflow-auto">
+        <div className={`w-full mx-auto px-2 py-2 ${darkMode ? 'bg-[#1C1C1C] text-[#E0E0E0]' : 'bg-white text-[#31293F]'}`}>
+          <div className="mb-4 flex justify-between items-center">
+            <div className="flex space-x-2">
+              <button className={`px-2 py-1 ${darkMode ? 'bg-[#2C2C2C] text-[#BB86FC]' : 'bg-[#F3F4F6] text-[#31293F]'} rounded`}>Attendance</button>
+              {/* <button className={`px-2 py-1 ${darkMode ? 'bg-[#1C1C1C] text-[#E0E0E0]' : 'bg-white text-[#31293F]'} rounded`} disabled>Leaves</button> */}
+            </div>
+            <div className="flex items-center space-x-2">
+              <button
+                onClick={() => setShowUploadPopup(true)}
+                className={`flex items-center space-x-2 px-4 py-1 rounded-lg ${
+                  darkMode ? 'bg-purple-600 text-white' : 'bg-purple-100 text-purple-600'
+                } hover:bg-opacity-80 transition-colors duration-200`}
+                  title="Upload Attendance"
+              >
+                <Upload size={16} />
+                <span className="ml-1">Upload</span>
+              </button>
+              <button
+                onClick={handleDownloadTemplate}
+                className={`flex items-center space-x-2 px-4 py-1 rounded-lg ${
+                  darkMode ? 'bg-purple-600 text-white' : 'bg-purple-100 text-purple-600'
+                } hover:bg-opacity-80 transition-colors duration-200`}
+                  title="Download Attendance Template"
+              >
+                <Download className="w-4 h-4" />
+                <span>Template</span>
+              </button>
+              <div className="relative">
+                <input
+                  type="text"
+                  placeholder="Search employee..."
+                  value={searchTerm}
+                  onChange={(e) => {
+                    setSearchTerm(e.target.value);
+                    setCurrentAttendancePage(1);
+                  }}
+                  className={`pl-8 pr-4 py-1 border rounded-md text-sm ${darkMode ? 'bg-[#2C2C2C] text-[#E0E0E0] border-[#3C3C3C]' : 'bg-white text-[#31293F] border-gray-300'}`}
+                />
+                <Search className={`absolute left-2 top-1/2 transform -translate-y-1/2 ${darkMode ? 'text-[#A6A9C8]' : 'text-gray-400'}`} size={16} />
+              </div>
+              <button
+                onClick={() => setShowFilters(true)}
+                className={`p-2 rounded ${darkMode ? 'bg-[#2C2C2C] text-[#BB86FC]' : 'bg-[#F3F4F6] text-[#31293F]'} hover:opacity-80`}
+              >
+                <Filter size={16} />
+              </button>
+              <input
+                type="month"
+                value={`${selectedYear}-${(selectedMonth + 1).toString().padStart(2, '0')}`}
+                onChange={(e) => {
+                  const [year, month] = e.target.value.split('-');
+                  setSelectedYear(parseInt(year));
+                  setSelectedMonth(parseInt(month) - 1);
+                }}
+                className={`p-1 border rounded ${darkMode ? 'bg-[#2C2C2C] text-[#E0E0E0] border-[#3C3C3C]' : 'bg-white text-[#31293F] border-gray-300'}`}
+              />
+              <button
+                onClick={() => setShowMarkAllPopup(true)}
+                className={`px-3 py-1 ${darkMode ? 'bg-[#BB86FC] text-[#1C1C1C]' : 'bg-[#796EA8] text-white'} rounded text-xs hover:opacity-90`}
+                disabled={!isEditing}
+              >
+                Mark All
+              </button>
+            </div>
+          </div>
 
-      <div className={`mt-2 flex items-center justify-between ${darkMode ? 'text-[#A6A9C8]' : 'text-[#554D74]'}`}>
-        <div>
-          Page {currentPage} of {totalPages} ({filteredEmployees.length} items)
-        </div>
-        <div className="flex items-center space-x-2">
-          <button
-            onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-            disabled={currentPage === 1}
-            className={`px-2 py-1 border rounded ${darkMode ? 'bg-[#2C2C2C] text-[#E0E0E0] border-[#3C3C3C]' : 'bg-white text-[#31293F] border-gray-300'} hover:opacity-80`}
-          >
-            <ChevronLeft size={12} />
-          </button>
-          {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
-            <button
-              key={page}
-              onClick={() => setCurrentPage(page)}
-              className={`px-2 border rounded ${currentPage === page ? (darkMode ? 'bg-[#BB86FC] text-[#1C1C1C]' : 'bg-[#796EA8] text-white') : ''} ${darkMode ? 'border-[#3C3C3C]' : 'border-gray-300'} hover:opacity-80`}
+          <AttendanceTable 
+            employees={currentEmployees} 
+            darkMode={darkMode} 
+            selectedMonth={selectedMonth}
+            selectedYear={selectedYear}
+            attendanceData={attendanceData}
+            setAttendanceData={setAttendanceData}
+            isEditing={isEditing}
+          />
+
+          <div className={`mt-2 flex items-center justify-between ${darkMode ? 'text-[#A6A9C8]' : 'text-[#554D74]'}`}>
+            <div>
+              Page {currentAttendancePage} of {totalPages} ({filteredEmployees.length} items)
+            </div>
+            <div className="flex items-center space-x-2">
+              <button
+                onClick={() => setCurrentAttendancePage(prev => Math.max(prev - 1, 1))}
+                disabled={currentAttendancePage === 1}
+                className={`px-2 py-1 border rounded ${darkMode ? 'bg-[#2C2C2C] text-[#E0E0E0] border-[#3C3C3C]' : 'bg-white text-[#31293F] border-gray-300'} hover:opacity-80`}
+              >
+                <ChevronLeft size={12} />
+              </button>
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
+                <button
+                  key={page}
+                  onClick={() => setCurrentAttendancePage(page)}
+                  className={`px-2 border rounded ${currentAttendancePage === page ? (darkMode ? 'bg-[#BB86FC] text-[#1C1C1C]' : 'bg-[#796EA8] text-white') : ''} ${darkMode ? 'border-[#3C3C3C]' : 'border-gray-300'} hover:opacity-80`}
+                >
+                  {page}
+                </button>
+              ))}
+              <button
+                onClick={() => setCurrentAttendancePage(prev => Math.min(prev + 1, totalPages))}
+                disabled={currentAttendancePage === totalPages}
+                className={`px-2 py-1 border rounded ${darkMode ? 'bg-[#2C2C2C] text-[#E0E0E0] border-[#3C3C3C]' : 'bg-white text-[#31293F] border-gray-300'} hover:opacity-80`}
+              >
+                <ChevronRight size={12} />
+              </button>
+            </div>
+          </div>
+
+          <div className="mt-4 flex justify-center space-x-2">
+            <button 
+              className={`px-3 py-1 ${darkMode ? 'bg-[#3700B3] text-white' : 'bg-[#554D74] text-white'} rounded text-xs hover:opacity-90 flex items-center`}
+              onClick={handleEdit}
+              disabled={isLocked}
             >
-              {page}
+              <Edit size={14} className="mr-1" />
+              Edit
             </button>
-          ))}
-          <button
-            onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-            disabled={currentPage === totalPages}
-            className={`px-2 py-1 border rounded ${darkMode ? 'bg-[#2C2C2C] text-[#E0E0E0] border-[#3C3C3C]' : 'bg-white text-[#31293F] border-gray-300'} hover:opacity-80`}
-          >
-            <ChevronRight size={12} />
-          </button>
+            <button 
+              className={`px-3 py-1 ${darkMode ? 'bg-[#BB86FC] text-[#1C1C1C]' : 'bg-[#796EA8] text-white'} rounded text-xs hover:opacity-90 flex items-center`}
+              onClick={handleSave}
+              disabled={!isEditing}
+            >
+              <Save size={14} className="mr-1" />
+              Save
+            </button>
+            <button 
+              className={`px-3 py-1 ${darkMode ? 'bg-[#CF6679] text-[#1C1C1C]' : 'bg-[#EF4444] text-white'} rounded text-xs hover:opacity-90 flex items-center`}
+              onClick={handleLock}
+              disabled={isLocked || !isSaved}
+            >
+              <Lock size={14} className="mr-1" />
+              Lock
+            </button>
+            <button 
+              className={`px-3 py-1 ${darkMode ? 'bg-[#03DAC6] text-[#1C1C1C]' : 'bg-[#10B981] text-white'} rounded text-xs hover:opacity-90 flex items-center`}
+              onClick={handleUnlock}
+              disabled={!isLocked}
+            >
+              <Unlock size={14} className="mr-1" />
+              Unlock
+            </button>
+            <button 
+              className={`px-3 py-1 ${darkMode ? 'bg-[#BB86FC] text-[#1C1C1C]' : 'bg-[#796EA8] text-white'} rounded text-xs hover:opacity-90 flex items-center`}
+              onClick={handleExportReport}
+              disabled={!isLocked}
+            >
+              <FileUp size={14} className="mr-1" />
+              Export Report
+            </button>
+          </div>
+
+          {showFilters && (
+            <FilterPopup
+              darkMode={darkMode}
+              onClose={() => setShowFilters(false)}
+              onApplyFilters={handleApplyFilters}
+            />
+          )}
+
+          {showMarkAllPopup && (
+            <MarkAllPopup
+              darkMode={darkMode}
+              onClose={() => setShowMarkAllPopup(false)}
+              onMarkAll={handleMarkAll}
+              daysInMonth={daysInMonth}
+            />
+          )}
+
+          {showUploadPopup && (
+            <UploadPopup
+              darkMode={darkMode}
+              onClose={() => setShowUploadPopup(false)}
+              onUpload={handleUploadAttendance}
+            />
+          )}
+
+          {alert && (
+            <Alert
+              message={alert.message}
+              type={alert.type}
+              onClose={() => setAlert(null)}
+            />
+          )}
         </div>
       </div>
-
-      <div className="mt-4 flex justify-center space-x-2">
-        <button 
-          className={`px-3 py-1 ${darkMode ? 'bg-[#3700B3] text-white' : 'bg-[#554D74] text-white'} rounded text-xs hover:opacity-90 flex items-center`}
-          onClick={handleEdit}
-          disabled={isLocked}
-        >
-          <Edit size={14} className="mr-1" />
-          Edit
-        </button>
-        <button 
-          className={`px-3 py-1 ${darkMode ? 'bg-[#BB86FC] text-[#1C1C1C]' : 'bg-[#796EA8] text-white'} rounded text-xs hover:opacity-90 flex items-center`}
-          onClick={handleSave}
-          disabled={!isEditing}
-        >
-          <Save size={14} className="mr-1" />
-          Save
-        </button>
-        <button 
-          className={`px-3 py-1 ${darkMode ? 'bg-[#CF6679] text-[#1C1C1C]' : 'bg-[#EF4444] text-white'} rounded text-xs hover:opacity-90 flex items-center`}
-          onClick={handleLock}
-          disabled={isLocked || !isSaved}
-        >
-          <Lock size={14} className="mr-1" />
-          Lock
-        </button>
-        <button 
-          className={`px-3 py-1 ${darkMode ? 'bg-[#03DAC6] text-[#1C1C1C]' : 'bg-[#10B981] text-white'} rounded text-xs hover:opacity-90 flex items-center`}
-          onClick={handleUnlock}
-          disabled={!isLocked}
-        >
-          <Unlock size={14} className="mr-1" />
-          Unlock
-        </button>
-        <button 
-          className={`px-3 py-1 ${darkMode ? 'bg-[#BB86FC] text-[#1C1C1C]' : 'bg-[#796EA8] text-white'} rounded text-xs hover:opacity-90 flex items-center`}
-          onClick={handleExportReport}
-          disabled={!isLocked}
-        >
-          <FileUp size={14} className="mr-1" />
-          Export Report
-        </button>
-      </div>
-
-      {showFilters && (
-        <FilterPopup
-          darkMode={darkMode}
-          onClose={() => setShowFilters(false)}
-          onApplyFilters={handleApplyFilters}
-        />
-      )}
-
-      {showMarkAllPopup && (
-        <MarkAllPopup
-          darkMode={darkMode}
-          onClose={() => setShowMarkAllPopup(false)}
-          onMarkAll={handleMarkAll}
-          daysInMonth={daysInMonth}
-        />
-      )}
-
-      {showUploadPopup && (
-        <UploadPopup
-          darkMode={darkMode}
-          onClose={() => setShowUploadPopup(false)}
-          onUpload={handleUploadAttendance}
-        />
-      )}
-
-      {alert && (
-        <Alert
-          message={alert.message}
-          type={alert.type}
-          onClose={() => setAlert(null)}
-        />
-      )}
     </div>
   );
 }
