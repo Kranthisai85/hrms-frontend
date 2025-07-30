@@ -12,31 +12,24 @@ import { authService } from "./services/api";
 import Home from "./components/Admin/Home";
 import Navbar from "./components/Admin/Navbar";
 import Sidebar from "./components/Admin/Sidebar";
-// import UserRoles from "./components/Admin/UserRoles";
 import Attendance from "./components/Admin/Attendance";
-// import Hiring from "./components/Admin/Hiring";
-// import { EmployeeProvider } from "./components/Admin/EmployeeContext";
 import Employee from "./components/Admin/Employee";
 import Payroll from "./components/Admin/Payroll";
 import Reports from "./components/Admin/Reports";
-// import Assets from "./components/Admin/Assets";
 import LoginPage from "./components/auth/LoginPage";
 
 // Employee Components
-// import EmployeeDashboard from "./Employee/EmployeeDashboard";
 import EmployeeAttendance from "./Employee/EmployeeAttendance";
 import EmployeeHome from "./Employee/EmployeeHome";
 import EmployeePayroll from "./Employee/EmployeePayroll";
 import EmployeeProfile from "./Employee/EmployeeProfile";
 import EmployeeReports from "./Employee/EmployeeReports";
-// import EmployeeHelp from "./Employee/EmployeeHelp";
-// import InvestmentDeclaration from "./Employee/InvestmentDeclaration";
 import "./App.css";
 import EmployeeNavbar from "./Employee/EmployeeNavbar";
 import EmployeeSidebar from "./Employee/EmployeeSidebar";
-import Toast from './Toast';
+import Toast from "./Toast";
 import Masters from "./components/Admin/masters/Masters";
-
+import AuthHandler from "./components/auth/AuthHandler"; // New component for handling authentication
 
 function ProtectedRoute({ children, allowedUserType }) {
   const navigate = useNavigate();
@@ -65,6 +58,7 @@ function App() {
   const [userType, setUserType] = useState(() => {
     return localStorage.getItem("userType") || "";
   });
+  const [isCheckingAuth, setIsCheckingAuth] = useState(false);
 
   useEffect(() => {
     if (darkMode) {
@@ -82,11 +76,13 @@ function App() {
     });
   };
 
-  const handleLogin = (type) => {
+  const handleLogin = (type, companyId, superAdminID) => {
     setIsAuthenticated(true);
     setUserType(type);
     localStorage.setItem("isAuthenticated", "true");
     localStorage.setItem("userType", type);
+    localStorage.setItem("companyId", companyId);
+    localStorage.setItem("superAdminID", superAdminID);
   };
 
   const handleLogout = () => {
@@ -97,40 +93,54 @@ function App() {
   };
 
   const renderAdminContent = (pageName) => {
-    const props = { 
-      darkMode, 
-      setCurrentPage, 
-      toggleDarkMode 
+    const props = {
+      darkMode,
+      setCurrentPage,
+      toggleDarkMode,
     };
     switch (pageName) {
       case "Home":
         return <Home {...props} />;
-      // case "User Roles":
-      //   return <UserRoles {...props} />;
       case "Masters":
         return <Masters {...props} />;
       case "Time & Attendance":
         return <Attendance {...props} />;
-      // case "Hiring":
-      //   return <Hiring {...props} />;
       case "Employee":
         return <Employee {...props} />;
       case "Payroll":
         return <Payroll {...props} />;
       case "Reports":
         return <Reports {...props} />;
-      // case "Assets":
-      //   return <Assets {...props} />;
-      // case "Help":
-      //   return <Help {...props} />;
       default:
         return <Home {...props} />;
     }
   };
 
+  // Show loading state while checking authentication
+  if (isCheckingAuth) {
+    return (
+      <Router>
+        <Toast />
+        <div className={`flex h-screen ${darkMode ? "dark" : ""}`}>
+          <div className="flex items-center justify-center w-full">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
+              <p className="text-gray-600 dark:text-gray-400">Processing authentication...</p>
+            </div>
+          </div>
+        </div>
+      </Router>
+    );
+  }
+
   return (
     <Router>
       <Toast />
+      <AuthHandler
+        setIsAuthenticated={setIsAuthenticated}
+        setUserType={setUserType}
+        setIsCheckingAuth={setIsCheckingAuth}
+      />
       <div className={`flex h-screen ${darkMode ? "dark" : ""}`}>
         <div className="flex flex-col flex-1 overflow-hidden">
           {isAuthenticated && (
@@ -156,23 +166,16 @@ function App() {
               <Route
                 path="/login"
                 element={
-                  (() => {
-                    // Check for superAdminID and password in URL
-                    const superAdminID = new URLSearchParams(window.location.search).get('superAdminID');
-                    const password = new URLSearchParams(window.location.search).get('password');
-                    return superAdminID != undefined && password != undefined ? (
-                      <LoginPage onLogin={handleLogin} darkMode={darkMode} superAdminID={superAdminID} password={password} />
-                    ) : isAuthenticated ? (
-                      <Navigate
-                        to={
-                          userType === "admin" ? "/admin/home" : "/employee/home"
-                        }
-                        replace
-                      />
-                    ) : (
-                      <LoginPage onLogin={handleLogin} darkMode={darkMode} />
-                    );
-                  })()
+                  isAuthenticated ? (
+                    <Navigate
+                      to={
+                        userType === "admin" ? "/admin/home" : "/employee/home"
+                      }
+                      replace
+                    />
+                  ) : (
+                    <LoginPage onLogin={handleLogin} darkMode={darkMode} />
+                  )
                 }
               />
 
@@ -186,10 +189,6 @@ function App() {
                         path="/home"
                         element={renderAdminContent("Home")}
                       />
-                      {/* <Route
-                        path="/user-roles"
-                        element={renderAdminContent("User Roles")}
-                      /> */}
                       <Route
                         path="masters"
                         element={renderAdminContent("Masters")}
@@ -198,10 +197,6 @@ function App() {
                         path="time-attendance"
                         element={renderAdminContent("Time & Attendance")}
                       />
-                      {/* <Route
-                        path="hiring"
-                        element={renderAdminContent("Hiring")}
-                      /> */}
                       <Route
                         path="employee"
                         element={renderAdminContent("Employee")}
@@ -214,11 +209,6 @@ function App() {
                         path="reports"
                         element={renderAdminContent("Reports")}
                       />
-                      {/* <Route
-                        path="assets"
-                        element={renderAdminContent("Assets")}
-                      /> */}
-                      <Route path="help" element={renderAdminContent("Help")} />
                     </Routes>
                   </ProtectedRoute>
                 }
@@ -234,16 +224,10 @@ function App() {
                       <Route path="profile" element={<EmployeeProfile />} />
                       <Route path="payroll" element={<EmployeePayroll />} />
                       <Route path="reports" element={<EmployeeReports />} />
-
-                      {/* <Route
-                        path="payroll/investment-declaration"
-                        element={<InvestmentDeclaration />}
-                      /> */}
                       <Route
                         path="attendance"
                         element={<EmployeeAttendance />}
                       />
-                      {/* <Route path="help" element={<EmployeeHelp />} /> */}
                     </Routes>
                   </ProtectedRoute>
                 }
@@ -262,25 +246,7 @@ function App() {
                     />
                   ) : (
                     <Navigate to="/login" replace />
-                    // null
                   )
-                }
-              />
-
-              {/* Catch-all route */}
-              <Route
-                path="*"
-                element={
-                  <Navigate
-                    to={
-                      isAuthenticated
-                        ? userType === "admin"
-                          ? "/admin/home"
-                          : "/employee/home"
-                        : "/login"
-                    }
-                    replace
-                  />
                 }
               />
             </Routes>
