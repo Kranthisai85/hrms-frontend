@@ -38,6 +38,7 @@ export default function SubDepartmentTable({ darkMode, subDepartments, departmen
         toast.error(response.message || 'Failed to create sub-department');
       }
     } catch (error) {
+      console.log(error);
       toast.error('Error creating sub-department');
     } finally {
       setLocalLoading(false);

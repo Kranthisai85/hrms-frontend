@@ -282,8 +282,8 @@ export const departmentService = {
 };
 
 export const subDepartmentService = {
-  createDepartment: async (departmentData) => {
-    const response = await api.post('/departments', departmentData);
+  createSubDepartment: async (subDepartmentData) => {
+    const response = await api.post('/sub-departments', subDepartmentData);
     return response.data;
   },
 
@@ -292,18 +292,18 @@ export const subDepartmentService = {
     return response.data;
   },
 
-  getDepartment: async (id) => {
-    const response = await api.get(`/departments/${id}`);
+  getSubDepartment: async (id) => {
+    const response = await api.get(`/sub-departments/${id}`);
     return response.data;
   },
 
-  updateDepartment: async (id, departmentData) => {
-    const response = await api.put(`/departments/${id}`, departmentData);
+  updateSubDepartment: async (id, subDepartmentData) => {
+    const response = await api.put(`/sub-departments/${id}`, subDepartmentData);
     return response.data;
   },
 
-  deleteDepartment: async (id) => {
-    const response = await api.delete(`/departments/${id}`);
+  deleteSubDepartment: async (id) => {
+    const response = await api.delete(`/sub-departments/${id}`);
     return response.data;
   }
 };
@@ -366,8 +366,8 @@ export const branchService = {
 
 // Grades services
 export const gradesService = {
-  createGrade: async (branchData) => {
-    const response = await api.post('/grades', branchData);
+  createGrade: async (gradeData) => {
+    const response = await api.post('/grades', gradeData);
     return response.data;
   },
 
@@ -376,25 +376,20 @@ export const gradesService = {
     return response.data;
   },
 
-  // getBranch: async (id) => {
-  //   const response = await api.get(`/branches/${id}`);
-  //   return response.data;
-  // },
+  updateGrade: async (id, gradeData) => {
+    const response = await api.put(`/grades/${id}`, gradeData);
+    return response.data;
+  },
 
-  // updateBranch: async (id, branchData) => {
-  //   const response = await api.put(`/branches/${id}`, branchData);
-  //   return response.data;
-  // },
-
-  // deleteBranch: async (id) => {
-  //   const response = await api.delete(`/branches/${id}`);
-  //   return response.data;
-  // }
+  deleteGrade: async (id) => {
+    const response = await api.delete(`/grades/${id}`);
+    return response.data;
+  }
 };
 
 export const categoryService = {
-  createCategory: async (branchData) => {
-    const response = await api.post('/categories', branchData);
+  createCategory: async (categoryData) => {
+    const response = await api.post('/categories', categoryData);
     return response.data;
   },
 
@@ -403,25 +398,20 @@ export const categoryService = {
     return response.data;
   },
 
-  // getBranch: async (id) => {
-  //   const response = await api.get(`/branches/${id}`);
-  //   return response.data;
-  // },
+  updateCategory: async (id, categoryData) => {
+    const response = await api.put(`/categories/${id}`, categoryData);
+    return response.data;
+  },
 
-  // updateBranch: async (id, branchData) => {
-  //   const response = await api.put(`/branches/${id}`, branchData);
-  //   return response.data;
-  // },
-
-  // deleteBranch: async (id) => {
-  //   const response = await api.delete(`/branches/${id}`);
-  //   return response.data;
-  // }
+  deleteCategory: async (id) => {
+    const response = await api.delete(`/categories/${id}`);
+    return response.data;
+  }
 };
 
 export const reasonsService = {
-  createReasons: async (branchData) => {
-    const response = await api.post('/reasons', branchData);
+  createReason: async (reasonData) => {
+    const response = await api.post('/reasons', reasonData);
     return response.data;
   },
 
@@ -435,20 +425,15 @@ export const reasonsService = {
     return response.data;
   },
 
-  // getBranch: async (id) => {
-  //   const response = await api.get(`/branches/${id}`);
-  //   return response.data;
-  // },
+  updateReason: async (id, reasonData) => {
+    const response = await api.put(`/reasons/${id}`, reasonData);
+    return response.data;
+  },
 
-  // updateBranch: async (id, branchData) => {
-  //   const response = await api.put(`/branches/${id}`, branchData);
-  //   return response.data;
-  // },
-
-  // deleteBranch: async (id) => {
-  //   const response = await api.delete(`/branches/${id}`);
-  //   return response.data;
-  // }
+  deleteReason: async (id) => {
+    const response = await api.delete(`/reasons/${id}`);
+    return response.data;
+  }
 };
 
 // Error handling wrapper

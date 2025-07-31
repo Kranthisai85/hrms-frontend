@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { BankDetailsForm } from './BankDetailsForm.jsx';
 import { DocumentsTab } from './DocumentsTab.jsx';
 import { FamilyDetailsForm } from './FamilyDetailsForm.jsx';
@@ -21,6 +21,13 @@ export default function EmployeeProfileDetails({
     const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
     const [loading, setLoading] = useState(false);
     const [feedback, setFeedback] = useState({}); // { tab: { type: 'success'|'error', message: '' } }
+
+    // Update employeeData when employee prop changes
+    useEffect(() => {
+        if (employee) {
+            setEmployeeData(employee);
+        }
+    }, [employee]);
 
     // Helper to update only a section of employeeData
     const updateSection = (sectionData) => {

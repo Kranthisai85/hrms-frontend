@@ -124,8 +124,11 @@ export default function Masters({ darkMode, setCurrentPage, toggleDarkMode }) {
     } else if (activeTab === 'department') {
       fetchData(departmentService.getDepartments, setDepartments, 'Error fetching departments');
     } else if (activeTab === 'designation') {
+      // Fetch both designations and departments since designations depend on departments
       fetchData(designationService.getDesignations, setDesignations, 'Error fetching designations');
+      fetchData(departmentService.getDepartments, setDepartments, 'Error fetching departments');
     } else if (activeTab === 'sub Department') {
+      fetchData(departmentService.getDepartments, setDepartments, 'Error fetching departments');
       fetchData(subDepartmentService.getAllSubDepartments, setSubDepartments, 'Error fetching sub-departments');
     } else if (activeTab === 'grade') {
       fetchData(gradesService.getGrades, setGrades, 'Error fetching grades');

@@ -27,12 +27,21 @@ export function OrgDetailsForm({ employeeData, setEmployeeData, onSaveSection, l
     }, [setEmployeeData]);
 
     const handleSave = () => {
-        // Only send org section fields
+        // Only send org section fields - using API response field names
         const orgFields = [
-            'empCode','name','gender','dateOfBirth','branch','designation','department','subDepartment','grade','category','reportingManager','employeeType','employmentStatus','dateOfJoin','mobileNumber','personalEmail','officialEmail','bloodGroup','inviteSent','confirmationDate','resignationDate','relievedDate','reason','aadhaarNo','pan'
+            'employeeId','user','branchId','designationId','departmentId','subDepartmentId','gradeId','categoryId','reportingManagerId','employmentType','employmentStatus','joiningDate','email','inviteSent','confirmationDate','resignationDate','relievedDate','reason','aadharNumber','panNumber'
         ];
         const sectionData = {};
-        orgFields.forEach(f => { if (formData[f] !== undefined) sectionData[f] = formData[f]; });
+        orgFields.forEach(f => { 
+            if (formData[f] !== undefined) {
+                if (f === 'user') {
+                    // Handle nested user object
+                    sectionData[f] = formData[f];
+                } else {
+                    sectionData[f] = formData[f];
+                }
+            }
+        });
         onSaveSection(sectionData);
     };
 
@@ -40,26 +49,36 @@ export function OrgDetailsForm({ employeeData, setEmployeeData, onSaveSection, l
         <div className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                 <FloatingInput
-                    id="empCode"
+                    id="employeeId"
                     label="Employee Code"
-                    value={formData.empCode}
+                    value={formData.employeeId || ''}
                     onChange={handleInputChange}
                     required
-                    error={formErrors.empCode}
+                    error={formErrors.employeeId}
                 />
                 <FloatingInput
                     id="name"
                     label="Name"
-                    value={formData.name}
-                    onChange={handleInputChange}
+                    value={formData.user?.name || ''}
+                    onChange={(e) => {
+                        setEmployeeData(prev => ({
+                            ...prev,
+                            user: { ...prev.user, name: e.target.value }
+                        }));
+                    }}
                     required
                     error={formErrors.name}
                 />
                 <SearchableSelect
                     id="gender"
                     label="Gender"
-                    value={formData.gender}
-                    onChange={(e) => handleInputChange({ target: { name: 'gender', value: e.target.value } })}
+                    value={formData.user?.gender}
+                    onChange={(e) => {
+                        setEmployeeData(prev => ({
+                            ...prev,
+                            user: { ...prev.user, gender: e.target.value }
+                        }));
+                    }}
                     staticOptions={[
                         { value: 'Male', label: 'Male' },
                         { value: 'Female', label: 'Female' },
@@ -71,96 +90,101 @@ export function OrgDetailsForm({ employeeData, setEmployeeData, onSaveSection, l
                     id="dateOfBirth"
                     label="Date of Birth"
                     type="date"
-                    value={formData.dateOfBirth}
-                    onChange={handleInputChange}
+                    value={formData.user?.date_of_birth}
+                    onChange={(e) => {
+                        setEmployeeData(prev => ({
+                            ...prev,
+                            user: { ...prev.user, date_of_birth: e.target.value }
+                        }));
+                    }}
                     required
                     error={formErrors.dateOfBirth}
                 />
                 <SearchableSelect
-                    id="branch"
+                    id="branchId"
                     label="Branch"
-                    value={formData.branch}
+                    value={formData.branchId}
                     onChange={handleInputChange}
                     fetchOptions={branchService.getBranches}
                     darkMode={darkMode}
                     required
-                    error={formErrors.branch}
+                    error={formErrors.branchId}
                 />
                 <SearchableSelect
-                    id="designation"
+                    id="designationId"
                     label="Designation"
-                    value={formData.designation}
+                    value={formData.designationId}
                     onChange={handleInputChange}
                     fetchOptions={designationService.getDesignations}
                     darkMode={darkMode}
                     required
-                    error={formErrors.designation}
+                    error={formErrors.designationId}
                 />
                 <SearchableSelect
-                    id="department"
+                    id="departmentId"
                     label="Department"
-                    value={formData.department}
+                    value={formData.departmentId}
                     onChange={handleInputChange}
                     fetchOptions={departmentService.getDepartments}
                     darkMode={darkMode}
                     required
-                    error={formErrors.department}
+                    error={formErrors.departmentId}
                 />
                 <SearchableSelect
-                    id="subDepartment"
+                    id="subDepartmentId"
                     label="Sub Department"
-                    value={formData.subDepartment}
+                    value={formData.subDepartmentId}
                     onChange={handleInputChange}
                     fetchOptions={subDepartmentService.getAllSubDepartments}
                     darkMode={darkMode}
                     required
-                    error={formErrors.subDepartment}
+                    error={formErrors.subDepartmentId}
                 />
                 <SearchableSelect
-                    id="grade"
+                    id="gradeId"
                     label="Grade"
-                    value={formData.grade}
+                    value={formData.gradeId}
                     onChange={handleInputChange}
                     fetchOptions={gradesService.getGrades}
                     darkMode={darkMode}
                     required
-                    error={formErrors.grade}
+                    error={formErrors.gradeId}
                 />
                 <SearchableSelect
-                    id="category"
+                    id="categoryId"
                     label="Category"
-                    value={formData.category}
+                    value={formData.categoryId}
                     onChange={handleInputChange}
                     fetchOptions={categoryService.getAllCategories}
                     darkMode={darkMode}
                     required
-                    error={formErrors.category}
+                    error={formErrors.categoryId}
                 />
                 <SearchableSelect
-                    id="reportingManager"
+                    id="reportingManagerId"
                     label="Reporting Manager"
-                    value={formData.reportingManager}
+                    value={formData.reportingManagerId}
                     onChange={handleInputChange}
-                    error={formErrors.reportingManager}
+                    error={formErrors.reportingManagerId}
                     fetchOptions={employeeService.getEmployees}
                     darkMode={darkMode}
                     isEmployee={true}
                     required
                 />
                 <FloatingInput
-                    id="dateOfJoin"
+                    id="joiningDate"
                     label="Date of Join"
                     type="date"
-                    value={formData.dateOfJoin}
+                    value={formData.joiningDate || ''}
                     onChange={handleInputChange}
                     required
-                    error={formErrors.dateOfJoin}
+                    error={formErrors.joiningDate}
                 />
                 <SearchableSelect
-                    id="employeeType"
+                    id="employmentType"
                     label="Employee Type"
-                    value={formData.employeeType}
-                    onChange={(e) => handleInputChange({ target: { name: 'employeeType', value: e.target.value } })}
+                    value={formData.employmentType}
+                    onChange={(e) => handleInputChange({ target: { name: 'employmentType', value: e.target.value } })}
                     staticOptions={[
                         { value: 'Full-time', label: 'Full-Time' },
                         { value: 'Part-time', label: 'Part-Time' },
@@ -168,7 +192,7 @@ export function OrgDetailsForm({ employeeData, setEmployeeData, onSaveSection, l
                         { value: 'Intern', label: 'Intern' },
                     ]}
                     required
-                    error={formErrors.employeeType}
+                    error={formErrors.employmentType}
                 />
                 <SearchableSelect
                     id="employmentStatus"
@@ -255,34 +279,35 @@ export function OrgDetailsForm({ employeeData, setEmployeeData, onSaveSection, l
                 <FloatingInput
                     id="mobileNumber"
                     label="Mobile Number"
-                    value={formData.mobileNumber}
-                    onChange={handleInputChange}
+                    value={formData.user?.phone}
+                    onChange={(e) => {
+                        setEmployeeData(prev => ({
+                            ...prev,
+                            user: { ...prev.user, phone: e.target.value }
+                        }));
+                    }}
                     required
                     error={formErrors.mobileNumber}
                 />
                 <FloatingInput
-                    id="personalEmail"
-                    label="Personal Email"
+                    id="email"
+                    label="Email"
                     type="email"
-                    value={formData.personalEmail}
+                    value={formData.email || ''}
                     onChange={handleInputChange}
                     required
-                    error={formErrors.personalEmail}
-                />
-                <FloatingInput
-                    id="officialEmail"
-                    label="Official Email"
-                    type="email"
-                    value={formData.officialEmail}
-                    onChange={handleInputChange}
-                    required
-                    error={formErrors.officialEmail}
+                    error={formErrors.email}
                 />
                 <SearchableSelect
                     id="bloodGroup"
                     label="Blood Group"
-                    value={formData.bloodGroup}
-                    onChange={(e) => handleInputChange({ target: { name: 'bloodGroup', value: e.target.value } })}
+                    value={formData.user?.blood_group}
+                    onChange={(e) => {
+                        setEmployeeData(prev => ({
+                            ...prev,
+                            user: { ...prev.user, blood_group: e.target.value }
+                        }));
+                    }}
                     staticOptions={[
                         { label: 'A+', value: 'A+' },
                         { label: 'A-', value: 'A-' },
@@ -296,20 +321,20 @@ export function OrgDetailsForm({ employeeData, setEmployeeData, onSaveSection, l
                     required
                 />
                 <FloatingInput
-                    id="aadhaarNo"
+                    id="aadharNumber"
                     label="Aadhaar No"
-                    value={formData.aadhaarNo || ''}
+                    value={formData.aadharNumber || ''}
                     onChange={handleInputChange}
                     required
-                    error={formErrors.aadhaarNo}
+                    error={formErrors.aadharNumber}
                 />
                 <FloatingInput
-                    id="pan"
+                    id="panNumber"
                     label="PAN"
-                    value={formData.pan || ''}
+                    value={formData.panNumber || ''}
                     onChange={handleInputChange}
                     required
-                    error={formErrors.pan}
+                    error={formErrors.panNumber}
                 />
                 <div className="flex items-center">
                     <input

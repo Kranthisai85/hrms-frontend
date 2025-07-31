@@ -55,6 +55,7 @@ export default function ReasonsTable({
         toast.error(response.message || `Failed to create ${type.toLowerCase()} reason`);
       }
     } catch (error) {
+      console.log(error);
       toast.error(`Error creating ${type.toLowerCase()} reason`);
     } finally {
       setLocalLoading(false);
@@ -297,7 +298,15 @@ export default function ReasonsTable({
             setNewReason({ name: "", type: "" });
           }}
           title={editingReason ? `Edit ${newReason.type} Reason` : `Create ${newReason.type} Reason`}
-          onSubmit={() => newReason.type === "Resignation" ? handleCreateReason("Resignation") : handleCreateReason("Termination")}
+          onSubmit={() => {
+            if (editingReason) {
+              // Update existing reason
+              newReason.type === "Resignation" ? handleUpdateReason("Resignation") : handleUpdateReason("Termination");
+            } else {
+              // Create new reason
+              newReason.type === "Resignation" ? handleCreateReason("Resignation") : handleCreateReason("Termination");
+            }
+          }}
           submitText={editingReason ? "Update" : "Save"}
           onCancel={() => {
             setIsCreateResignationReasonOpen(false);

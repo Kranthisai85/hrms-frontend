@@ -31,10 +31,22 @@ export default function Navbar({ currentPage, darkMode, handleLogout }) {
       <div className="max-w-full mx-auto px-4 sm:px-6 lg:px-4">
         <div className="flex justify-between h-16">
           <div className="flex items-center space-x-4">
-            {/* Power Logo */}
+            {/* Company Logo or Power Icon */}
             <div className="flex-shrink-0">
+              {companyData?.logo ? (
+                <img
+                  src={companyData.logo}
+                  alt={`${companyData.name} logo`}
+                  className="w-8 h-8 object-contain"
+                  onError={(e) => {
+                    // If logo fails to load, hide the img and show SVG
+                    e.target.style.display = 'none';
+                    e.target.nextSibling.style.display = 'block';
+                  }}
+                />
+              ) : null}
               <svg
-                className="w-8 h-8"
+                className={`w-8 h-8 ${companyData?.logo ? 'hidden' : ''}`}
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"

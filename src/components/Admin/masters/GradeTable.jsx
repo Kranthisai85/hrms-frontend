@@ -95,6 +95,7 @@ export default function GradeTable({ darkMode, grades, searchTerm, setSearchTerm
         toast.error(response.message || 'Failed to update grade');
       }
     } catch (error) {
+      console.log(error);
       toast.error('Error updating grade');
     } finally {
       setLocalLoading(false);
