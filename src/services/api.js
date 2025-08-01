@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 // const API_URL = 'https://admin.pacehrm.com/api/';
-const API_URL = 'http://localhost:3306/api/';
+export const API_URL = 'http://localhost:3306/api/';
 
 // Create axios instance with default config
 const api = axios.create({
@@ -97,6 +97,23 @@ export const employeeService = {
   createEmployee: async (employeeData) => {
     const response = await api.post('/employees', employeeData);
     return response.data;
+  },
+
+  uploadEmployeePhoto: async (employeeId, photoFile) => {
+    try {
+      const formData = new FormData();
+      formData.append('photo', photoFile);
+      formData.append('employeeId', employeeId);
+      
+      const response = await api.post('/employees/upload-photo', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || error.message;
+    }
   },
 
   getEmployees: async () => {

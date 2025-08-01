@@ -39,6 +39,7 @@ export default function EmployeeProfileDetails({
         setLoading(true);
         setFeedback({});
         try {
+            console.log(`Saving ${section} section:`, sectionData);
             let response;
             // If Org tab and no employeeId, create
             if (section === 'org' && !employeeData.id) {
@@ -48,10 +49,12 @@ export default function EmployeeProfileDetails({
             } else {
                 // Update: send only sectionData
                 response = await employeeService.updateEmployee(employeeData.id, sectionData);
+                console.log('Backend response:', response);
                 setEmployeeData(prev => ({ ...prev, ...sectionData }));
                 setFeedback({ [section]: { type: 'success', message: 'Section updated successfully.' } });
             }
         } catch (err) {
+            console.error('Save error:', err);
             setFeedback({ [section]: { type: 'error', message: err.message || 'Failed to save.' } });
         } finally {
             setLoading(false);

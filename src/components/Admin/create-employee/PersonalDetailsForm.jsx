@@ -1,6 +1,7 @@
 import { Upload } from 'lucide-react';
 import { useCallback } from 'react';
 import FloatingInput from '../FloatingInput.jsx';
+import { employeeService,API_URL } from '../../../services/api';
 
 export function PersonalDetailsForm({ employeeData, setEmployeeData, onSaveSection, loading, feedback, darkMode, onCancel }) {
     // Ensure emergencyContact is always defined
@@ -26,35 +27,81 @@ export function PersonalDetailsForm({ employeeData, setEmployeeData, onSaveSecti
         }
     }, [setEmployeeData]);
 
-    const handlePhotoUpload = useCallback((e) => {
+    const handlePhotoUpload = useCallback(async (e) => {
         const file = e.target.files[0];
         if (file) {
-            const reader = new FileReader();
-            reader.onloadend = () => {
-                setEmployeeData(prev => ({ ...prev, photo: reader.result }));
-            };
-            reader.readAsDataURL(file);
+            try {
+                // Upload photo using service
+                const response = await employeeService.uploadEmployeePhoto(employeeData.id, file);
+                
+                if (response.success) {
+                    // Update employee data with the file path
+                    setEmployeeData(prev => ({ 
+                        ...prev, 
+                        photo: response.photoPath 
+                    }));
+                    console.log('Photo uploaded successfully:', response.photoPath);
+                } else {
+                    console.error('Photo upload failed:', response.message);
+                }
+            } catch (error) {
+                console.error('Error uploading photo:', error);
+            }
         }
-    }, [setEmployeeData]);
+    }, [setEmployeeData, employeeData.id]);
 
     const handleSave = () => {
-        // Only send personal and address fields
-        const personalFields = [
-            'photo', 'maritalStatus', 'emergencyContactName', 'emergencyContactNumber', 'emergencyContactRelationship',
-            'address', 'city', 'state', 'country', 'pincode',
-            'permanentAddress', 'permanentCity', 'permanentState', 'permanentCountry', 'permanentPincode'
-        ];
-        const sectionData = {};
-        personalFields.forEach(f => { if (formData[f] !== undefined) sectionData[f] = formData[f]; });
+        // Prepare data matching backend API expectations
+        const sectionData = {
+            // Photo - only send file path, not base64 data
+            photo: formData.photo && !formData.photo.startsWith('data:') ? formData.photo : null,
+            
+            // Emergency Contact (matching backend field names)
+            emergencyContactName: formData.emergencyContact?.name,
+            emergencyContactPhone: formData.emergencyContact?.number,
+            emergencyContactRelation: formData.emergencyContact?.relationship,
+            
+            // Present Address
+            address: formData.presentHouseNumber,
+            city: formData.presentCity,
+            state: formData.presentState,
+            country: formData.presentCountry || 'India',
+            pincode: formData.presentPincode,
+            
+            // Permanent Address
+            permanentAddress: formData.permanentHouseNumber,
+            permanentCity: formData.permanentCity,
+            permanentState: formData.permanentState,
+            permanentCountry: formData.permanentCountry || 'India',
+            permanentPincode: formData.permanentPincode
+        };
+        
+        console.log('Personal Details being sent to backend:', sectionData);
         onSaveSection(sectionData);
     };
 
     return (
         <div className="space-y-4">
             <div className="flex items-center space-x-4">
-                <div className="w-32 h-32 bg-gray-200 rounded-full overflow-hidden">
+                <div className="w-32 h-32 bg-gray-200 rounded-full overflow-hidden relative">
                     {formData.photo ? (
-                        <img src={formData.photo} alt="Employee" className="w-full h-full object-cover" />
+                        <>
+                            <img 
+                                src={formData.photo.startsWith('data:') ? formData.photo : `${API_URL}uploads/employee-photos/${formData.photo}`} 
+                                alt="Employee" 
+                                className="w-full h-full object-cover"
+                                onError={(e) => {
+                                    e.target.style.display = 'none';
+                                    const fallback = e.target.parentElement.querySelector('.photo-fallback');
+                                    if (fallback) {
+                                        fallback.style.display = 'flex';
+                                    }
+                                }}
+                            />
+                            <div className="photo-fallback w-full h-full flex items-center justify-center text-gray-400 absolute inset-0" style={{ display: 'none' }}>
+                                No Photo
+                            </div>
+                        </>
                     ) : (
                         <div className="w-full h-full flex items-center justify-center text-gray-400">
                             No Photo
@@ -100,11 +147,17 @@ export function PersonalDetailsForm({ employeeData, setEmployeeData, onSaveSecti
                         onChange={handleInputChange}
                     />
                     <FloatingInput
+                        id="presentCountry"
+                        label="Country"
+                        value={formData.presentCountry || 'India'}
+                        onChange={handleInputChange}
+                    />
+                    <FloatingInput
                         id="presentPincode"
                         label="Pincode"
                         value={formData.presentPincode || ''}
                         onChange={handleInputChange}
-                        type="text" // Using text to allow flexibility, can change to 'number' if only digits are needed
+                        type="text"
                     />
                 </div>
             </div>
@@ -132,11 +185,17 @@ export function PersonalDetailsForm({ employeeData, setEmployeeData, onSaveSecti
                         onChange={handleInputChange}
                     />
                     <FloatingInput
+                        id="permanentCountry"
+                        label="Country"
+                        value={formData.permanentCountry || 'India'}
+                        onChange={handleInputChange}
+                    />
+                    <FloatingInput
                         id="permanentPincode"
                         label="Pincode"
                         value={formData.permanentPincode || ''}
                         onChange={handleInputChange}
-                        type="text" // Using text, can change to 'number' if needed
+                        type="text"
                     />
                 </div>
             </div>

@@ -5,6 +5,7 @@ import {
   BrowserRouter as Router,
   Routes,
   useNavigate,
+  useLocation,
 } from "react-router-dom";
 import { authService } from "./services/api";
 
@@ -45,6 +46,34 @@ function ProtectedRoute({ children, allowedUserType }) {
   }, [isAuthenticated, navigate, allowedUserType, userType]);
 
   return isAuthenticated && userType === allowedUserType ? children : null;
+}
+
+function URLParameterHandler({ onLogin }) {
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const urlParams = new URLSearchParams(location.search);
+    const companyId = urlParams.get('companyId');
+    const superAdminID = urlParams.get('superAdminID');
+    const password = urlParams.get('password');
+
+    console.log(companyId, superAdminID, password);
+
+    if (companyId && superAdminID && password) {
+      // Auto-login with URL parameters
+      onLogin('admin', companyId, superAdminID);
+      
+      // Clear URL parameters after login
+      const newUrl = window.location.pathname;
+      window.history.replaceState({}, '', newUrl);
+      
+      // Navigate to admin home
+      navigate('/admin/home');
+    }
+  }, [location, onLogin, navigate]);
+
+  return null;
 }
 
 function App() {
@@ -141,6 +170,7 @@ function App() {
         setUserType={setUserType}
         setIsCheckingAuth={setIsCheckingAuth}
       />
+      <URLParameterHandler onLogin={handleLogin} />
       <div className={`flex h-screen ${darkMode ? "dark" : ""}`}>
         <div className="flex flex-col flex-1 overflow-hidden">
           {isAuthenticated && (
