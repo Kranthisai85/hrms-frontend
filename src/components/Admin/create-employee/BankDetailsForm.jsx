@@ -11,10 +11,13 @@ export function BankDetailsForm({ employeeData, setEmployeeData, onSaveSection, 
     }, [setEmployeeData]);
 
     const handleSave = () => {
-        // Only send bank section fields
-        const bankFields = ['bankName', 'bankAccountNo', 'ifscCode'];
-        const sectionData = {};
-        bankFields.forEach(f => { if (formData[f] !== undefined) sectionData[f] = formData[f]; });
+        // Only send bank section fields - using API response field names
+        const sectionData = {
+            bankName: formData.bankName || '',
+            accountNumber: formData.accountNumber || '',
+            ifscCode: formData.ifscCode || '',
+            branch: formData.branch || ''
+        };
         onSaveSection(sectionData);
     };
 
@@ -30,12 +33,12 @@ export function BankDetailsForm({ employeeData, setEmployeeData, onSaveSection, 
                     error={formData.bankNameError}
                 />
                 <FloatingInput
-                    id="bankAccountNo"
+                    id="accountNumber"
                     label="Bank Account No"
-                    value={formData.bankAccountNo}
+                    value={formData.accountNumber}
                     onChange={handleInputChange}
                     required
-                    error={formData.bankAccountNoError}
+                    error={formData.accountNumberError}
                 />
                 <FloatingInput
                     id="ifscCode"
@@ -44,6 +47,14 @@ export function BankDetailsForm({ employeeData, setEmployeeData, onSaveSection, 
                     onChange={handleInputChange}
                     required
                     error={formData.ifscCodeError}
+                />
+                <FloatingInput
+                    id="branch"
+                    label="Branch"
+                    value={formData.branch}
+                    onChange={handleInputChange}
+                    required
+                    error={formData.branchError}
                 />
             </div>
             <div className="mt-6 flex justify-end space-x-2">

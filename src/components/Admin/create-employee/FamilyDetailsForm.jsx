@@ -41,6 +41,7 @@ export function FamilyDetailsForm({ employeeData, setEmployeeData, onSaveSection
                     dateOfBirth: '',
                     relationship: '',
                     gender: '',
+                    phone: '',
                     nominee: false,
                     sharePercentage: 0,
                 },
@@ -58,8 +59,17 @@ export function FamilyDetailsForm({ employeeData, setEmployeeData, onSaveSection
     const handleSave = () => {
         // Only send family section fields
         const sectionData = {
-            isOrphan: formData.isOrphan,
-            familyMembers: (formData.familyMembers || []).map(({ id, ...rest }) => rest),
+            isOrphan: formData.isOrphan || false,
+            familyMembers: (formData.familyMembers || []).map(({ id, ...rest }) => ({
+                name: rest.name || '',
+                dateOfBirth: rest.dateOfBirth || '',
+                relationship: rest.relationship || '',
+                gender: rest.gender || '',
+                phone: rest.phone || '',
+                nominee: rest.nominee || false,
+                sharePercentage: rest.sharePercentage || 0,
+                user_id: employeeData.userId || employeeData.user?.id // Add user_id as required by backend
+            })),
         };
         onSaveSection(sectionData);
     };
@@ -85,7 +95,7 @@ export function FamilyDetailsForm({ employeeData, setEmployeeData, onSaveSection
                         For now, we'll keep the structure but remove the error display. */}
                     {formData.familyMembers.map((member, index) => (
                         <div key={member.id} className="p-4 bg-gray-50 rounded-lg mb-4">
-                            <div className="grid grid-cols-1 md:grid-cols-6 gap-3">
+                            <div className="grid grid-cols-1 md:grid-cols-7 gap-3">
                                 <FloatingInput
                                     id={`familyName-${index}`}
                                     label="Name"
@@ -129,6 +139,13 @@ export function FamilyDetailsForm({ employeeData, setEmployeeData, onSaveSection
                                     ]}
                                     required
                                     // error={formErrors.familyMembers?.[index]?.gender} // Removed as per new_code
+                                />
+                                <FloatingInput
+                                    id={`familyPhone-${index}`}
+                                    label="Phone Number"
+                                    value={member.phone}
+                                    onChange={(e) => handleNestedInputChange(index, 'phone', e.target.value)}
+                                    // error={formErrors.familyMembers?.[index]?.phone} // Removed as per new_code
                                 />
                                 <div className="flex items-center space-x-2">
                                     <input

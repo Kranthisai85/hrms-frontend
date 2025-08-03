@@ -30,7 +30,13 @@ export function QualificationDetailsForm({ employeeData, setEmployeeData, onSave
             ...prev,
             qualifications: [
                 ...(prev.qualifications || []),
-                { qualification: '', yearOfPassing: '', institution: '' },
+                { 
+                    degree: '', 
+                    yearOfCompletion: '', 
+                    institution: '',
+                    percentage: '',
+                    specialization: ''
+                },
             ],
         }));
     }, [setEmployeeData]);
@@ -45,8 +51,13 @@ export function QualificationDetailsForm({ employeeData, setEmployeeData, onSave
     const handleSave = () => {
         // Only send qualification section fields
         const sectionData = {
-            lessThanPrimary: formData.lessThanPrimary,
-            qualifications: formData.qualifications,
+            lessThanPrimary: formData.lessThanPrimary || false,
+            qualifications: (formData.qualifications || []).map(qual => ({
+                qualification: qual.degree || '',
+                yearOfPassing: qual.yearOfCompletion || '',
+                institution: qual.institution || '',
+                user_id: employeeData.userId || employeeData.user?.id // Add user_id as required by backend
+            })),
         };
         onSaveSection(sectionData);
     };
@@ -68,12 +79,12 @@ export function QualificationDetailsForm({ employeeData, setEmployeeData, onSave
             </div>
             {formData.qualifications.map((qualification, index) => (
                 <div key={index} className="p-4 bg-gray-50 rounded-lg">
-                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
                         <SearchableSelect
-                            id={`qualification-${index}`}
-                            label="Qualification"
-                            value={qualification.qualification}
-                            onChange={(e) => handleNestedInputChange(index, 'qualification', e.target.value)}
+                            id={`degree-${index}`}
+                            label="Degree"
+                            value={qualification.degree}
+                            onChange={(e) => handleNestedInputChange(index, 'degree', e.target.value)}
                             staticOptions={[
                                 { value: '10th', label: '10th / Matriculation' },
                                 { value: '12th', label: '12th / Higher Secondary' },
@@ -87,11 +98,11 @@ export function QualificationDetailsForm({ employeeData, setEmployeeData, onSave
                             required
                         />
                         <FloatingInput
-                            id={`yearOfPassing-${index}`}
-                            label="Year of Passing"
+                            id={`yearOfCompletion-${index}`}
+                            label="Year of Completion"
                             type="number"
-                            value={qualification.yearOfPassing}
-                            onChange={(e) => handleNestedInputChange(index, 'yearOfPassing', e.target.value)}
+                            value={qualification.yearOfCompletion}
+                            onChange={(e) => handleNestedInputChange(index, 'yearOfCompletion', e.target.value)}
                             required
                         />
                         <FloatingInput
@@ -100,6 +111,19 @@ export function QualificationDetailsForm({ employeeData, setEmployeeData, onSave
                             value={qualification.institution}
                             onChange={(e) => handleNestedInputChange(index, 'institution', e.target.value)}
                             required
+                        />
+                        <FloatingInput
+                            id={`percentage-${index}`}
+                            label="Percentage"
+                            type="number"
+                            value={qualification.percentage}
+                            onChange={(e) => handleNestedInputChange(index, 'percentage', e.target.value)}
+                        />
+                        <FloatingInput
+                            id={`specialization-${index}`}
+                            label="Specialization"
+                            value={qualification.specialization}
+                            onChange={(e) => handleNestedInputChange(index, 'specialization', e.target.value)}
                         />
                     </div>
                     <button

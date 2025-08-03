@@ -4,15 +4,22 @@ import FloatingInput from '../FloatingInput.jsx';
 import { employeeService,API_URL } from '../../../services/api';
 
 export function PersonalDetailsForm({ employeeData, setEmployeeData, onSaveSection, loading, feedback, darkMode, onCancel }) {
-    // Ensure emergencyContact is always defined
+    // Ensure emergencyContact is always defined with proper fallbacks
     const formData = {
         ...employeeData,
-        emergencyContact: employeeData.emergencyContact || { name: '', number: '', relationship: '' }
+        emergencyContact: {
+            name: employeeData.emergencyContact?.name || '',
+            number: employeeData.emergencyContact?.number || '',
+            relationship: employeeData.emergencyContact?.relationship || ''
+        }
     };
     // (You can add validation logic here if needed)
 
+
+
     const handleInputChange = useCallback((e) => {
         const { name, value } = e.target;
+        
         if (name.includes('.')) {
             const [parent, child] = name.split('.');
             setEmployeeData(prev => ({
@@ -57,23 +64,23 @@ export function PersonalDetailsForm({ employeeData, setEmployeeData, onSaveSecti
             photo: formData.photo && !formData.photo.startsWith('data:') ? formData.photo : null,
             
             // Emergency Contact (matching backend field names)
-            emergencyContactName: formData.emergencyContact?.name,
-            emergencyContactPhone: formData.emergencyContact?.number,
-            emergencyContactRelation: formData.emergencyContact?.relationship,
+            emergencyContactName: formData.emergencyContact?.name || '',
+            emergencyContactPhone: formData.emergencyContact?.number || '',
+            emergencyContactRelation: formData.emergencyContact?.relationship || '',
             
             // Present Address
-            address: formData.presentHouseNumber,
-            city: formData.presentCity,
-            state: formData.presentState,
+            address: formData.presentHouseNumber || '',
+            city: formData.presentCity || '',
+            state: formData.presentState || '',
             country: formData.presentCountry || 'India',
-            pincode: formData.presentPincode,
+            pincode: formData.presentPincode || '',
             
             // Permanent Address
-            permanentAddress: formData.permanentHouseNumber,
-            permanentCity: formData.permanentCity,
-            permanentState: formData.permanentState,
+            permanentAddress: formData.permanentHouseNumber || '',
+            permanentCity: formData.permanentCity || '',
+            permanentState: formData.permanentState || '',
             permanentCountry: formData.permanentCountry || 'India',
-            permanentPincode: formData.permanentPincode
+            permanentPincode: formData.permanentPincode || ''
         };
         
         console.log('Personal Details being sent to backend:', sectionData);
@@ -129,33 +136,33 @@ export function PersonalDetailsForm({ employeeData, setEmployeeData, onSaveSecti
                 <h3 className="font-semibold text-lg">Present Address</h3>
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                     <FloatingInput
-                        id="presentHouseNumber"
+                        id="address"
                         label="House Number/Street/Flat No"
-                        value={formData.presentHouseNumber || ''}
+                        value={formData.address?.address || ''}
                         onChange={handleInputChange}
                     />
                     <FloatingInput
-                        id="presentCity"
+                        id="city"
                         label="City"
-                        value={formData.presentCity || ''}
+                        value={formData.address?.city || ''}
                         onChange={handleInputChange}
                     />
                     <FloatingInput
-                        id="presentState"
+                        id="state"
                         label="State"
-                        value={formData.presentState || ''}
+                        value={formData.address?.state || ''}
                         onChange={handleInputChange}
                     />
                     <FloatingInput
-                        id="presentCountry"
+                        id="country"
                         label="Country"
-                        value={formData.presentCountry || 'India'}
+                        value={formData.address?.country || 'India'}
                         onChange={handleInputChange}
                     />
                     <FloatingInput
-                        id="presentPincode"
+                        id="pincode"
                         label="Pincode"
-                        value={formData.presentPincode || ''}
+                        value={formData.address?.pincode || ''}
                         onChange={handleInputChange}
                         type="text"
                     />
@@ -167,33 +174,33 @@ export function PersonalDetailsForm({ employeeData, setEmployeeData, onSaveSecti
                 <h3 className="font-semibold text-lg">Permanent Address</h3>
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                     <FloatingInput
-                        id="permanentHouseNumber"
+                        id="permanentAddress"
                         label="House Number/Street/Flat No"
-                        value={formData.permanentHouseNumber || ''}
+                        value={formData.address?.permanentAddress || ''}
                         onChange={handleInputChange}
                     />
                     <FloatingInput
                         id="permanentCity"
                         label="City"
-                        value={formData.permanentCity || ''}
+                        value={formData.address?.permanentCity || ''}
                         onChange={handleInputChange}
                     />
                     <FloatingInput
                         id="permanentState"
                         label="State"
-                        value={formData.permanentState || ''}
+                        value={formData.address?.permanentState || ''}
                         onChange={handleInputChange}
                     />
                     <FloatingInput
                         id="permanentCountry"
                         label="Country"
-                        value={formData.permanentCountry || 'India'}
+                        value={formData.address?.permanentCountry || 'India'}
                         onChange={handleInputChange}
                     />
                     <FloatingInput
                         id="permanentPincode"
                         label="Pincode"
-                        value={formData.permanentPincode || ''}
+                        value={formData.address?.permanentPincode || ''}
                         onChange={handleInputChange}
                         type="text"
                     />
@@ -206,21 +213,21 @@ export function PersonalDetailsForm({ employeeData, setEmployeeData, onSaveSecti
                         id="emergencyContactName"
                         label="Name"
                         name="emergencyContact.name"
-                        value={formData.emergencyContact.name}
+                        value={formData.emergencyContact?.name || ''}
                         onChange={handleInputChange}
                     />
                     <FloatingInput
                         id="emergencyContactNumber"
                         label="Number"
                         name="emergencyContact.number"
-                        value={formData.emergencyContact.number}
+                        value={formData.emergencyContact?.number || ''}
                         onChange={handleInputChange}
                     />
                     <FloatingInput
                         id="emergencyContactRelationship"
                         label="Relationship"
                         name="emergencyContact.relationship"
-                        value={formData.emergencyContact.relationship}
+                        value={formData.emergencyContact?.relationship || ''}
                         onChange={handleInputChange}
                     />
                 </div>

@@ -29,7 +29,13 @@ export function ProfessionalDetailsForm({ employeeData, setEmployeeData, onSaveS
             ...prev,
             experiences: [
                 ...(prev.experiences || []),
-                { companyName: '', designation: '', fromDate: '', toDate: '' },
+                { 
+                    company: '', 
+                    position: '', 
+                    fromDate: '', 
+                    toDate: '',
+                    description: ''
+                },
             ],
         }));
     }, [setEmployeeData]);
@@ -44,8 +50,15 @@ export function ProfessionalDetailsForm({ employeeData, setEmployeeData, onSaveS
     const handleSave = () => {
         // Only send professional section fields
         const sectionData = {
-            isFresher: formData.isFresher,
-            experiences: formData.experiences,
+            isFresher: formData.isFresher || false,
+            experiences: (formData.experiences || []).map(exp => ({
+                companyName: exp.company || '',
+                designation: exp.position || '',
+                fromDate: exp.fromDate || '',
+                toDate: exp.toDate || '',
+                description: exp.description || '',
+                user_id: employeeData.userId || employeeData.user?.id // Add user_id as required by backend
+            })),
         };
         onSaveSection(sectionData);
     };
@@ -73,19 +86,19 @@ export function ProfessionalDetailsForm({ employeeData, setEmployeeData, onSaveS
                     )}
                     {formData.experiences.map((experience, index) => (
                         <div key={index} className="p-4 bg-gray-50 rounded-lg mb-4">
-                            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                            <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
                                 <FloatingInput
-                                    id={`companyName-${index}`}
+                                    id={`company-${index}`}
                                     label="Previous Company Name"
-                                    value={experience.companyName}
-                                    onChange={(e) => handleNestedInputChange(index, 'companyName', e.target.value)}
+                                    value={experience.company}
+                                    onChange={(e) => handleNestedInputChange(index, 'company', e.target.value)}
                                     required
                                 />
                                 <FloatingInput
-                                    id={`designation-${index}`}
-                                    label="Designation"
-                                    value={experience.designation}
-                                    onChange={(e) => handleNestedInputChange(index, 'designation', e.target.value)}
+                                    id={`position-${index}`}
+                                    label="Position"
+                                    value={experience.position}
+                                    onChange={(e) => handleNestedInputChange(index, 'position', e.target.value)}
                                     required
                                 />
                                 <FloatingInput
@@ -103,6 +116,12 @@ export function ProfessionalDetailsForm({ employeeData, setEmployeeData, onSaveS
                                     value={experience.toDate}
                                     onChange={(e) => handleNestedInputChange(index, 'toDate', e.target.value)}
                                     required
+                                />
+                                <FloatingInput
+                                    id={`description-${index}`}
+                                    label="Description"
+                                    value={experience.description}
+                                    onChange={(e) => handleNestedInputChange(index, 'description', e.target.value)}
                                 />
                             </div>
                             <button

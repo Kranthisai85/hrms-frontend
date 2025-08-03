@@ -90,9 +90,30 @@ export default function Employee({ darkMode, setCurrentPage, toggleDarkMode }) {
     setShowViewModal(true);
   };
 
-  const handleEdit = (employee) => {
-    setSelectedEmployee(employee);
-    setShowForm(true);
+  const handleEdit = async (employee) => {
+    try {
+      setLoading(true);
+      // Fetch complete employee data using the getEmployee API
+      const response = await employeeService.getEmployee(employee.id);
+      
+      if (response.success) {
+        // Set the complete employee data from the API response
+        setSelectedEmployee(response.data);
+        setShowForm(true);
+      } else {
+        console.error('Failed to fetch employee details:', response.message);
+        // Fallback to the basic employee data if API fails
+        setSelectedEmployee(employee);
+        setShowForm(true);
+      }
+    } catch (error) {
+      console.error('Error fetching employee details:', error);
+      // Fallback to the basic employee data if API fails
+      setSelectedEmployee(employee);
+      setShowForm(true);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const formatDate = (dateString) => {

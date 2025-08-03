@@ -27,21 +27,24 @@ export function OrgDetailsForm({ employeeData, setEmployeeData, onSaveSection, l
     }, [setEmployeeData]);
 
     const handleSave = () => {
-        // Only send org section fields - using API response field names
-        const orgFields = [
-            'employeeId','user','branchId','designationId','departmentId','subDepartmentId','gradeId','categoryId','reportingManagerId','employmentType','employmentStatus','joiningDate','email','inviteSent','confirmationDate','resignationDate','relievedDate','reason','aadharNumber','panNumber'
-        ];
-        const sectionData = {};
-        orgFields.forEach(f => { 
-            if (formData[f] !== undefined) {
-                if (f === 'user') {
-                    // Handle nested user object
-                    sectionData[f] = formData[f];
-                } else {
-                    sectionData[f] = formData[f];
-                }
-            }
-        });
+        // Prepare data matching backend API expectations
+        const sectionData = {
+            // Employee basic fields (only those expected by backend)
+            departmentId: formData.departmentId,
+            designationId: formData.designationId,
+            branchId: formData.branchId,
+            employmentType: formData.employmentType,
+            panNumber: formData.panNumber,
+            aadharNumber: formData.aadharNumber,
+            email: formData.email,
+            
+            // User details (for user update) - using backend expected field names
+            firstName: formData.user?.name,
+            phoneNumber: formData.user?.phone, // Backend expects phoneNumber for employee
+            dateOfBirth: formData.user?.date_of_birth,
+            gender: formData.user?.gender,
+            bloodGroup: formData.user?.blood_group
+        };
         onSaveSection(sectionData);
     };
 
@@ -90,7 +93,7 @@ export function OrgDetailsForm({ employeeData, setEmployeeData, onSaveSection, l
                     id="dateOfBirth"
                     label="Date of Birth"
                     type="date"
-                    value={formData.user?.date_of_birth}
+                    value={formData.user?.date_of_birth || formData.user?.dateOfBirth}
                     onChange={(e) => {
                         setEmployeeData(prev => ({
                             ...prev,

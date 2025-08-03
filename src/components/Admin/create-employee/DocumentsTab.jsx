@@ -8,7 +8,13 @@ export function DocumentsTab({ employeeData, setEmployeeData, onSaveSection, loa
     const handleSave = () => {
         // Only send documents section fields
         const sectionData = {
-            documents: uploadedDocuments,
+            documents: (uploadedDocuments || []).map(doc => ({
+                documentName: doc.type || '',
+                fileName: doc.documentNumber || '',
+                lastUpdated: doc.issueDate || new Date().toISOString(),
+                comment: doc.description || '',
+                user_id: employeeData.userId || employeeData.user?.id // Add user_id as required by backend
+            })),
         };
         onSaveSection(sectionData);
     };
@@ -30,10 +36,10 @@ export function DocumentsTab({ employeeData, setEmployeeData, onSaveSection, loa
                     <thead className="bg-gray-50 sticky top-0">
                         <tr>
                             <th className="px-4 py-2 text-left text-sm font-medium text-gray-500">Sr. No.</th>
-                            <th className="px-4 py-2 text-left text-sm font-medium text-gray-500">Document Name</th>
-                            <th className="px-4 py-2 text-left text-sm font-medium text-gray-500">File Name</th>
-                            <th className="px-4 py-2 text-left text-sm font-medium text-gray-500">Last Updated</th>
-                            <th className="px-4 py-2 text-left text-sm font-medium text-gray-500">Comments</th>
+                            <th className="px-4 py-2 text-left text-sm font-medium text-gray-500">Document Type</th>
+                            <th className="px-4 py-2 text-left text-sm font-medium text-gray-500">Document Number</th>
+                            <th className="px-4 py-2 text-left text-sm font-medium text-gray-500">Issue Date</th>
+                            <th className="px-4 py-2 text-left text-sm font-medium text-gray-500">Expiry Date</th>
                             <th className="px-4 py-2 text-left text-sm font-medium text-gray-500">Status</th>
                         </tr>
                     </thead>
@@ -41,10 +47,10 @@ export function DocumentsTab({ employeeData, setEmployeeData, onSaveSection, loa
                         {uploadedDocuments.map((doc, index) => (
                             <tr key={index} className="hover:bg-gray-50">
                                 <td className="px-4 py-2 text-sm">{index + 1}</td>
-                                <td className="px-4 py-2 text-sm">{doc.documentName}</td>
-                                <td className="px-4 py-2 text-sm">{doc.fileName}</td>
-                                <td className="px-4 py-2 text-sm">{format(new Date(doc.lastUpdated), 'dd-MMM-yyyy')}</td>
-                                <td className="px-4 py-2 text-sm">{doc.comment}</td>
+                                <td className="px-4 py-2 text-sm">{doc.type}</td>
+                                <td className="px-4 py-2 text-sm">{doc.documentNumber}</td>
+                                <td className="px-4 py-2 text-sm">{doc.issueDate ? format(new Date(doc.issueDate), 'dd-MMM-yyyy') : '-'}</td>
+                                <td className="px-4 py-2 text-sm">{doc.expiryDate ? format(new Date(doc.expiryDate), 'dd-MMM-yyyy') : '-'}</td>
                                 <td className="px-4 py-2 text-sm">
                                     <span className="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs">
                                         Uploaded

@@ -25,7 +25,85 @@ export default function EmployeeProfileDetails({
     // Update employeeData when employee prop changes
     useEffect(() => {
         if (employee) {
-            setEmployeeData(employee);
+            // Transform the API response to match our form structure
+            // const transformedEmployee = {
+            //     // Basic employee fields
+            //     id: employee.id,
+            //     employeeId: employee.employeeId,
+            //     userId: employee.userId,
+            //     departmentId: employee.departmentId,
+            //     designationId: employee.designationId,
+            //     branchId: employee.branchId,
+            //     subDepartmentId: employee.subDepartmentId,
+            //     gradeId: employee.gradeId,
+            //     categoryId: employee.categoryId,
+            //     reportingManagerId: employee.reportingManagerId,
+            //     joiningDate: employee.joiningDate,
+            //     employmentStatus: employee.employmentStatus,
+            //     employmentType: employee.employmentType,
+            //     photo: employee.photo,
+                
+            //     // User details (nested)
+            //     user: employee.user || {},
+                
+            //     // Department, designation, branch details (nested objects)
+            //     department: employee.department || {},
+            //     designation: employee.designation || {},
+            //     branch: employee.branch || {},
+            //     reportingManager: employee.reportingManager || {},
+                
+            //     // Address details (nested)
+            //     address: employee.address || {},
+                
+            //     // Arrays
+            //     familyMembers: employee.familyMembers || [],
+            //     qualifications: employee.qualifications || [],
+            //     experiences: employee.experiences || [],
+            //     documents: employee.documents || [],
+                
+            //     // Bank details (nested)
+            //     bankDetails: employee.bankDetails || {},
+                
+            //     // Map address fields to form structure (from address object)
+            //     presentHouseNumber: employee.address?.address || '',
+            //     presentCity: employee.address?.city || '',
+            //     presentState: employee.address?.state || '',
+            //     presentCountry: employee.address?.country || 'India',
+            //     presentPincode: employee.address?.pincode || '',
+                
+            //     permanentHouseNumber: employee.address?.permanentAddress || '',
+            //     permanentCity: employee.address?.permanentCity || '',
+            //     permanentState: employee.address?.permanentState || '',
+            //     permanentCountry: employee.address?.permanentCountry || 'India',
+            //     permanentPincode: employee.address?.permanentPincode || '',
+                
+            //     // Emergency contact (if available in the response)
+            //     emergencyContact: employee.emergencyContact || { name: '', number: '', relationship: '' },
+                
+            //     // Bank details mapping (from employee object)
+            //     bankName: employee.bankName || '',
+            //     accountNumber: employee.accountNumber || '',
+            //     ifscCode: employee.ifscCode || '',
+            //     branch: employee.branch || '',
+                
+            //     // Additional fields from API response
+            //     aadharNumber: employee.aadharNumber || '',
+            //     panNumber: employee.panNumber || '',
+            //     email: employee.email || employee.user?.email || '',
+            //     inviteSent: employee.inviteSent || false,
+            //     confirmationDate: employee.confirmationDate || '',
+            //     resignationDate: employee.resignationDate || '',
+            //     relievedDate: employee.relievedDate || '',
+            //     reason: employee.reason || '',
+                
+            //     // Checkbox fields
+            //     isOrphan: employee.isOrphan || false,
+            //     lessThanPrimary: employee.lessThanPrimary || false,
+            //     isFresher: employee.isFresher || false,
+            // };
+            
+            console.log('Transformed employee data:', employee);
+                setEmployeeData(employee);
         }
     }, [employee]);
 
@@ -81,11 +159,6 @@ export default function EmployeeProfileDetails({
 
     return (
         <div className={`mx-auto max-w-8xl ${darkMode ? 'bg-gray-800 text-white' : 'bg-white text-gray-900'}`}>
-            {employeeData.photo && (
-                <div className="flex justify-end p-1">
-                    <img src={employeeData.photo} alt="Employee" className="w-32 h-32 rounded-full object-cover" />
-                </div>
-            )}
             <Tabs activeTab={activeTab} setActiveTab={setActiveTab} />
             <div className="p-6">
                 {activeTab === 'org' && (

@@ -9,7 +9,8 @@ const FloatingInput = ({
     required = false,
     error,
     darkMode,
-    small = false
+    small = false,
+    name
 }) => {
     const [isFocused, setIsFocused] = useState(false);
 
@@ -20,7 +21,7 @@ const FloatingInput = ({
         <div className="relative mb-4">
             <input
                 id={id}
-                name={id}
+                name={name || id}
                 type={type}
                 value={value}
                 onChange={onChange}
