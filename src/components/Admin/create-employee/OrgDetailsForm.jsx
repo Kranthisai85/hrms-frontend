@@ -1,4 +1,4 @@
-import { useCallback } from 'react';
+import { useCallback, useState, useEffect } from 'react';
 import {
     branchService,
     categoryService,
@@ -15,8 +15,230 @@ import SearchableSelect from '../SearchableSelect.jsx';
 export function OrgDetailsForm({ employeeData, setEmployeeData, onSaveSection, loading, feedback, darkMode, onCancel }) {
     // Use employeeData for form values
     const formData = employeeData;
-    const formErrors = {};
-    // (You can add validation logic here if needed)
+    const [formErrors, setFormErrors] = useState({});
+    const [isFormValid, setIsFormValid] = useState(false);
+
+    // Validation functions
+    const validateAge = (dateOfBirth) => {
+        if (!dateOfBirth) return 'Date of Birth is required';
+        
+        const today = new Date();
+        const birthDate = new Date(dateOfBirth);
+        const age = today.getFullYear() - birthDate.getFullYear();
+        const monthDiff = today.getMonth() - birthDate.getMonth();
+        
+        if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+            age--;
+        }
+        
+        if (age < 18) {
+            return 'Employee must be at least 18 years old';
+        }
+        if (age > 70) {
+            return 'Employee age cannot be more than 70 years';
+        }
+        return null;
+    };
+
+    const validateEmail = (email) => {
+        if (!email) return 'Email is required';
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+            return 'Please enter a valid email address';
+        }
+        return null;
+    };
+
+    const validateMobileNumber = (phone) => {
+        if (!phone) return 'Mobile number is required';
+        const phoneRegex = /^[6-9]\d{9}$/;
+        if (!phoneRegex.test(phone)) {
+            return 'Please enter a valid 10-digit mobile number starting with 6, 7, 8, or 9';
+        }
+        return null;
+    };
+
+    const validatePAN = (pan) => {
+        if (!pan) return 'PAN is required';
+        const panRegex = /^[A-Z]{5}[0-9]{4}[A-Z]{1}$/;
+        if (!panRegex.test(pan.toUpperCase())) {
+            return 'Please enter a valid PAN number (e.g., ABCDE1234F)';
+        }
+        return null;
+    };
+
+    const validateAadhaar = (aadhaar) => {
+        if (!aadhaar) return 'Aadhaar number is required';
+        const aadhaarRegex = /^[0-9]{12}$/;
+        if (!aadhaarRegex.test(aadhaar)) {
+            return 'Please enter a valid 12-digit Aadhaar number';
+        }
+        return null;
+    };
+
+    const validateEmployeeCode = (empCode) => {
+        if (!empCode) return 'Employee Code is required';
+        if (empCode.length < 3) {
+            return 'Employee Code must be at least 3 characters long';
+        }
+        if (empCode.length > 20) {
+            return 'Employee Code cannot exceed 20 characters';
+        }
+        return null;
+    };
+
+    const validateName = (name) => {
+        if (!name) return 'Name is required';
+        if (name.length < 2) {
+            return 'Name must be at least 2 characters long';
+        }
+        if (name.length > 50) {
+            return 'Name cannot exceed 50 characters';
+        }
+        const nameRegex = /^[a-zA-Z\s]+$/;
+        if (!nameRegex.test(name)) {
+            return 'Name can only contain letters and spaces';
+        }
+        return null;
+    };
+
+    const validateJoiningDate = (joiningDate, dateOfBirth) => {
+        if (!joiningDate) return 'Joining Date is required';
+        
+        const joinDate = new Date(joiningDate);
+        const today = new Date();
+        
+        if (joinDate > today) {
+            return 'Joining Date cannot be in the future';
+        }
+        
+        if (dateOfBirth) {
+            const birthDate = new Date(dateOfBirth);
+            const ageAtJoining = joinDate.getFullYear() - birthDate.getFullYear();
+            const monthDiff = joinDate.getMonth() - birthDate.getMonth();
+            
+            if (monthDiff < 0 || (monthDiff === 0 && joinDate.getDate() < birthDate.getDate())) {
+                ageAtJoining--;
+            }
+            
+            if (ageAtJoining < 18) {
+                return 'Employee must be at least 18 years old at joining date';
+            }
+        }
+        
+        return null;
+    };
+
+    const validateConfirmationDate = (confirmationDate, joiningDate) => {
+        if (!confirmationDate) return 'Confirmation Date is required';
+        
+        const confirmDate = new Date(confirmationDate);
+        const joinDate = new Date(joiningDate);
+        const today = new Date();
+        
+        if (confirmDate < joinDate) {
+            return 'Confirmation Date cannot be before Joining Date';
+        }
+        
+        if (confirmDate > today) {
+            return 'Confirmation Date cannot be in the future';
+        }
+        
+        return null;
+    };
+
+    const validateResignationDate = (resignationDate, joiningDate) => {
+        if (!resignationDate) return 'Resignation Date is required';
+        
+        const resignDate = new Date(resignationDate);
+        const joinDate = new Date(joiningDate);
+        const today = new Date();
+        
+        if (resignDate < joinDate) {
+            return 'Resignation Date cannot be before Joining Date';
+        }
+        
+        if (resignDate > today) {
+            return 'Resignation Date cannot be in the future';
+        }
+        
+        return null;
+    };
+
+    const validateRelievedDate = (relievedDate, resignationDate) => {
+        if (!relievedDate) return 'Relieved Date is required';
+        
+        const relieveDate = new Date(relievedDate);
+        const resignDate = new Date(resignationDate);
+        const today = new Date();
+        
+        if (resignationDate && relieveDate < resignDate) {
+            return 'Relieved Date cannot be before Resignation Date';
+        }
+        
+        if (relieveDate > today) {
+            return 'Relieved Date cannot be in the future';
+        }
+        
+        return null;
+    };
+
+    // Comprehensive validation function
+    const validateForm = () => {
+        const errors = {};
+        
+        // Basic validations
+        errors.empCode = validateEmployeeCode(formData.empCode);
+        errors.name = validateName(formData.user?.name);
+        errors.dateOfBirth = validateAge(formData.user?.date_of_birth || formData.user?.dateOfBirth);
+        errors.email = validateEmail(formData.email);
+        errors.mobileNumber = validateMobileNumber(formData.user?.phone);
+        errors.panNumber = validatePAN(formData.panNumber);
+        errors.aadharNumber = validateAadhaar(formData.aadharNumber);
+        errors.joiningDate = validateJoiningDate(formData.joiningDate, formData.user?.date_of_birth || formData.user?.dateOfBirth);
+        
+        // Conditional validations
+        if (formData.employmentStatus === 'Confirmed' && formData.confirmationDate) {
+            errors.confirmationDate = validateConfirmationDate(formData.confirmationDate, formData.joiningDate);
+        }
+        
+        if ((formData.employmentStatus === 'Resigned' || formData.employmentStatus === 'Relieved') && formData.resignationDate) {
+            errors.resignationDate = validateResignationDate(formData.resignationDate, formData.joiningDate);
+        }
+        
+        if (formData.relievedDate) {
+            errors.relievedDate = validateRelievedDate(formData.relievedDate, formData.resignationDate);
+        }
+        
+        // Required field validations
+        if (!formData.branchId) errors.branchId = 'Branch is required';
+        if (!formData.designationId) errors.designationId = 'Designation is required';
+        if (!formData.departmentId) errors.departmentId = 'Department is required';
+        if (!formData.subDepartmentId) errors.subDepartmentId = 'Sub Department is required';
+        if (!formData.gradeId) errors.gradeId = 'Grade is required';
+        if (!formData.categoryId) errors.categoryId = 'Category is required';
+        if (!formData.employmentType) errors.employmentType = 'Employment Type is required';
+        if (!formData.employmentStatus) errors.employmentStatus = 'Employment Status is required';
+        if (!formData.user?.gender) errors.gender = 'Gender is required';
+        if (!formData.user?.blood_group) errors.bloodGroup = 'Blood Group is required';
+        
+        // Remove null values
+        Object.keys(errors).forEach(key => {
+            if (errors[key] === null) {
+                delete errors[key];
+            }
+        });
+        
+        setFormErrors(errors);
+        setIsFormValid(Object.keys(errors).length === 0);
+        
+        return Object.keys(errors).length === 0;
+    };
+
+    // Validate form on data changes
+    useEffect(() => {
+        validateForm();
+    }, [formData]);
 
     const handleInputChange = useCallback((e) => {
         const { name, value, type, checked } = e.target;
@@ -27,6 +249,10 @@ export function OrgDetailsForm({ employeeData, setEmployeeData, onSaveSection, l
     }, [setEmployeeData]);
 
     const handleSave = () => {
+        if (!validateForm()) {
+            return;
+        }
+        
         // Prepare data matching backend API expectations
         const sectionData = {
             // Employee basic fields (only those expected by backend)
@@ -39,17 +265,23 @@ export function OrgDetailsForm({ employeeData, setEmployeeData, onSaveSection, l
             reportingManagerId: formData.reportingManagerId,
             branchId: formData.branchId,
             employmentType: formData.employmentType,
+            employmentStatus: formData.employmentStatus,
             panNumber: formData.panNumber, // Backend expects 'pan'
             aadharNumber: formData.aadharNumber, // Backend expects 'aadhaarNo'
             officialEmail: formData.email, // Backend expects 'officialEmail'
             joiningDate: formData.joiningDate, // Backend expects 'dateOfJoin'
+            confirmationDate: formData.confirmationDate,
+            resignationDate: formData.resignationDate,
+            relievedDate: formData.relievedDate,
+            reason: formData.reason,
+            inviteSent: formData.inviteSent,
             
             // User details (for user update) - using backend expected field names
             name: formData.user?.name, // Backend expects 'name' not 'firstName'
             phone: formData.user?.phone, // Backend expects 'mobileNumber'
-            dateOfBirth: formData.user?.date_of_birth,
+            dateOfBirth: formData.user?.date_of_birth || formData.user?.dateOfBirth,
             gender: formData.user?.gender,
-            bloodGroup: formData.user?.blood_group
+            bloodGroup: formData.user?.blood_group || formData.user?.bloodGroup
         };
         onSaveSection(sectionData);
     };
@@ -108,6 +340,7 @@ export function OrgDetailsForm({ employeeData, setEmployeeData, onSaveSection, l
                     }}
                     required
                     error={formErrors.dateOfBirth}
+                    max={new Date().toISOString().split('T')[0]}
                 />
                 <SearchableSelect
                     id="branchId"
@@ -188,6 +421,7 @@ export function OrgDetailsForm({ employeeData, setEmployeeData, onSaveSection, l
                     onChange={handleInputChange}
                     required
                     error={formErrors.joiningDate}
+                    max={new Date().toISOString().split('T')[0]}
                 />
                 <SearchableSelect
                     id="employmentType"
@@ -220,15 +454,17 @@ export function OrgDetailsForm({ employeeData, setEmployeeData, onSaveSection, l
                     error={formErrors.employmentStatus}
                 />
                 {formData.employmentStatus === 'Confirmed' && (
-                    <FloatingInput
-                        id="confirmationDate"
-                        label="Confirmation Date"
-                        type="date"
-                        value={formData.confirmationDate}
-                        onChange={handleInputChange}
-                        required
-                        error={formErrors.confirmationDate}
-                    />
+                                    <FloatingInput
+                    id="confirmationDate"
+                    label="Confirmation Date"
+                    type="date"
+                    value={formData.confirmationDate}
+                    onChange={handleInputChange}
+                    required
+                    error={formErrors.confirmationDate}
+                    min={formData.joiningDate || new Date().toISOString().split('T')[0]}
+                    max={new Date().toISOString().split('T')[0]}
+                />
                 )}
                 {(formData.employmentStatus === 'Resigned' || formData.employmentStatus === 'Relieved') && (
                     <>
@@ -240,6 +476,8 @@ export function OrgDetailsForm({ employeeData, setEmployeeData, onSaveSection, l
                             onChange={handleInputChange}
                             required
                             error={formErrors.resignationDate}
+                            min={formData.joiningDate || new Date().toISOString().split('T')[0]}
+                            max={new Date().toISOString().split('T')[0]}
                         />
                         <FloatingInput
                             id="relievedDate"
@@ -249,6 +487,8 @@ export function OrgDetailsForm({ employeeData, setEmployeeData, onSaveSection, l
                             onChange={handleInputChange}
                             required
                             error={formErrors.relievedDate}
+                            min={formData.resignationDate || formData.joiningDate || new Date().toISOString().split('T')[0]}
+                            max={new Date().toISOString().split('T')[0]}
                         />
                         <SearchableSelect
                             id="reasonForResignation"
@@ -272,6 +512,8 @@ export function OrgDetailsForm({ employeeData, setEmployeeData, onSaveSection, l
                             onChange={handleInputChange}
                             required
                             error={formErrors.relievedDate}
+                            min={formData.joiningDate || new Date().toISOString().split('T')[0]}
+                            max={new Date().toISOString().split('T')[0]}
                         />
                         <SearchableSelect
                             id="reasonForTermination"
@@ -297,6 +539,8 @@ export function OrgDetailsForm({ employeeData, setEmployeeData, onSaveSection, l
                     }}
                     required
                     error={formErrors.mobileNumber}
+                    maxLength={10}
+                    placeholder="10-digit mobile number"
                 />
                 <FloatingInput
                     id="email"
@@ -336,6 +580,8 @@ export function OrgDetailsForm({ employeeData, setEmployeeData, onSaveSection, l
                     onChange={handleInputChange}
                     required
                     error={formErrors.aadharNumber}
+                    maxLength={12}
+                    placeholder="12-digit Aadhaar number"
                 />
                 <FloatingInput
                     id="panNumber"
@@ -344,6 +590,8 @@ export function OrgDetailsForm({ employeeData, setEmployeeData, onSaveSection, l
                     onChange={handleInputChange}
                     required
                     error={formErrors.panNumber}
+                    maxLength={10}
+                    placeholder="ABCDE1234F"
                 />
                 <div className="flex items-center">
                     <input
@@ -362,8 +610,12 @@ export function OrgDetailsForm({ employeeData, setEmployeeData, onSaveSection, l
             <div className="mt-6 flex justify-end space-x-2">
                 <button
                     onClick={handleSave}
-                    className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-                    disabled={loading}
+                    className={`px-4 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 ${
+                        isFormValid && !loading
+                            ? 'bg-blue-500 text-white hover:bg-blue-600 focus:ring-blue-500'
+                            : 'bg-gray-400 text-gray-600 cursor-not-allowed'
+                    }`}
+                    disabled={loading || !isFormValid}
                 >
                     {employeeData.id ? 'Update ' : 'Create '} {"Employee"}
                 </button>
@@ -377,6 +629,21 @@ export function OrgDetailsForm({ employeeData, setEmployeeData, onSaveSection, l
             </div>
             {feedback && (
                 <div className={`mt-2 ${feedback.type === 'success' ? 'text-green-600' : 'text-red-600'}`}>{feedback.message}</div>
+            )}
+            
+            {/* Validation Summary */}
+            {Object.keys(formErrors).length > 0 && (
+                <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-md">
+                    <h3 className="text-sm font-medium text-red-800 mb-2">Please fix the following errors:</h3>
+                    <ul className="text-sm text-red-700 space-y-1">
+                        {Object.entries(formErrors).map(([field, error]) => (
+                            <li key={field} className="flex items-start">
+                                <span className="mr-2">•</span>
+                                <span>{error}</span>
+                            </li>
+                        ))}
+                    </ul>
+                </div>
             )}
         </div>
     );
