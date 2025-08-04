@@ -4,9 +4,9 @@ import { Link, useNavigate } from "react-router-dom"
 const navItems = [
   { name: "Masters", icon: <FileText className="w-5 h-5" /> },
   { name: "Employee", icon: <Users className="w-5 h-5" /> },
-  { name: "Time & Attendance", icon: <CalendarClock className="w-5 h-5" /> },
-  { name: "Payroll", icon: <HandCoins className="w-5 h-5" /> },
-  { name: "Reports", icon: <BarChart2 className="w-5 h-5" /> },
+  // { name: "Time & Attendance", icon: <CalendarClock className="w-5 h-5" /> },
+  // { name: "Payroll", icon: <HandCoins className="w-5 h-5" /> },
+  // { name: "Reports", icon: <BarChart2 className="w-5 h-5" /> },
 ]
 
 export default function Sidebar({ setCurrentPage, darkMode, toggleDarkMode }) {

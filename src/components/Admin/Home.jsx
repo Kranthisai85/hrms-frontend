@@ -38,8 +38,10 @@ function Home({ darkMode, setCurrentPage, toggleDarkMode }) {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 w-full max-w-6xl">
             {[
               { title: "Employee Management", description: "Streamline your workforce operations" },
-              { title: "Time & Attendance", description: "Track and manage employee time efficiently" },
-              { title: "Payroll Processing", description: "Simplify your payroll operations" }
+              { title: "Time & Attendance", description: "Coming Soon..." },
+              { title: "Payroll Processing", description: "Coming Soon..." }
+              // { title: "Time & Attendance", description: "Track and manage employee time efficiently" },
+              // { title: "Payroll Processing", description: "Simplify your payroll operations" }
             ].map((card, index) => (
               <motion.div
                 key={index}

@@ -17,6 +17,7 @@ export function OrgDetailsForm({ employeeData, setEmployeeData, onSaveSection, l
     const formData = employeeData;
     const [formErrors, setFormErrors] = useState({});
     const [isFormValid, setIsFormValid] = useState(false);
+    const [touchedFields, setTouchedFields] = useState({});
 
     // Validation functions
     const validateAge = (dateOfBirth) => {
@@ -106,11 +107,6 @@ export function OrgDetailsForm({ employeeData, setEmployeeData, onSaveSection, l
         if (!joiningDate) return 'Joining Date is required';
         
         const joinDate = new Date(joiningDate);
-        const today = new Date();
-        
-        if (joinDate > today) {
-            return 'Joining Date cannot be in the future';
-        }
         
         if (dateOfBirth) {
             const birthDate = new Date(dateOfBirth);
@@ -134,14 +130,9 @@ export function OrgDetailsForm({ employeeData, setEmployeeData, onSaveSection, l
         
         const confirmDate = new Date(confirmationDate);
         const joinDate = new Date(joiningDate);
-        const today = new Date();
         
         if (confirmDate < joinDate) {
             return 'Confirmation Date cannot be before Joining Date';
-        }
-        
-        if (confirmDate > today) {
-            return 'Confirmation Date cannot be in the future';
         }
         
         return null;
@@ -152,14 +143,9 @@ export function OrgDetailsForm({ employeeData, setEmployeeData, onSaveSection, l
         
         const resignDate = new Date(resignationDate);
         const joinDate = new Date(joiningDate);
-        const today = new Date();
         
         if (resignDate < joinDate) {
             return 'Resignation Date cannot be before Joining Date';
-        }
-        
-        if (resignDate > today) {
-            return 'Resignation Date cannot be in the future';
         }
         
         return null;
@@ -170,20 +156,70 @@ export function OrgDetailsForm({ employeeData, setEmployeeData, onSaveSection, l
         
         const relieveDate = new Date(relievedDate);
         const resignDate = new Date(resignationDate);
-        const today = new Date();
         
         if (resignationDate && relieveDate < resignDate) {
             return 'Relieved Date cannot be before Resignation Date';
         }
         
-        if (relieveDate > today) {
-            return 'Relieved Date cannot be in the future';
-        }
-        
         return null;
     };
 
-    // Comprehensive validation function
+    const validateCTC = (ctc) => {
+        if (!ctc) return 'CTC is required';
+        if (isNaN(ctc) || parseFloat(ctc) <= 0) {
+            return 'CTC must be a valid positive number';
+        }
+        if (parseFloat(ctc) > 999999999) {
+            return 'CTC cannot exceed 999,999,999';
+        }
+        return null;
+    };
+
+    // Validate individual field
+    const validateField = (fieldName, value) => {
+        switch (fieldName) {
+            case 'empCode':
+                return validateEmployeeCode(value);
+            case 'name':
+                return validateName(value);
+            case 'dateOfBirth':
+                return validateAge(value);
+            case 'email':
+                return validateEmail(value);
+            case 'mobileNumber':
+                return validateMobileNumber(value);
+            case 'panNumber':
+                return validatePAN(value);
+            case 'aadharNumber':
+                return validateAadhaar(value);
+            case 'bloodGroup':
+                return !value ? 'Blood Group is required' : null;
+            case 'joiningDate':
+                return validateJoiningDate(value, formData.user?.date_of_birth || formData.user?.dateOfBirth);
+            case 'confirmationDate':
+                return validateConfirmationDate(value, formData.joiningDate);
+            case 'resignationDate':
+                return validateResignationDate(value, formData.joiningDate);
+            case 'relievedDate':
+                return validateRelievedDate(value, formData.resignationDate);
+            case 'ctc':
+                return validateCTC(value);
+            case 'branchId':
+            case 'designationId':
+            case 'departmentId':
+            case 'subDepartmentId':
+            case 'gradeId':
+            case 'categoryId':
+            case 'employmentType':
+            case 'employmentStatus':
+            case 'gender':
+                return !value ? `${fieldName.charAt(0).toUpperCase() + fieldName.slice(1)} is required` : null;
+            default:
+                return null;
+        }
+    };
+
+    // Comprehensive validation function for entire form
     const validateForm = () => {
         const errors = {};
         
@@ -195,6 +231,7 @@ export function OrgDetailsForm({ employeeData, setEmployeeData, onSaveSection, l
         errors.mobileNumber = validateMobileNumber(formData.user?.phone);
         errors.panNumber = validatePAN(formData.panNumber);
         errors.aadharNumber = validateAadhaar(formData.aadharNumber);
+        errors.ctc = validateCTC(formData.ctc);
         errors.joiningDate = validateJoiningDate(formData.joiningDate, formData.user?.date_of_birth || formData.user?.dateOfBirth);
         
         // Conditional validations
@@ -220,7 +257,7 @@ export function OrgDetailsForm({ employeeData, setEmployeeData, onSaveSection, l
         if (!formData.employmentType) errors.employmentType = 'Employment Type is required';
         if (!formData.employmentStatus) errors.employmentStatus = 'Employment Status is required';
         if (!formData.user?.gender) errors.gender = 'Gender is required';
-        if (!formData.user?.blood_group) errors.bloodGroup = 'Blood Group is required';
+        if (!formData.user?.bloodGroup) errors.bloodGroup = 'Blood Group is required';
         
         // Remove null values
         Object.keys(errors).forEach(key => {
@@ -235,20 +272,56 @@ export function OrgDetailsForm({ employeeData, setEmployeeData, onSaveSection, l
         return Object.keys(errors).length === 0;
     };
 
-    // Validate form on data changes
-    useEffect(() => {
-        validateForm();
-    }, [formData]);
+    // Handle field blur - validate individual field when user leaves the field
+    const handleFieldBlur = (fieldName, value) => {
+        setTouchedFields(prev => ({ ...prev, [fieldName]: true }));
+        
+        const error = validateField(fieldName, value);
+        setFormErrors(prev => ({
+            ...prev,
+            [fieldName]: error
+        }));
+    };
+
+    // Handle field change - validate and remove errors when value becomes valid
+    const handleFieldChange = (fieldName, value) => {
+        // Validate on change if field has been touched
+        if (touchedFields[fieldName]) {
+            const error = validateField(fieldName, value);
+            setFormErrors(prev => ({
+                ...prev,
+                [fieldName]: error
+            }));
+        }
+    };
+
+    // Handle field change with immediate validation (for real-time feedback)
+    const handleFieldChangeWithValidation = (fieldName, value) => {
+        // Mark field as touched and validate immediately
+        setTouchedFields(prev => ({ ...prev, [fieldName]: true }));
+        
+        const error = validateField(fieldName, value);
+        setFormErrors(prev => ({
+            ...prev,
+            [fieldName]: error
+        }));
+    };
 
     const handleInputChange = useCallback((e) => {
         const { name, value, type, checked } = e.target;
+        const fieldValue = type === 'checkbox' ? checked : value;
+        
         setEmployeeData(prev => ({
             ...prev,
-            [name]: type === 'checkbox' ? checked : value,
+            [name]: fieldValue,
         }));
+        
+        // Validate field immediately for real-time feedback
+        handleFieldChangeWithValidation(name, fieldValue);
     }, [setEmployeeData]);
 
     const handleSave = () => {
+        // Validate entire form when save is clicked
         if (!validateForm()) {
             return;
         }
@@ -275,13 +348,13 @@ export function OrgDetailsForm({ employeeData, setEmployeeData, onSaveSection, l
             relievedDate: formData.relievedDate,
             reason: formData.reason,
             inviteSent: formData.inviteSent,
-            
+            ctc: formData.ctc,
             // User details (for user update) - using backend expected field names
             name: formData.user?.name, // Backend expects 'name' not 'firstName'
             phone: formData.user?.phone, // Backend expects 'mobileNumber'
-            dateOfBirth: formData.user?.date_of_birth || formData.user?.dateOfBirth,
+            dateOfBirth:  formData.user?.dateOfBirth,
             gender: formData.user?.gender,
-            bloodGroup: formData.user?.blood_group || formData.user?.bloodGroup
+            bloodGroup: formData.user?.bloodGroup
         };
         onSaveSection(sectionData);
     };
@@ -294,6 +367,7 @@ export function OrgDetailsForm({ employeeData, setEmployeeData, onSaveSection, l
                     label="Employee Code"
                     value={formData.empCode || ''}
                     onChange={handleInputChange}
+                    onBlur={(e) => handleFieldBlur('empCode', e.target.value)}
                     required
                     error={formErrors.empCode}
                 />
@@ -302,11 +376,14 @@ export function OrgDetailsForm({ employeeData, setEmployeeData, onSaveSection, l
                     label="Name"
                     value={formData.user?.name || ''}
                     onChange={(e) => {
+                        const value = e.target.value;
                         setEmployeeData(prev => ({
                             ...prev,
-                            user: { ...prev.user, name: e.target.value }
+                            user: { ...prev.user, name: value }
                         }));
+                        handleFieldChangeWithValidation('name', value);
                     }}
+                    onBlur={(e) => handleFieldBlur('name', e.target.value)}
                     required
                     error={formErrors.name}
                 />
@@ -315,11 +392,14 @@ export function OrgDetailsForm({ employeeData, setEmployeeData, onSaveSection, l
                     label="Gender"
                     value={formData.user?.gender}
                     onChange={(e) => {
+                        const value = e.target.value;
                         setEmployeeData(prev => ({
                             ...prev,
-                            user: { ...prev.user, gender: e.target.value }
+                            user: { ...prev.user, gender: value }
                         }));
+                        handleFieldChangeWithValidation('gender', value);
                     }}
+                    onBlur={(e) => handleFieldBlur('gender', e.target.value)}
                     staticOptions={[
                         { value: 'Male', label: 'Male' },
                         { value: 'Female', label: 'Female' },
@@ -333,11 +413,14 @@ export function OrgDetailsForm({ employeeData, setEmployeeData, onSaveSection, l
                     type="date"
                     value={formData.user?.date_of_birth || formData.user?.dateOfBirth}
                     onChange={(e) => {
+                        const value = e.target.value;
                         setEmployeeData(prev => ({
                             ...prev,
-                            user: { ...prev.user, date_of_birth: e.target.value }
+                            user: { ...prev.user, date_of_birth: value }
                         }));
+                        handleFieldChangeWithValidation('dateOfBirth', value);
                     }}
+                    onBlur={(e) => handleFieldBlur('dateOfBirth', e.target.value)}
                     required
                     error={formErrors.dateOfBirth}
                     max={new Date().toISOString().split('T')[0]}
@@ -347,6 +430,7 @@ export function OrgDetailsForm({ employeeData, setEmployeeData, onSaveSection, l
                     label="Branch"
                     value={formData.branchId}
                     onChange={handleInputChange}
+                    onBlur={(e) => handleFieldBlur('branchId', e.target.value)}
                     fetchOptions={branchService.getBranches}
                     darkMode={darkMode}
                     required
@@ -357,6 +441,7 @@ export function OrgDetailsForm({ employeeData, setEmployeeData, onSaveSection, l
                     label="Designation"
                     value={formData.designationId}
                     onChange={handleInputChange}
+                    onBlur={(e) => handleFieldBlur('designationId', e.target.value)}
                     fetchOptions={designationService.getDesignations}
                     darkMode={darkMode}
                     required
@@ -367,6 +452,7 @@ export function OrgDetailsForm({ employeeData, setEmployeeData, onSaveSection, l
                     label="Department"
                     value={formData.departmentId}
                     onChange={handleInputChange}
+                    onBlur={(e) => handleFieldBlur('departmentId', e.target.value)}
                     fetchOptions={departmentService.getDepartments}
                     darkMode={darkMode}
                     required
@@ -377,6 +463,7 @@ export function OrgDetailsForm({ employeeData, setEmployeeData, onSaveSection, l
                     label="Sub Department"
                     value={formData.subDepartmentId}
                     onChange={handleInputChange}
+                    onBlur={(e) => handleFieldBlur('subDepartmentId', e.target.value)}
                     fetchOptions={subDepartmentService.getAllSubDepartments}
                     darkMode={darkMode}
                     required
@@ -387,6 +474,7 @@ export function OrgDetailsForm({ employeeData, setEmployeeData, onSaveSection, l
                     label="Grade"
                     value={formData.gradeId}
                     onChange={handleInputChange}
+                    onBlur={(e) => handleFieldBlur('gradeId', e.target.value)}
                     fetchOptions={gradesService.getGrades}
                     darkMode={darkMode}
                     required
@@ -397,6 +485,7 @@ export function OrgDetailsForm({ employeeData, setEmployeeData, onSaveSection, l
                     label="Category"
                     value={formData.categoryId}
                     onChange={handleInputChange}
+                    onBlur={(e) => handleFieldBlur('categoryId', e.target.value)}
                     fetchOptions={categoryService.getAllCategories}
                     darkMode={darkMode}
                     required
@@ -407,6 +496,7 @@ export function OrgDetailsForm({ employeeData, setEmployeeData, onSaveSection, l
                     label="Reporting Manager"
                     value={formData.reportingManagerId}
                     onChange={handleInputChange}
+                    onBlur={(e) => handleFieldBlur('reportingManagerId', e.target.value)}
                     error={formErrors.reportingManagerId}
                     fetchOptions={employeeService.getEmployees}
                     darkMode={darkMode}
@@ -419,15 +509,21 @@ export function OrgDetailsForm({ employeeData, setEmployeeData, onSaveSection, l
                     type="date"
                     value={formData.joiningDate || ''}
                     onChange={handleInputChange}
+                    onBlur={(e) => handleFieldBlur('joiningDate', e.target.value)}
                     required
                     error={formErrors.joiningDate}
-                    max={new Date().toISOString().split('T')[0]}
+                    min={formData.user?.date_of_birth || formData.user?.dateOfBirth}
                 />
                 <SearchableSelect
                     id="employmentType"
                     label="Employee Type"
                     value={formData.employmentType}
-                    onChange={(e) => handleInputChange({ target: { name: 'employmentType', value: e.target.value } })}
+                    onChange={(e) => {
+                        const value = e.target.value;
+                        handleInputChange({ target: { name: 'employmentType', value: value } });
+                        handleFieldChangeWithValidation('employmentType', value);
+                    }}
+                    onBlur={(e) => handleFieldBlur('employmentType', e.target.value)}
                     staticOptions={[
                         { value: 'Full-time', label: 'Full-Time' },
                         { value: 'Part-time', label: 'Part-Time' },
@@ -441,7 +537,12 @@ export function OrgDetailsForm({ employeeData, setEmployeeData, onSaveSection, l
                     id="employmentStatus"
                     label="Employment Status"
                     value={formData.employmentStatus}
-                    onChange={(e) => handleInputChange({ target: { name: 'employmentStatus', value: e.target.value } })}
+                    onChange={(e) => {
+                        const value = e.target.value;
+                        handleInputChange({ target: { name: 'employmentStatus', value: value } });
+                        handleFieldChangeWithValidation('employmentStatus', value);
+                    }}
+                    onBlur={(e) => handleFieldBlur('employmentStatus', e.target.value)}
                     staticOptions={[
                         { value: 'Probation', label: 'Probation' },
                         { value: 'Confirmed', label: 'Confirmed' },
@@ -460,10 +561,10 @@ export function OrgDetailsForm({ employeeData, setEmployeeData, onSaveSection, l
                     type="date"
                     value={formData.confirmationDate}
                     onChange={handleInputChange}
+                    onBlur={(e) => handleFieldBlur('confirmationDate', e.target.value)}
                     required
                     error={formErrors.confirmationDate}
                     min={formData.joiningDate || new Date().toISOString().split('T')[0]}
-                    max={new Date().toISOString().split('T')[0]}
                 />
                 )}
                 {(formData.employmentStatus === 'Resigned' || formData.employmentStatus === 'Relieved') && (
@@ -474,10 +575,10 @@ export function OrgDetailsForm({ employeeData, setEmployeeData, onSaveSection, l
                             type="date"
                             value={formData.resignationDate}
                             onChange={handleInputChange}
+                            onBlur={(e) => handleFieldBlur('resignationDate', e.target.value)}
                             required
                             error={formErrors.resignationDate}
                             min={formData.joiningDate || new Date().toISOString().split('T')[0]}
-                            max={new Date().toISOString().split('T')[0]}
                         />
                         <FloatingInput
                             id="relievedDate"
@@ -485,16 +586,21 @@ export function OrgDetailsForm({ employeeData, setEmployeeData, onSaveSection, l
                             type="date"
                             value={formData.relievedDate}
                             onChange={handleInputChange}
+                            onBlur={(e) => handleFieldBlur('relievedDate', e.target.value)}
                             required
                             error={formErrors.relievedDate}
                             min={formData.resignationDate || formData.joiningDate || new Date().toISOString().split('T')[0]}
-                            max={new Date().toISOString().split('T')[0]}
                         />
                         <SearchableSelect
                             id="reasonForResignation"
                             label="Resignation Reason"
                             value={formData.reason}
-                            onChange={handleInputChange}
+                            onChange={(e) => {
+                                const value = e.target.value;
+                                handleInputChange({ target: { name: 'reason', value: value } });
+                                handleFieldChangeWithValidation('reason', value);
+                            }}
+                            onBlur={(e) => handleFieldBlur('reason', e.target.value)}
                             fetchOptions={reasonsService.getAllResignationReasons}
                             darkMode={darkMode}
                             required
@@ -510,16 +616,21 @@ export function OrgDetailsForm({ employeeData, setEmployeeData, onSaveSection, l
                             type="date"
                             value={formData.relievedDate}
                             onChange={handleInputChange}
+                            onBlur={(e) => handleFieldBlur('relievedDate', e.target.value)}
                             required
                             error={formErrors.relievedDate}
                             min={formData.joiningDate || new Date().toISOString().split('T')[0]}
-                            max={new Date().toISOString().split('T')[0]}
                         />
                         <SearchableSelect
                             id="reasonForTermination"
                             label="Termination Reason"
                             value={formData.reason}
-                            onChange={handleInputChange}
+                            onChange={(e) => {
+                                const value = e.target.value;
+                                handleInputChange({ target: { name: 'reason', value: value } });
+                                handleFieldChangeWithValidation('reason', value);
+                            }}
+                            onBlur={(e) => handleFieldBlur('reason', e.target.value)}
                             fetchOptions={reasonsService.getAllTerminationReasons}
                             darkMode={darkMode}
                             required
@@ -532,11 +643,14 @@ export function OrgDetailsForm({ employeeData, setEmployeeData, onSaveSection, l
                     label="Mobile Number"
                     value={formData.user?.phone}
                     onChange={(e) => {
+                        const value = e.target.value;
                         setEmployeeData(prev => ({
                             ...prev,
-                            user: { ...prev.user, phone: e.target.value }
+                            user: { ...prev.user, phone: value }
                         }));
+                        handleFieldChangeWithValidation('mobileNumber', value);
                     }}
+                    onBlur={(e) => handleFieldBlur('mobileNumber', e.target.value)}
                     required
                     error={formErrors.mobileNumber}
                     maxLength={10}
@@ -548,19 +662,23 @@ export function OrgDetailsForm({ employeeData, setEmployeeData, onSaveSection, l
                     type="email"
                     value={formData.email || ''}
                     onChange={handleInputChange}
+                    onBlur={(e) => handleFieldBlur('email', e.target.value)}
                     required
                     error={formErrors.email}
                 />
                 <SearchableSelect
                     id="bloodGroup"
                     label="Blood Group"
-                    value={formData.user?.blood_group}
+                    value={formData.user?.bloodGroup}
                     onChange={(e) => {
+                        const value = e.target.value;
                         setEmployeeData(prev => ({
                             ...prev,
-                            user: { ...prev.user, blood_group: e.target.value }
+                            user: { ...prev.user, bloodGroup: value }
                         }));
+                        handleFieldChangeWithValidation('bloodGroup', value);
                     }}
+                    onBlur={(e) => handleFieldBlur('bloodGroup', e.target.value)}
                     staticOptions={[
                         { label: 'A+', value: 'A+' },
                         { label: 'A-', value: 'A-' },
@@ -572,12 +690,14 @@ export function OrgDetailsForm({ employeeData, setEmployeeData, onSaveSection, l
                         { label: 'O-', value: 'O-' }
                     ]}
                     required
+                    error={formErrors.bloodGroup}
                 />
                 <FloatingInput
                     id="aadharNumber"
                     label="Aadhaar No"
                     value={formData.aadharNumber || ''}
                     onChange={handleInputChange}
+                    onBlur={(e) => handleFieldBlur('aadharNumber', e.target.value)}
                     required
                     error={formErrors.aadharNumber}
                     maxLength={12}
@@ -588,18 +708,33 @@ export function OrgDetailsForm({ employeeData, setEmployeeData, onSaveSection, l
                     label="PAN"
                     value={formData.panNumber || ''}
                     onChange={handleInputChange}
+                    onBlur={(e) => handleFieldBlur('panNumber', e.target.value)}
                     required
                     error={formErrors.panNumber}
                     maxLength={10}
-                    placeholder="ABCDE1234F"
-                />
-                <div className="flex items-center">
+                                         placeholder="ABCDE1234F"
+                 />
+                 <FloatingInput
+                     id="ctc"
+                     label="CTC (Cost to Company)"
+                     type="number"
+                     value={formData.ctc || ''}
+                     onChange={handleInputChange}
+                     onBlur={(e) => handleFieldBlur('ctc', e.target.value)}
+                     required
+                     error={formErrors.ctc}
+                     min="0"
+                     step="0.01"
+                     placeholder="Enter CTC amount"
+                 />
+                 <div className="flex items-center">
                     <input
                         type="checkbox"
                         id="inviteSent"
                         name="inviteSent"
                         checked={formData.inviteSent}
                         onChange={handleInputChange}
+                        onBlur={(e) => handleFieldBlur('inviteSent', e.target.checked)}
                         className="mr-2 rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
                     />
                     <label htmlFor="inviteSent" className="text-sm font-medium text-gray-700">
@@ -611,11 +746,11 @@ export function OrgDetailsForm({ employeeData, setEmployeeData, onSaveSection, l
                 <button
                     onClick={handleSave}
                     className={`px-4 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 ${
-                        isFormValid && !loading
+                        !loading
                             ? 'bg-blue-500 text-white hover:bg-blue-600 focus:ring-blue-500'
                             : 'bg-gray-400 text-gray-600 cursor-not-allowed'
                     }`}
-                    disabled={loading || !isFormValid}
+                    disabled={loading}
                 >
                     {employeeData.id ? 'Update ' : 'Create '} {"Employee"}
                 </button>
@@ -631,7 +766,7 @@ export function OrgDetailsForm({ employeeData, setEmployeeData, onSaveSection, l
                 <div className={`mt-2 ${feedback.type === 'success' ? 'text-green-600' : 'text-red-600'}`}>{feedback.message}</div>
             )}
             
-            {/* Validation Summary */}
+            {/* Validation Summary - Only show when form is submitted or fields are touched */}
             {Object.keys(formErrors).length > 0 && (
                 <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-md">
                     <h3 className="text-sm font-medium text-red-800 mb-2">Please fix the following errors:</h3>

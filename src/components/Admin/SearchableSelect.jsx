@@ -30,7 +30,7 @@ const SearchableSelect = ({
                 const data = response.data;
                 const formattedOptions = data.map(item => ({
                     value: item.id,
-                    label: isEmployee ? `${item.employeeId} - ${item.user.name} ${item.user.lastName ?? ''}` : item.name,
+                    label: isEmployee ? `${item.empCode} - ${item.user.name} ${item.user.lastName ?? ''}` : item.name,
                 }));
                 setOptions(formattedOptions);
             } catch (error) {
