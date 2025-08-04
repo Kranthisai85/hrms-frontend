@@ -265,7 +265,7 @@ export default function Employee({ darkMode, setCurrentPage, toggleDarkMode }) {
                        Invite Employee
                      </button>
                      <button 
-                       onClick={() => { setSelectedEmployee(null); setShowForm(true); }} 
+                       onClick={() => { setSelectedEmployee(null); setShowForm(true);}} 
                        className={`px-4 py-2 ${darkMode ? 'bg-[#03DAC6] text-[#1C1C1C] hover:bg-[#00BFA5]' : 'bg-green-600 text-white hover:bg-green-700'} rounded-md text-xs font-medium transition-all duration-200 transform hover:scale-102 flex items-center`}
                      >
                        <span className="mr-1.5">+</span>
@@ -392,7 +392,7 @@ export default function Employee({ darkMode, setCurrentPage, toggleDarkMode }) {
                            onClick={() => handleEdit(employee)}
                          >
                            <td className="px-4 py-3 font-medium">{(currentPageNumber - 1) * itemsPerPage + index + 1}</td>
-                           <td className="px-4 py-3 font-medium">{employee.employeeId}</td>
+                           <td className="px-4 py-3 font-medium">{employee.empCode}</td>
                            <td className="px-4 py-3 font-medium">{`${employee.user.name} ${employee.user.lastName != undefined ? employee.user.lastName : ''}`}</td>
                            <td className="px-4 py-3">{getNameByIdFromList(employee.designationId, designationsList)}</td>
                            <td className="px-4 py-3">{getNameByIdFromList(employee.departmentId, departmentsList)}</td>
@@ -492,7 +492,7 @@ export default function Employee({ darkMode, setCurrentPage, toggleDarkMode }) {
                   <div className="flex justify-between items-center h-14">
                     <div className="flex items-center">
                       <button
-                        onClick={() => setShowForm(false)}
+                        onClick={() => {setShowForm(false); fetchEmployees()}}
                         className={`mr-4 p-1.5 rounded-full hover:bg-gray-100 ${darkMode ? 'hover:bg-gray-800' : ''}`}
                       >
                         <X size={20} />
@@ -512,7 +512,7 @@ export default function Employee({ darkMode, setCurrentPage, toggleDarkMode }) {
                       employee={selectedEmployee}
                       darkMode={darkMode}
                       onSave={handleSubmit}
-                      onCancel={() => setShowForm(false)}
+                      onCancel={() => {setShowForm(false); fetchEmployees()}}
                       formId="employee-form"
                     />
                   </div>

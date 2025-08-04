@@ -31,16 +31,22 @@ export function OrgDetailsForm({ employeeData, setEmployeeData, onSaveSection, l
         const sectionData = {
             // Employee basic fields (only those expected by backend)
             departmentId: formData.departmentId,
+            empCode: formData.empCode,
             designationId: formData.designationId,
+            subDepartmentId: formData.subDepartmentId,
+            gradeId: formData.gradeId,
+            categoryId: formData.categoryId,
+            reportingManagerId: formData.reportingManagerId,
             branchId: formData.branchId,
             employmentType: formData.employmentType,
-            panNumber: formData.panNumber,
-            aadharNumber: formData.aadharNumber,
-            email: formData.email,
+            panNumber: formData.panNumber, // Backend expects 'pan'
+            aadharNumber: formData.aadharNumber, // Backend expects 'aadhaarNo'
+            officialEmail: formData.email, // Backend expects 'officialEmail'
+            joiningDate: formData.joiningDate, // Backend expects 'dateOfJoin'
             
             // User details (for user update) - using backend expected field names
-            firstName: formData.user?.name,
-            phoneNumber: formData.user?.phone, // Backend expects phoneNumber for employee
+            name: formData.user?.name, // Backend expects 'name' not 'firstName'
+            phone: formData.user?.phone, // Backend expects 'mobileNumber'
             dateOfBirth: formData.user?.date_of_birth,
             gender: formData.user?.gender,
             bloodGroup: formData.user?.blood_group
@@ -52,12 +58,12 @@ export function OrgDetailsForm({ employeeData, setEmployeeData, onSaveSection, l
         <div className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                 <FloatingInput
-                    id="employeeId"
+                    id="empCode"
                     label="Employee Code"
-                    value={formData.employeeId || ''}
+                    value={formData.empCode || ''}
                     onChange={handleInputChange}
                     required
-                    error={formErrors.employeeId}
+                    error={formErrors.empCode}
                 />
                 <FloatingInput
                     id="name"
