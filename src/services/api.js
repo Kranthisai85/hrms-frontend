@@ -11,13 +11,18 @@ const api = axios.create({
   },
 });
 
-// Add request interceptor to add auth token
+// Add request interceptor to add auth token and frontend host
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('token');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
+    
+    // Add frontend host to headers for domain validation
+    const frontendHost = window.location.host;
+    config.headers['X-Frontend-Host'] = frontendHost;
+    
     return config;
   },
   (error) => {
@@ -39,6 +44,15 @@ export const companyService = {
   updateCompanyData: async (companyId, companyData) => {
     try {
       const response = await api.put(`/companies/${companyId}`, companyData);
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || error.message;
+    }
+  },
+
+  getCompanyByDomain: async () => {
+    try {
+      const response = await api.get('/companies/test-domain');
       return response.data;
     } catch (error) {
       throw error.response?.data || error.message;

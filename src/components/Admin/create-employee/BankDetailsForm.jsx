@@ -1,22 +1,48 @@
-import { useCallback } from 'react';
+import { useCallback, useState } from 'react';
 import FloatingInput from '../FloatingInput.jsx';
 
 export function BankDetailsForm({ employeeData, setEmployeeData, onSaveSection, loading, feedback, darkMode, onCancel }) {
     const formData = employeeData;
-    // (You can add validation logic here if needed)
+    
+    // State for IFSC validation errors
+    const [ifscError, setIfscError] = useState('');
 
     const handleInputChange = useCallback((e) => {
         const { name, value } = e.target;
-        setEmployeeData(prev => ({ ...prev, [name]: value }));
+        
+        // Special validation for IFSC code
+        if (name === 'ifscCode') {
+            // Convert to uppercase and remove spaces
+            const cleanValue = value.toUpperCase().replace(/\s/g, '');
+            
+            // Validate alphanumeric and length
+            if (cleanValue && !/^[A-Z0-9]+$/.test(cleanValue)) {
+                setIfscError('IFSC code should contain only letters and numbers');
+            } else if (cleanValue && cleanValue.length !== 11) {
+                setIfscError('IFSC code must be exactly 11 characters');
+            } else {
+                setIfscError('');
+            }
+            
+            // Update with cleaned value
+            setEmployeeData(prev => ({ ...prev, [name]: cleanValue }));
+        } else {
+            setEmployeeData(prev => ({ ...prev, [name]: value }));
+        }
     }, [setEmployeeData]);
 
     const handleSave = () => {
+        // Check if there are IFSC validation errors
+        if (ifscError) {
+            return; // Don't save if there are validation errors
+        }
+        
         // Only send bank section fields - using API response field names
         const sectionData = {
             bankName: formData.bankName || '',
             accountNumber: formData.accountNumber || '',
             ifscCode: formData.ifscCode || '',
-            branch: formData.branch || ''
+            bankBranch: formData.bankBranch || ''
         };
         onSaveSection(sectionData);
     };
@@ -46,12 +72,14 @@ export function BankDetailsForm({ employeeData, setEmployeeData, onSaveSection, 
                     value={formData.ifscCode}
                     onChange={handleInputChange}
                     required
-                    error={formData.ifscCodeError}
+                    error={ifscError || formData.ifscCodeError}
+                    maxLength={11}
+                    placeholder="e.g., SBIN0001234"
                 />
                 <FloatingInput
-                    id="branch"
+                    id="bankBranch"
                     label="Branch"
-                    value={formData.branch}
+                    value={formData.bankBranch}
                     onChange={handleInputChange}
                     required
                     error={formData.branchError}

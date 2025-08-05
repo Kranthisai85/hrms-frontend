@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { authService } from '../../services/api';
+import { authService, companyService } from '../../services/api';
 
 export default function LoginPage({ onLogin, darkMode }) {
   const [userType, setUserType] = useState('admin');
@@ -9,6 +9,30 @@ export default function LoginPage({ onLogin, darkMode }) {
   });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [companyInfo, setCompanyInfo] = useState(null);
+  const [companyLoading, setCompanyLoading] = useState(true);
+
+  // Fetch company info based on current domain
+  useEffect(() => {
+    const fetchCompanyInfo = async () => {
+      try {
+        const data = await companyService.getCompanyByDomain();
+        
+        if (data.success && data.data && data.data.company) {
+          setCompanyInfo(data.data.company);
+        } else {
+          console.warn('Company info not found or invalid response');
+        }
+      } catch (error) {
+        console.error('Failed to fetch company info:', error);
+        // Don't show error to user, just log it
+      } finally {
+        setCompanyLoading(false);
+      }
+    };
+
+    fetchCompanyInfo();
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -34,6 +58,35 @@ export default function LoginPage({ onLogin, darkMode }) {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100 dark:bg-gray-900">
       <div className="max-w-md w-full space-y-8 p-8 bg-white dark:bg-gray-800 rounded-lg shadow-md">
+        {/* Company Info Display */}
+        {!companyLoading && companyInfo && (
+          <div className="text-center mb-6">
+            <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 rounded-lg p-4">
+              <h3 className="text-lg font-semibold text-blue-800 dark:text-blue-200 mb-1">
+                Welcome to
+              </h3>
+              <h2 className="text-2xl font-bold text-blue-900 dark:text-blue-100">
+                {companyInfo.name}
+              </h2>
+              {/* <p className="text-sm text-blue-600 dark:text-blue-300 mt-1">
+                {companyInfo.domain}
+              </p> */}
+            </div>
+          </div>
+        )}
+        
+        {companyLoading && (
+          <div className="text-center mb-6">
+            <div className="bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg p-4">
+              <div className="animate-pulse">
+                <div className="h-4 bg-gray-200 dark:bg-gray-600 rounded w-24 mx-auto mb-2"></div>
+                <div className="h-6 bg-gray-200 dark:bg-gray-600 rounded w-32 mx-auto mb-1"></div>
+                <div className="h-3 bg-gray-200 dark:bg-gray-600 rounded w-20 mx-auto"></div>
+              </div>
+            </div>
+          </div>
+        )}
+
         <div>
           <h2 className="text-center text-3xl font-extrabold text-gray-900 dark:text-white">
             Sign in to your account

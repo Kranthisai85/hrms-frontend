@@ -1,5 +1,5 @@
 import { PlusCircle } from 'lucide-react';
-import { useCallback } from 'react';
+import { useCallback, useState } from 'react';
 import FloatingInput from '../FloatingInput.jsx';
 import SearchableSelect from '../SearchableSelect.jsx';
 
@@ -9,14 +9,42 @@ export function QualificationDetailsForm({ employeeData, setEmployeeData, onSave
         ...employeeData,
         qualifications: employeeData.qualifications || []
     };
-    // (You can add validation logic here if needed)
+    
+    // State for year validation errors
+    const [yearErrors, setYearErrors] = useState({});
+    // State for education validation errors
+    const [educationErrors, setEducationErrors] = useState({
+        educationStatus: '',
+        qualifications: []
+    });
 
     const handleInputChange = useCallback((e) => {
         const { name, checked } = e.target;
-        setEmployeeData(prev => ({ ...prev, [name]: checked }));
+        setEmployeeData(prev => ({ 
+            ...prev, 
+            [name]: checked,
+            qualifications: checked ? [] : prev.qualifications,
+        }));
     }, [setEmployeeData]);
 
     const handleNestedInputChange = useCallback((index, field, value) => {
+        // Special validation for year of passing
+        if (field === 'yearOfPassing') {
+            // Validate 4-digit numeric year
+            if (value && !/^\d{4}$/.test(value)) {
+                setYearErrors(prev => ({
+                    ...prev,
+                    [index]: 'Year must be exactly 4 digits (e.g., 2023)'
+                }));
+            } else {
+                setYearErrors(prev => {
+                    const newErrors = { ...prev };
+                    delete newErrors[index];
+                    return newErrors;
+                });
+            }
+        }
+        
         setEmployeeData(prev => ({
             ...prev,
             qualifications: prev.qualifications.map((item, i) =>
@@ -25,6 +53,53 @@ export function QualificationDetailsForm({ employeeData, setEmployeeData, onSave
         }));
     }, [setEmployeeData]);
 
+    // Validation function to check if qualification data is complete
+    const validateQualification = (qualification) => {
+        const errors = {};
+        if (!qualification.degree || qualification.degree.trim() === '') {
+            errors.degree = 'Degree is required';
+        }
+        if (!qualification.yearOfPassing) {
+            errors.yearOfPassing = 'Year of passing is required';
+        }
+        if (!qualification.institution || qualification.institution.trim() === '') {
+            errors.institution = 'Institution is required';
+        }
+        return errors;
+    };
+
+    // Validation function to check overall education validity
+    const validateEducation = () => {
+        const errors = {
+            educationStatus: '',
+            qualifications: []
+        };
+
+        // If not less than primary, must have at least one qualification with complete information
+        if (!formData.lessThanPrimary) {
+            if (!formData.qualifications || formData.qualifications.length === 0) {
+                errors.educationStatus = 'Please either mark as less than primary education or add at least one qualification';
+            } else {
+                // Validate each qualification
+                const qualificationErrors = formData.qualifications.map(qual => validateQualification(qual));
+                errors.qualifications = qualificationErrors;
+                
+                // Check if at least one qualification has complete information
+                const hasValidQualification = qualificationErrors.some(qualError => 
+                    Object.keys(qualError).length === 0
+                );
+                
+                if (!hasValidQualification) {
+                    errors.educationStatus = 'Please provide complete information for at least one qualification';
+                }
+            }
+        }
+
+        setEducationErrors(errors);
+        return Object.keys(errors.educationStatus).length === 0 && 
+               errors.qualifications.every(qualError => Object.keys(qualError).length === 0);
+    };
+
     const handleAddItem = useCallback(() => {
         setEmployeeData(prev => ({
             ...prev,
@@ -32,7 +107,7 @@ export function QualificationDetailsForm({ employeeData, setEmployeeData, onSave
                 ...(prev.qualifications || []),
                 { 
                     degree: '', 
-                    yearOfCompletion: '', 
+                    yearOfPassing: '', 
                     institution: '',
                     percentage: '',
                     specialization: ''
@@ -49,13 +124,25 @@ export function QualificationDetailsForm({ employeeData, setEmployeeData, onSave
     }, [setEmployeeData]);
 
     const handleSave = () => {
+        // Check if there are year validation errors
+        if (Object.keys(yearErrors).length > 0) {
+            return; // Don't save if there are validation errors
+        }
+        
+        // Validate education requirements
+        if (!validateEducation()) {
+            return; // Don't save if education validation fails
+        }
+        
         // Only send qualification section fields
         const sectionData = {
             lessThanPrimary: formData.lessThanPrimary || false,
             qualifications: (formData.qualifications || []).map(qual => ({
-                qualification: qual.degree || '',
-                yearOfPassing: qual.yearOfCompletion || '',
+                degree: qual.degree || '',
+                yearOfPassing: qual.yearOfPassing || '',
                 institution: qual.institution || '',
+                percentage: qual.percentage || '',
+                specialization: qual.specialization || '',
                 user_id: employeeData.userId || employeeData.user?.id // Add user_id as required by backend
             })),
         };
@@ -77,6 +164,9 @@ export function QualificationDetailsForm({ employeeData, setEmployeeData, onSave
                     Less than primary education
                 </label>
             </div>
+            {educationErrors.educationStatus && (
+                <div className="text-red-500 text-sm mt-1">{educationErrors.educationStatus}</div>
+            )}
             {formData.qualifications.map((qualification, index) => (
                 <div key={index} className="p-4 bg-gray-50 rounded-lg">
                     <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
@@ -96,14 +186,18 @@ export function QualificationDetailsForm({ employeeData, setEmployeeData, onSave
                                 { value: 'others', label: 'Others' },
                             ]}
                             required
+                            error={educationErrors.qualifications[index]?.degree}
                         />
                         <FloatingInput
-                            id={`yearOfCompletion-${index}`}
+                            id={`yearOfPassing-${index}`}
                             label="Year of Completion"
                             type="number"
-                            value={qualification.yearOfCompletion}
-                            onChange={(e) => handleNestedInputChange(index, 'yearOfCompletion', e.target.value)}
+                            value={qualification.yearOfPassing}
+                            onChange={(e) => handleNestedInputChange(index, 'yearOfPassing', e.target.value)}
                             required
+                            error={yearErrors[index] || educationErrors.qualifications[index]?.yearOfPassing}
+                            maxLength={4}
+                            placeholder="e.g., 2023"
                         />
                         <FloatingInput
                             id={`institution-${index}`}
@@ -111,6 +205,7 @@ export function QualificationDetailsForm({ employeeData, setEmployeeData, onSave
                             value={qualification.institution}
                             onChange={(e) => handleNestedInputChange(index, 'institution', e.target.value)}
                             required
+                            error={educationErrors.qualifications[index]?.institution}
                         />
                         <FloatingInput
                             id={`percentage-${index}`}

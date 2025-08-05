@@ -1,10 +1,16 @@
 import { PlusCircle } from 'lucide-react';
-import { useCallback } from 'react';
+import { useCallback, useState } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import FloatingInput from '../FloatingInput.jsx';
 import SearchableSelect from '../SearchableSelect.jsx';
 
 export function FamilyDetailsForm({ employeeData, setEmployeeData, onSaveSection, loading, feedback, darkMode, onCancel }) {
+    // State for validation errors
+    const [validationErrors, setValidationErrors] = useState({
+        orphanStatus: '',
+        familyMembers: []
+    });
+
     // Ensure familyMembers is always an array
     const formData = {
         ...employeeData,
@@ -56,7 +62,65 @@ export function FamilyDetailsForm({ employeeData, setEmployeeData, onSaveSection
         }));
     }, [setEmployeeData]);
 
+    // Validation function to check if family member data is complete
+    const validateFamilyMember = (member) => {
+        const errors = {};
+        if (!member.name || member.name.trim() === '') {
+            errors.name = 'Name is required';
+        }
+        if (!member.dateOfBirth) {
+            errors.dateOfBirth = 'Date of birth is required';
+        }
+        if (!member.relationship) {
+            errors.relationship = 'Relationship is required';
+        }
+        if (!member.gender) {
+            errors.gender = 'Gender is required';
+        }
+        if (member.nominee && (!member.sharePercentage || member.sharePercentage <= 0)) {
+            errors.sharePercentage = 'Share percentage is required for nominees';
+        }
+        return errors;
+    };
+
+    // Validation function to check overall form validity
+    const validateForm = () => {
+        const errors = {
+            orphanStatus: '',
+            familyMembers: []
+        };
+
+        // If not orphan, must have at least one family member with complete information
+        if (!formData.isOrphan) {
+            if (!formData.familyMembers || formData.familyMembers.length === 0) {
+                errors.orphanStatus = 'Please either mark as orphan or add at least one family member';
+            } else {
+                // Validate each family member
+                const memberErrors = formData.familyMembers.map(member => validateFamilyMember(member));
+                errors.familyMembers = memberErrors;
+                
+                // Check if at least one family member has complete information
+                const hasValidMember = memberErrors.some(memberError => 
+                    Object.keys(memberError).length === 0
+                );
+                
+                if (!hasValidMember) {
+                    errors.orphanStatus = 'Please provide complete information for at least one family member';
+                }
+            }
+        }
+
+        setValidationErrors(errors);
+        return Object.keys(errors.orphanStatus).length === 0 && 
+               errors.familyMembers.every(memberError => Object.keys(memberError).length === 0);
+    };
+
     const handleSave = () => {
+        // Validate form before saving
+        if (!validateForm()) {
+            return; // Don't save if validation fails
+        }
+
         // Only send family section fields
         const sectionData = {
             isOrphan: formData.isOrphan || false,
@@ -87,6 +151,9 @@ export function FamilyDetailsForm({ employeeData, setEmployeeData, onSaveSection
                     />
                     <span className="text-sm font-medium text-gray-700">Orphan</span>
                 </label>
+                {validationErrors.orphanStatus && (
+                    <div className="text-red-500 text-sm mt-1">{validationErrors.orphanStatus}</div>
+                )}
             </div>
             {!formData.isOrphan && (
                 <div>
@@ -95,14 +162,14 @@ export function FamilyDetailsForm({ employeeData, setEmployeeData, onSaveSection
                         For now, we'll keep the structure but remove the error display. */}
                     {formData.familyMembers.map((member, index) => (
                         <div key={member.id} className="p-4 bg-gray-50 rounded-lg mb-4">
-                            <div className="grid grid-cols-1 md:grid-cols-7 gap-3">
+                            <div className="grid grid-cols-1 md:grid-cols-6 gap-4">
                                 <FloatingInput
                                     id={`familyName-${index}`}
                                     label="Name"
                                     value={member.name}
                                     onChange={(e) => handleNestedInputChange(index, 'name', e.target.value)}
                                     required
-                                    // error={formErrors.familyMembers?.[index]?.name} // Removed as per new_code
+                                    error={validationErrors.familyMembers[index]?.name}
                                 />
                                 <FloatingInput
                                     id={`familyDOB-${index}`}
@@ -111,7 +178,7 @@ export function FamilyDetailsForm({ employeeData, setEmployeeData, onSaveSection
                                     value={member.dateOfBirth}
                                     onChange={(e) => handleNestedInputChange(index, 'dateOfBirth', e.target.value)}
                                     required
-                                    // error={formErrors.familyMembers?.[index]?.dateOfBirth} // Removed as per new_code
+                                    error={validationErrors.familyMembers[index]?.dateOfBirth}
                                 />
                                 <SearchableSelect
                                     id={`familyRelationship-${index}`}
@@ -125,7 +192,7 @@ export function FamilyDetailsForm({ employeeData, setEmployeeData, onSaveSection
                                         { value: 'Child', label: 'Child' },
                                     ]}
                                     required
-                                    // error={formErrors.familyMembers?.[index]?.relationship} // Removed as per new_code
+                                    error={validationErrors.familyMembers[index]?.relationship}
                                 />
                                 <SearchableSelect
                                     id={`familyGender-${index}`}
@@ -138,14 +205,7 @@ export function FamilyDetailsForm({ employeeData, setEmployeeData, onSaveSection
                                         { value: 'other', label: 'Other' },
                                     ]}
                                     required
-                                    // error={formErrors.familyMembers?.[index]?.gender} // Removed as per new_code
-                                />
-                                <FloatingInput
-                                    id={`familyPhone-${index}`}
-                                    label="Phone Number"
-                                    value={member.phone}
-                                    onChange={(e) => handleNestedInputChange(index, 'phone', e.target.value)}
-                                    // error={formErrors.familyMembers?.[index]?.phone} // Removed as per new_code
+                                    error={validationErrors.familyMembers[index]?.gender}
                                 />
                                 <div className="flex items-center space-x-2">
                                     <input
@@ -160,15 +220,19 @@ export function FamilyDetailsForm({ employeeData, setEmployeeData, onSaveSection
                                     </label>
                                 </div>
                                 {member.nominee && (
-                                    <FloatingInput
-                                        id={`familyShare-${index}`}
-                                        label="Share Percentage"
-                                        type="number"
-                                        value={member.sharePercentage}
-                                        onChange={(e) => handleNestedInputChange(index, 'sharePercentage', e.target.value)}
-                                        required
-                                        // error={formErrors.familyMembers?.[index]?.sharePercentage} // Removed as per new_code
-                                    />
+                                    <div className="relative">
+                                        <FloatingInput
+                                            id={`familyShare-${index}`}
+                                            label="Share %"
+                                            type="number"
+                                            value={member.sharePercentage}
+                                            onChange={(e) => handleNestedInputChange(index, 'sharePercentage', e.target.value)}
+                                            required
+                                            error={validationErrors.familyMembers[index]?.sharePercentage}
+                                            className="pr-8"
+                                        />
+                                        <span className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500">%</span>
+                                    </div>
                                 )}
                             </div>
                             <button

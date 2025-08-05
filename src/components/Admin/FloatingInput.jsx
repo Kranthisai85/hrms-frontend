@@ -10,7 +10,8 @@ const FloatingInput = ({
     error,
     darkMode,
     small = false,
-    name
+    name,
+    disabled = false
 }) => {
     const [isFocused, setIsFocused] = useState(false);
 
@@ -28,6 +29,7 @@ const FloatingInput = ({
                 onFocus={() => setIsFocused(true)}
                 onBlur={() => setIsFocused(false)}
                 required={required}
+                disabled={disabled}
                 className={`block text-sm w-full rounded-lg border p-3.5 
                     ${error ? 'border-red-500' : isFocused ? 'border-blue-600' : 'border-gray-300'}
                     focus:outline-none focus:ring-0

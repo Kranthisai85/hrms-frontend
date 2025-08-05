@@ -1,5 +1,5 @@
 import { PlusCircle } from 'lucide-react';
-import { useCallback } from 'react';
+import { useCallback, useState } from 'react';
 import FloatingInput from '../FloatingInput.jsx';
 
 export function ProfessionalDetailsForm({ employeeData, setEmployeeData, onSaveSection, loading, feedback, darkMode, onCancel }) {
@@ -8,11 +8,20 @@ export function ProfessionalDetailsForm({ employeeData, setEmployeeData, onSaveS
         ...employeeData,
         experiences: employeeData.experiences || []
     };
-    // (You can add validation logic here if needed)
+    
+    // State for professional validation errors
+    const [professionalErrors, setProfessionalErrors] = useState({
+        fresherStatus: '',
+        experiences: []
+    });
 
     const handleInputChange = useCallback((e) => {
         const { name, checked } = e.target;
-        setEmployeeData(prev => ({ ...prev, [name]: checked }));
+        setEmployeeData(prev => ({ 
+            ...prev, 
+            [name]: checked,
+            experiences: checked ? [] : prev.experiences,
+        }));
     }, [setEmployeeData]);
 
     const handleNestedInputChange = useCallback((index, field, value) => {
@@ -23,6 +32,56 @@ export function ProfessionalDetailsForm({ employeeData, setEmployeeData, onSaveS
             ),
         }));
     }, [setEmployeeData]);
+
+    // Validation function to check if experience data is complete
+    const validateExperience = (experience) => {
+        const errors = {};
+        if (!experience.company || experience.company.trim() === '') {
+            errors.company = 'Company name is required';
+        }
+        if (!experience.position || experience.position.trim() === '') {
+            errors.position = 'Position is required';
+        }
+        if (!experience.fromDate) {
+            errors.fromDate = 'From date is required';
+        }
+        if (!experience.toDate) {
+            errors.toDate = 'To date is required';
+        }
+        return errors;
+    };
+
+    // Validation function to check overall professional validity
+    const validateProfessional = () => {
+        const errors = {
+            fresherStatus: '',
+            experiences: []
+        };
+
+        // If not fresher, must have at least one experience with complete information
+        if (!formData.isFresher) {
+            if (!formData.experiences || formData.experiences.length === 0) {
+                errors.fresherStatus = 'Please either mark as fresher or add at least one experience';
+            } else {
+                // Validate each experience
+                const experienceErrors = formData.experiences.map(exp => validateExperience(exp));
+                errors.experiences = experienceErrors;
+                
+                // Check if at least one experience has complete information
+                const hasValidExperience = experienceErrors.some(expError => 
+                    Object.keys(expError).length === 0
+                );
+                
+                if (!hasValidExperience) {
+                    errors.fresherStatus = 'Please provide complete information for at least one experience';
+                }
+            }
+        }
+
+        setProfessionalErrors(errors);
+        return Object.keys(errors.fresherStatus).length === 0 && 
+               errors.experiences.every(expError => Object.keys(expError).length === 0);
+    };
 
     const handleAddItem = useCallback(() => {
         setEmployeeData(prev => ({
@@ -48,12 +107,17 @@ export function ProfessionalDetailsForm({ employeeData, setEmployeeData, onSaveS
     }, [setEmployeeData]);
 
     const handleSave = () => {
+        // Validate professional requirements
+        if (!validateProfessional()) {
+            return; // Don't save if professional validation fails
+        }
+        
         // Only send professional section fields
         const sectionData = {
             isFresher: formData.isFresher || false,
             experiences: (formData.experiences || []).map(exp => ({
-                companyName: exp.company || '',
-                designation: exp.position || '',
+                company: exp.company || '',
+                position: exp.position || '',
                 fromDate: exp.fromDate || '',
                 toDate: exp.toDate || '',
                 description: exp.description || '',
@@ -76,14 +140,12 @@ export function ProfessionalDetailsForm({ employeeData, setEmployeeData, onSaveS
                     />
                     <span className="text-sm font-medium text-gray-700">Fresher</span>
                 </label>
+                {professionalErrors.fresherStatus && (
+                    <div className="text-red-500 text-sm mt-1">{professionalErrors.fresherStatus}</div>
+                )}
             </div>
             {!formData.isFresher && (
                 <div>
-                    {formData.experiences.length === 0 && (
-                        <p className="text-red-500 text-sm">
-                            At least one experience is required if not a fresher.
-                        </p>
-                    )}
                     {formData.experiences.map((experience, index) => (
                         <div key={index} className="p-4 bg-gray-50 rounded-lg mb-4">
                             <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
@@ -93,6 +155,7 @@ export function ProfessionalDetailsForm({ employeeData, setEmployeeData, onSaveS
                                     value={experience.company}
                                     onChange={(e) => handleNestedInputChange(index, 'company', e.target.value)}
                                     required
+                                    error={professionalErrors.experiences[index]?.company}
                                 />
                                 <FloatingInput
                                     id={`position-${index}`}
@@ -100,6 +163,7 @@ export function ProfessionalDetailsForm({ employeeData, setEmployeeData, onSaveS
                                     value={experience.position}
                                     onChange={(e) => handleNestedInputChange(index, 'position', e.target.value)}
                                     required
+                                    error={professionalErrors.experiences[index]?.position}
                                 />
                                 <FloatingInput
                                     id={`fromDate-${index}`}
@@ -108,6 +172,7 @@ export function ProfessionalDetailsForm({ employeeData, setEmployeeData, onSaveS
                                     value={experience.fromDate}
                                     onChange={(e) => handleNestedInputChange(index, 'fromDate', e.target.value)}
                                     required
+                                    error={professionalErrors.experiences[index]?.fromDate}
                                 />
                                 <FloatingInput
                                     id={`toDate-${index}`}
@@ -116,6 +181,7 @@ export function ProfessionalDetailsForm({ employeeData, setEmployeeData, onSaveS
                                     value={experience.toDate}
                                     onChange={(e) => handleNestedInputChange(index, 'toDate', e.target.value)}
                                     required
+                                    error={professionalErrors.experiences[index]?.toDate}
                                 />
                                 <FloatingInput
                                     id={`description-${index}`}

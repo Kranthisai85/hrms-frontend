@@ -25,7 +25,7 @@ export function OrgDetailsForm({ employeeData, setEmployeeData, onSaveSection, l
         
         const today = new Date();
         const birthDate = new Date(dateOfBirth);
-        const age = today.getFullYear() - birthDate.getFullYear();
+        let age = today.getFullYear() - birthDate.getFullYear();
         const monthDiff = today.getMonth() - birthDate.getMonth();
         
         if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
@@ -110,7 +110,7 @@ export function OrgDetailsForm({ employeeData, setEmployeeData, onSaveSection, l
         
         if (dateOfBirth) {
             const birthDate = new Date(dateOfBirth);
-            const ageAtJoining = joinDate.getFullYear() - birthDate.getFullYear();
+            let ageAtJoining = joinDate.getFullYear() - birthDate.getFullYear();
             const monthDiff = joinDate.getMonth() - birthDate.getMonth();
             
             if (monthDiff < 0 || (monthDiff === 0 && joinDate.getDate() < birthDate.getDate())) {
@@ -765,9 +765,8 @@ export function OrgDetailsForm({ employeeData, setEmployeeData, onSaveSection, l
             {feedback && (
                 <div className={`mt-2 ${feedback.type === 'success' ? 'text-green-600' : 'text-red-600'}`}>{feedback.message}</div>
             )}
-            
             {/* Validation Summary - Only show when form is submitted or fields are touched */}
-            {Object.keys(formErrors).length > 0 && (
+            {/* {Object.keys(formErrors).length > 0 && (
                 <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-md">
                     <h3 className="text-sm font-medium text-red-800 mb-2">Please fix the following errors:</h3>
                     <ul className="text-sm text-red-700 space-y-1">
@@ -779,7 +778,7 @@ export function OrgDetailsForm({ employeeData, setEmployeeData, onSaveSection, l
                         ))}
                     </ul>
                 </div>
-            )}
+            )} */}
         </div>
     );
 }
