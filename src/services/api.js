@@ -1,7 +1,7 @@
 import axios from 'axios';
 
-// export const API_URL = 'https://admin.pacehrm.com/api/';
-export const API_URL = 'http://localhost:3306/api/';
+export const API_URL = 'https://admin.pacehrm.com/api/';
+// export const API_URL = 'http://localhost:3306/api/';
 
 // Create axios instance with default config
 const api = axios.create({
@@ -470,11 +470,19 @@ export const reasonsService = {
 // Error handling wrapper
 const handleApiError = (error) => {
   const errorMessage = error.response?.data?.message || error.message || 'An error occurred';
-  throw new Error(errorMessage);
+  const newError = new Error(errorMessage);
+  
+  // Preserve the original error structure for validation errors
+  if (error.response?.status === 400 && error.response?.data?.errors) {
+    newError.response = error.response;
+    newError.errors = error.response.data.errors;
+  }
+  
+  throw newError;
 };
 
 // Add error handling to all service methods
-Object.values([employeeService, attendanceService, payrollService, branchService, departmentService]).forEach(service => {
+Object.values([employeeService, attendanceService, payrollService, branchService, departmentService, designationService, subDepartmentService, gradesService, categoryService, reasonsService]).forEach(service => {
   Object.keys(service).forEach(key => {
     const originalMethod = service[key];
     service[key] = async (...args) => {

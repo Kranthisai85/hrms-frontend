@@ -18,6 +18,8 @@ export function OrgDetailsForm({ employeeData, setEmployeeData, onSaveSection, l
     const [formErrors, setFormErrors] = useState({});
     const [isFormValid, setIsFormValid] = useState(false);
     const [touchedFields, setTouchedFields] = useState({});
+    
+
 
     // Validation functions
     const validateAge = (dateOfBirth) => {
@@ -65,6 +67,18 @@ export function OrgDetailsForm({ employeeData, setEmployeeData, onSaveSection, l
         if (!panRegex.test(pan.toUpperCase())) {
             return 'Please enter a valid PAN number (e.g., ABCDE1234F)';
         }
+        // Check for common invalid patterns
+        const invalidPatterns = [
+            'AAAAA0000A', 'BBBBB0000B', 'CCCCC0000C', 'DDDDD0000D', 'EEEEE0000E',
+            'FFFFF0000F', 'GGGGG0000G', 'HHHHH0000H', 'IIIII0000I', 'JJJJJ0000J',
+            'KKKKK0000K', 'LLLLL0000L', 'MMMMM0000M', 'NNNNN0000N', 'OOOOO0000O',
+            'PPPPP0000P', 'QQQQQ0000Q', 'RRRRR0000R', 'SSSSS0000S', 'TTTTT0000T',
+            'UUUUU0000U', 'VVVVV0000V', 'WWWWW0000W', 'XXXXX0000X', 'YYYYY0000Y',
+            'ZZZZZ0000Z'
+        ];
+        if (invalidPatterns.includes(pan.toUpperCase())) {
+            return 'Please enter a valid PAN number';
+        }
         return null;
     };
 
@@ -73,6 +87,10 @@ export function OrgDetailsForm({ employeeData, setEmployeeData, onSaveSection, l
         const aadhaarRegex = /^[0-9]{12}$/;
         if (!aadhaarRegex.test(aadhaar)) {
             return 'Please enter a valid 12-digit Aadhaar number';
+        }
+        // Check for common invalid patterns
+        if (aadhaar === '000000000000' || aadhaar === '111111111111' || aadhaar === '999999999999') {
+            return 'Please enter a valid Aadhaar number';
         }
         return null;
     };
@@ -186,6 +204,8 @@ export function OrgDetailsForm({ employeeData, setEmployeeData, onSaveSection, l
                 return validateAge(value);
             case 'email':
                 return validateEmail(value);
+            case 'personalEmail':
+                return validateEmail(value);
             case 'mobileNumber':
                 return validateMobileNumber(value);
             case 'panNumber':
@@ -195,7 +215,7 @@ export function OrgDetailsForm({ employeeData, setEmployeeData, onSaveSection, l
             case 'bloodGroup':
                 return !value ? 'Blood Group is required' : null;
             case 'joiningDate':
-                return validateJoiningDate(value, formData.user?.date_of_birth || formData.user?.dateOfBirth);
+                return validateJoiningDate(value, formData.user?.dateOfBirth);
             case 'confirmationDate':
                 return validateConfirmationDate(value, formData.joiningDate);
             case 'resignationDate':
@@ -226,13 +246,14 @@ export function OrgDetailsForm({ employeeData, setEmployeeData, onSaveSection, l
         // Basic validations
         errors.empCode = validateEmployeeCode(formData.empCode);
         errors.name = validateName(formData.user?.name);
-        errors.dateOfBirth = validateAge(formData.user?.date_of_birth || formData.user?.dateOfBirth);
+        errors.dateOfBirth = validateAge(formData.user?.dateOfBirth);
         errors.email = validateEmail(formData.email);
+        errors.personalEmail = validateEmail(formData.personalEmail);
         errors.mobileNumber = validateMobileNumber(formData.user?.phone);
         errors.panNumber = validatePAN(formData.panNumber);
         errors.aadharNumber = validateAadhaar(formData.aadharNumber);
         errors.ctc = validateCTC(formData.ctc);
-        errors.joiningDate = validateJoiningDate(formData.joiningDate, formData.user?.date_of_birth || formData.user?.dateOfBirth);
+        errors.joiningDate = validateJoiningDate(formData.joiningDate, formData.user?.dateOfBirth);
         
         // Conditional validations
         if (formData.employmentStatus === 'Confirmed' && formData.confirmationDate) {
@@ -320,7 +341,7 @@ export function OrgDetailsForm({ employeeData, setEmployeeData, onSaveSection, l
         handleFieldChangeWithValidation(name, fieldValue);
     }, [setEmployeeData]);
 
-    const handleSave = () => {
+    const handleSave = async () => {
         // Validate entire form when save is clicked
         if (!validateForm()) {
             return;
@@ -342,6 +363,7 @@ export function OrgDetailsForm({ employeeData, setEmployeeData, onSaveSection, l
             panNumber: formData.panNumber, // Backend expects 'pan'
             aadharNumber: formData.aadharNumber, // Backend expects 'aadhaarNo'
             officialEmail: formData.email, // Backend expects 'officialEmail'
+            personalEmail: formData.personalEmail, // Backend expects 'personalEmail'
             joiningDate: formData.joiningDate, // Backend expects 'dateOfJoin'
             confirmationDate: formData.confirmationDate,
             resignationDate: formData.resignationDate,
@@ -356,7 +378,58 @@ export function OrgDetailsForm({ employeeData, setEmployeeData, onSaveSection, l
             gender: formData.user?.gender,
             bloodGroup: formData.user?.bloodGroup
         };
-        onSaveSection(sectionData);
+        
+        // Call onSaveSection with error handling for unique constraints
+        try {
+            await onSaveSection(sectionData);
+        } catch (error) {
+            console.log('Backend error received:', error);
+            console.log('Error response:', error.response);
+            console.log('Error data:', error.response?.data);
+            
+            // Handle unique constraint errors from backend
+            if (error.response?.data?.errors) {
+                const backendErrors = error.response.data.errors;
+                console.log('Backend errors:', backendErrors);
+                const newFormErrors = { ...formErrors };
+                
+                // Map backend error fields to frontend field names
+                Object.keys(backendErrors).forEach(field => {
+                    console.log(`Processing error for field: ${field}`, backendErrors[field]);
+                    switch (field) {
+                        case 'empCode':
+                            newFormErrors.empCode = backendErrors[field];
+                            break;
+                        case 'officialEmail':
+                            newFormErrors.email = backendErrors[field];
+                            break;
+                        case 'personalEmail':
+                            newFormErrors.personalEmail = backendErrors[field];
+                            break;
+                        case 'panNumber':
+                            newFormErrors.panNumber = backendErrors[field];
+                            break;
+                        case 'aadharNumber':
+                            newFormErrors.aadharNumber = backendErrors[field];
+                            break;
+                        case 'phone':
+                            newFormErrors.mobileNumber = backendErrors[field];
+                            break;
+                        case 'email':
+                            newFormErrors.personalEmail = backendErrors[field];
+                            break;
+                        default:
+                            newFormErrors[field] = backendErrors[field];
+                    }
+                });
+                
+                console.log('Updated form errors:', newFormErrors);
+                setFormErrors(newFormErrors);
+                setIsFormValid(false);
+            } else {
+                console.error('Unexpected error format:', error);
+            }
+        }
     };
 
     return (
@@ -411,12 +484,12 @@ export function OrgDetailsForm({ employeeData, setEmployeeData, onSaveSection, l
                     id="dateOfBirth"
                     label="Date of Birth"
                     type="date"
-                    value={formData.user?.date_of_birth || formData.user?.dateOfBirth}
+                    value={formData.user?.dateOfBirth}
                     onChange={(e) => {
                         const value = e.target.value;
                         setEmployeeData(prev => ({
                             ...prev,
-                            user: { ...prev.user, date_of_birth: value }
+                            user: { ...prev.user, dateOfBirth: value }
                         }));
                         handleFieldChangeWithValidation('dateOfBirth', value);
                     }}
@@ -512,7 +585,7 @@ export function OrgDetailsForm({ employeeData, setEmployeeData, onSaveSection, l
                     onBlur={(e) => handleFieldBlur('joiningDate', e.target.value)}
                     required
                     error={formErrors.joiningDate}
-                    min={formData.user?.date_of_birth || formData.user?.dateOfBirth}
+                    min={formData.user?.dateOfBirth}
                 />
                 <SearchableSelect
                     id="employmentType"
@@ -655,6 +728,16 @@ export function OrgDetailsForm({ employeeData, setEmployeeData, onSaveSection, l
                     error={formErrors.mobileNumber}
                     maxLength={10}
                     placeholder="10-digit mobile number"
+                />
+                <FloatingInput
+                    id="personalEmail"
+                    label="Personal Email"
+                    type="email"
+                    value={formData.personalEmail || ''}
+                    onChange={handleInputChange}
+                    onBlur={(e) => handleFieldBlur('personalEmail', e.target.value)}
+                    required
+                    error={formErrors.personalEmail}
                 />
                 <FloatingInput
                     id="email"

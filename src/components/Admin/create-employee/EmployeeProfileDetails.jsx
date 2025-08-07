@@ -133,7 +133,41 @@ export default function EmployeeProfileDetails({
             }
         } catch (err) {
             console.error('Save error:', err);
-            setFeedback({ [section]: { type: 'error', message: err.message || 'Failed to save.' } });
+            console.error('Error structure:', {
+                message: err.message,
+                response: err.response,
+                errors: err.errors,
+                data: err.data
+            });
+            
+            // Check if this is a validation error (400 status) that should be handled by the form
+            if (err.response?.status === 400 && err.response?.data?.errors) {
+                console.log('Validation errors found:', err.response.data.errors);
+                // For validation errors, let the form component handle them
+                // Don't set feedback, let the error bubble up to the form
+                throw err; // Re-throw so the form can handle it
+            } else if (err.message === 'Validation failed' && err.errors) {
+                console.log('Validation errors in err.errors:', err.errors);
+                // Handle case where error is thrown by handleApiError but still has errors
+                const validationError = new Error('Validation failed');
+                validationError.response = {
+                    status: 400,
+                    data: { errors: err.errors }
+                };
+                throw validationError;
+            } else if (err.message === 'Validation failed' && err.data?.errors) {
+                console.log('Validation errors in err.data.errors:', err.data.errors);
+                // Handle case where error data is in err.data
+                const validationError = new Error('Validation failed');
+                validationError.response = {
+                    status: 400,
+                    data: { errors: err.data.errors }
+                };
+                throw validationError;
+            } else {
+                // For other errors (500, network, etc.), show feedback
+                setFeedback({ [section]: { type: 'error', message: err.message || 'Failed to save.' } });
+            }
         } finally {
             setLoading(false);
         }
