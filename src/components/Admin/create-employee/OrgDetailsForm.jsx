@@ -18,8 +18,12 @@ export function OrgDetailsForm({ employeeData, setEmployeeData, onSaveSection, l
     const [formErrors, setFormErrors] = useState({});
     const [isFormValid, setIsFormValid] = useState(false);
     const [touchedFields, setTouchedFields] = useState({});
-    
 
+    // Debug: Log when employeeData changes
+    useEffect(() => {
+        console.log('employeeData updated:', employeeData);
+        console.log('formData.user?.dateOfBirth:', formData.user?.dateOfBirth);
+    }, [employeeData, formData.user?.dateOfBirth]);
 
     // Validation functions
     const validateAge = (dateOfBirth) => {
@@ -100,8 +104,8 @@ export function OrgDetailsForm({ employeeData, setEmployeeData, onSaveSection, l
         if (empCode.length < 3) {
             return 'Employee Code must be at least 3 characters long';
         }
-        if (empCode.length > 20) {
-            return 'Employee Code cannot exceed 20 characters';
+        if (empCode.length > 5) {
+            return 'Employee Code cannot exceed 5 characters';
         }
         return null;
     };
@@ -125,6 +129,12 @@ export function OrgDetailsForm({ employeeData, setEmployeeData, onSaveSection, l
         if (!joiningDate) return 'Joining Date is required';
         
         const joinDate = new Date(joiningDate);
+        const today = new Date();
+        
+        // Joining date should not be in the future
+        if (joinDate > today) {
+            return 'Joining Date cannot be in the future';
+        }
         
         if (dateOfBirth) {
             const birthDate = new Date(dateOfBirth);
@@ -148,10 +158,15 @@ export function OrgDetailsForm({ employeeData, setEmployeeData, onSaveSection, l
         
         const confirmDate = new Date(confirmationDate);
         const joinDate = new Date(joiningDate);
+        const today = new Date();
         
         if (confirmDate < joinDate) {
             return 'Confirmation Date cannot be before Joining Date';
         }
+        
+        // if (confirmDate > today) {
+        //     return 'Confirmation Date cannot be in the future';
+        // }
         
         return null;
     };
@@ -161,23 +176,40 @@ export function OrgDetailsForm({ employeeData, setEmployeeData, onSaveSection, l
         
         const resignDate = new Date(resignationDate);
         const joinDate = new Date(joiningDate);
+        const today = new Date();
         
         if (resignDate < joinDate) {
             return 'Resignation Date cannot be before Joining Date';
         }
         
+        // if (resignDate > today) {
+        //     return 'Resignation Date cannot be in the future';
+        // }
+        
         return null;
     };
 
-    const validateRelievedDate = (relievedDate, resignationDate) => {
+    const validateRelievedDate = (relievedDate, resignationDate, joiningDate) => {
         if (!relievedDate) return 'Relieved Date is required';
         
         const relieveDate = new Date(relievedDate);
-        const resignDate = new Date(resignationDate);
+        const joinDate = new Date(joiningDate);
+        const today = new Date();
         
-        if (resignationDate && relieveDate < resignDate) {
-            return 'Relieved Date cannot be before Resignation Date';
+        if (relieveDate < joinDate) {
+            return 'Relieved Date cannot be before Joining Date';
         }
+        
+        if (resignationDate) {
+            const resignDate = new Date(resignationDate);
+            if (relieveDate < resignDate) {
+                return 'Relieved Date cannot be before Resignation Date';
+            }
+        }
+        
+        // if (relieveDate > today) {
+        //     return 'Relieved Date cannot be in the future';
+        // }
         
         return null;
     };
@@ -221,7 +253,7 @@ export function OrgDetailsForm({ employeeData, setEmployeeData, onSaveSection, l
             case 'resignationDate':
                 return validateResignationDate(value, formData.joiningDate);
             case 'relievedDate':
-                return validateRelievedDate(value, formData.resignationDate);
+                return validateRelievedDate(value, formData.resignationDate, formData.joiningDate);
             case 'ctc':
                 return validateCTC(value);
             case 'branchId':
@@ -265,7 +297,7 @@ export function OrgDetailsForm({ employeeData, setEmployeeData, onSaveSection, l
         }
         
         if (formData.relievedDate) {
-            errors.relievedDate = validateRelievedDate(formData.relievedDate, formData.resignationDate);
+            errors.relievedDate = validateRelievedDate(formData.relievedDate, formData.resignationDate, formData.joiningDate);
         }
         
         // Required field validations
@@ -298,6 +330,7 @@ export function OrgDetailsForm({ employeeData, setEmployeeData, onSaveSection, l
         setTouchedFields(prev => ({ ...prev, [fieldName]: true }));
         
         const error = validateField(fieldName, value);
+
         setFormErrors(prev => ({
             ...prev,
             [fieldName]: error
@@ -326,17 +359,78 @@ export function OrgDetailsForm({ employeeData, setEmployeeData, onSaveSection, l
             ...prev,
             [fieldName]: error
         }));
+
+        // If dateOfBirth changes, re-validate joiningDate
+        if (fieldName === 'dateOfBirth' && formData.joiningDate) {
+            const joiningDateError = validateJoiningDate(formData.joiningDate, value);
+            setFormErrors(prev => ({
+                ...prev,
+                joiningDate: joiningDateError
+            }));
+            setTouchedFields(prev => ({ ...prev, joiningDate: true }));
+        }
+    };
+
+    // Handle employment status change and clear related fields
+    const handleEmploymentStatusChange = (newStatus) => {
+        setEmployeeData(prev => {
+            const updatedData = { ...prev, employmentStatus: newStatus };
+            
+            // Clear related fields based on status change
+            if (newStatus !== 'Confirmed') {
+                updatedData.confirmationDate = null;
+            }
+            
+            if (newStatus !== 'Resigned' && newStatus !== 'Relieved') {
+                updatedData.resignationDate = null;
+            }
+            
+            if (newStatus !== 'Resigned' && newStatus !== 'Relieved' && newStatus !== 'Terminated') {
+                updatedData.relievedDate = null;
+            }
+            
+            if (newStatus !== 'Resigned' && newStatus !== 'Terminated') {
+                updatedData.reason = null;
+            }
+            
+            return updatedData;
+        });
+        
+        // Clear form errors for cleared fields
+        setFormErrors(prev => {
+            const newErrors = { ...prev };
+            if (newStatus !== 'Confirmed') {
+                delete newErrors.confirmationDate;
+            }
+            if (newStatus !== 'Resigned' && newStatus !== 'Relieved') {
+                delete newErrors.resignationDate;
+            }
+            if (newStatus !== 'Resigned' && newStatus !== 'Relieved' && newStatus !== 'Terminated') {
+                delete newErrors.relievedDate;
+            }
+            if (newStatus !== 'Resigned' && newStatus !== 'Terminated') {
+                delete newErrors.reason;
+            }
+            return newErrors;
+        });
     };
 
     const handleInputChange = useCallback((e) => {
         const { name, value, type, checked } = e.target;
         const fieldValue = type === 'checkbox' ? checked : value;
         
+        // Special handling for employment status
+        if (name === 'employmentStatus') {
+            handleEmploymentStatusChange(value);
+            return;
+        }
+        
         setEmployeeData(prev => ({
             ...prev,
             [name]: fieldValue,
         }));
-        
+        console.log('name', name);
+        console.log('fieldValue', fieldValue);
         // Validate field immediately for real-time feedback
         handleFieldChangeWithValidation(name, fieldValue);
     }, [setEmployeeData]);
@@ -443,6 +537,7 @@ export function OrgDetailsForm({ employeeData, setEmployeeData, onSaveSection, l
                     onBlur={(e) => handleFieldBlur('empCode', e.target.value)}
                     required
                     error={formErrors.empCode}
+                    placeholder="Emp Code"
                 />
                 <FloatingInput
                     id="name"
@@ -459,6 +554,7 @@ export function OrgDetailsForm({ employeeData, setEmployeeData, onSaveSection, l
                     onBlur={(e) => handleFieldBlur('name', e.target.value)}
                     required
                     error={formErrors.name}
+                    placeholder="Name"
                 />
                 <SearchableSelect
                     id="gender"
@@ -496,7 +592,8 @@ export function OrgDetailsForm({ employeeData, setEmployeeData, onSaveSection, l
                     onBlur={(e) => handleFieldBlur('dateOfBirth', e.target.value)}
                     required
                     error={formErrors.dateOfBirth}
-                    max={new Date().toISOString().split('T')[0]}
+                    min={new Date(new Date().setFullYear(new Date().getFullYear() - 100)).toISOString().split('T')[0]}
+                    max={new Date(new Date().setFullYear(new Date().getFullYear() - 18)).toISOString().split('T')[0]}
                 />
                 <SearchableSelect
                     id="branchId"
@@ -586,6 +683,7 @@ export function OrgDetailsForm({ employeeData, setEmployeeData, onSaveSection, l
                     required
                     error={formErrors.joiningDate}
                     min={formData.user?.dateOfBirth}
+                    max={new Date().toISOString().split('T')[0]}
                 />
                 <SearchableSelect
                     id="employmentType"
@@ -612,8 +710,7 @@ export function OrgDetailsForm({ employeeData, setEmployeeData, onSaveSection, l
                     value={formData.employmentStatus}
                     onChange={(e) => {
                         const value = e.target.value;
-                        handleInputChange({ target: { name: 'employmentStatus', value: value } });
-                        handleFieldChangeWithValidation('employmentStatus', value);
+                        handleEmploymentStatusChange(value);
                     }}
                     onBlur={(e) => handleFieldBlur('employmentStatus', e.target.value)}
                     staticOptions={[
@@ -628,17 +725,18 @@ export function OrgDetailsForm({ employeeData, setEmployeeData, onSaveSection, l
                     error={formErrors.employmentStatus}
                 />
                 {formData.employmentStatus === 'Confirmed' && (
-                                    <FloatingInput
-                    id="confirmationDate"
-                    label="Confirmation Date"
-                    type="date"
-                    value={formData.confirmationDate}
-                    onChange={handleInputChange}
-                    onBlur={(e) => handleFieldBlur('confirmationDate', e.target.value)}
-                    required
-                    error={formErrors.confirmationDate}
-                    min={formData.joiningDate || new Date().toISOString().split('T')[0]}
-                />
+                    <FloatingInput
+                        id="confirmationDate"
+                        label="Confirmation Date"
+                        type="date"
+                        value={formData.confirmationDate}
+                        onChange={handleInputChange}
+                        onBlur={(e) => handleFieldBlur('confirmationDate', e.target.value)}
+                        required
+                        error={formErrors.confirmationDate}
+                        min={formData.joiningDate || new Date().toISOString().split('T')[0]}
+                        // max={new Date().toISOString().split('T')[0]}
+                    />
                 )}
                 {(formData.employmentStatus === 'Resigned' || formData.employmentStatus === 'Relieved') && (
                     <>
@@ -652,6 +750,7 @@ export function OrgDetailsForm({ employeeData, setEmployeeData, onSaveSection, l
                             required
                             error={formErrors.resignationDate}
                             min={formData.joiningDate || new Date().toISOString().split('T')[0]}
+                            // max={new Date().toISOString().split('T')[0]}
                         />
                         <FloatingInput
                             id="relievedDate"
@@ -663,6 +762,7 @@ export function OrgDetailsForm({ employeeData, setEmployeeData, onSaveSection, l
                             required
                             error={formErrors.relievedDate}
                             min={formData.resignationDate || formData.joiningDate || new Date().toISOString().split('T')[0]}
+                            // max={new Date().toISOString().split('T')[0]}
                         />
                         <SearchableSelect
                             id="reasonForResignation"
@@ -693,6 +793,7 @@ export function OrgDetailsForm({ employeeData, setEmployeeData, onSaveSection, l
                             required
                             error={formErrors.relievedDate}
                             min={formData.joiningDate || new Date().toISOString().split('T')[0]}
+                            max={new Date().toISOString().split('T')[0]}
                         />
                         <SearchableSelect
                             id="reasonForTermination"
@@ -738,6 +839,7 @@ export function OrgDetailsForm({ employeeData, setEmployeeData, onSaveSection, l
                     onBlur={(e) => handleFieldBlur('personalEmail', e.target.value)}
                     required
                     error={formErrors.personalEmail}
+                    placeholder="Personal Email"
                 />
                 <FloatingInput
                     id="email"
@@ -748,6 +850,7 @@ export function OrgDetailsForm({ employeeData, setEmployeeData, onSaveSection, l
                     onBlur={(e) => handleFieldBlur('email', e.target.value)}
                     required
                     error={formErrors.email}
+                    placeholder="Official Email"
                 />
                 <SearchableSelect
                     id="bloodGroup"
@@ -762,16 +865,18 @@ export function OrgDetailsForm({ employeeData, setEmployeeData, onSaveSection, l
                         handleFieldChangeWithValidation('bloodGroup', value);
                     }}
                     onBlur={(e) => handleFieldBlur('bloodGroup', e.target.value)}
-                    staticOptions={[
-                        { label: 'A+', value: 'A+' },
-                        { label: 'A-', value: 'A-' },
-                        { label: 'B+', value: 'B+' },
-                        { label: 'B-', value: 'B-' },
-                        { label: 'AB+', value: 'AB+' },
-                        { label: 'AB-', value: 'AB-' },
-                        { label: 'O+', value: 'O+' },
-                        { label: 'O-', value: 'O-' }
-                    ]}
+                    staticOptions={
+                        [
+                            { label: 'A+', value: 'A+' },
+                            { label: 'A-', value: 'A-' },
+                            { label: 'B+', value: 'B+' },
+                            { label: 'B-', value: 'B-' },
+                            { label: 'AB+', value: 'AB+' },
+                            { label: 'AB-', value: 'AB-' },
+                            { label: 'O+', value: 'O+' },
+                            { label: 'O-', value: 'O-' }
+                        ]
+                    }
                     required
                     error={formErrors.bloodGroup}
                 />
@@ -795,7 +900,7 @@ export function OrgDetailsForm({ employeeData, setEmployeeData, onSaveSection, l
                     required
                     error={formErrors.panNumber}
                     maxLength={10}
-                                         placeholder="ABCDE1234F"
+                    placeholder="PAN Number"
                  />
                  <FloatingInput
                      id="ctc"

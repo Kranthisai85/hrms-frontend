@@ -11,7 +11,12 @@ const FloatingInput = ({
     darkMode,
     small = false,
     name,
-    disabled = false
+    disabled = false,
+    min,
+    max,
+    placeholder,
+    maxLength,
+    step
 }) => {
     const [isFocused, setIsFocused] = useState(false);
 
@@ -30,22 +35,26 @@ const FloatingInput = ({
                 onBlur={() => setIsFocused(false)}
                 required={required}
                 disabled={disabled}
+                min={min}
+                max={max}
+                placeholder={placeholder}
+                maxLength={maxLength}
+                step={step}
+                style={{
+                    boxShadow: isFocused ? '0 0 0 1px #2563eb' : 'none',
+                }}
                 className={`block text-sm w-full rounded-lg border p-3.5 
                     ${error ? 'border-red-500' : isFocused ? 'border-blue-600' : 'border-gray-300'}
                     focus:outline-none focus:ring-0
                     ${'bg-white text-gray-900'}
                     ${error ? 'hover:border-red-500' : 'hover:border-blue-600'}`}
-                style={{
-                    boxShadow: isFocused ? '0 0 0 1px #2563eb' : 'none',
-                }}
             />
-            {/* ${small ? 'w-1/2' : ''} // Conditional width */}
             <label
                 htmlFor={id}
                 className={`absolute text-sm 
                     ${error ? 'text-red-500' : isFocused ? 'text-blue-600' : 'text-gray-500'}
                     duration-300 transform 
-                    ${isLabelFloating ? '-translate-y-4 scale-75' : 'translate-y-2 scale-100'}
+                    ${'-translate-y-4 scale-75' }
                     top-2 z-10 origin-[0]
                     ${'bg-white'} px-2 left-1`}
             >

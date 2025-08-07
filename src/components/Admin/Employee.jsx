@@ -21,6 +21,7 @@ export default function Employee({ darkMode, setCurrentPage, toggleDarkMode }) {
   const [departmentsList, setDepartments] = useState([])
   const [branchesList, setBranches] = useState([])
   const [designationsList, setDesignations] = useState([])
+  const [departmentsLoading, setDepartmentsLoading] = useState(false)
 
   // Fetch employees on component mount
   useEffect(() => {
@@ -30,15 +31,38 @@ export default function Employee({ darkMode, setCurrentPage, toggleDarkMode }) {
     fetchDesignations();
   }, []);
 
-  const filteredEmployees = employees.filter(employee =>
-    (employee.user.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      employee.id?.toString().toLowerCase().includes(searchTerm.toLowerCase())) &&
+  // Debug: Log when departments are loaded
+  useEffect(() => {
+    if (departmentsList.length > 0) {
+      console.log('Departments loaded:', departmentsList);
+    }
+  }, [departmentsList]);
 
-    (status === 'All' || employee.employmentStatus === status) &&
-    (department === 'All' || employee.department === department) &&
-    (!dateOfJoiningFilter || employee.dateOfJoin >= dateOfJoiningFilter) &&
-    (!dateOfLeavingFilter || (employee.dateOfLeaving && employee.dateOfLeaving <= dateOfLeavingFilter))
-  );
+  const filteredEmployees = employees.filter(employee => {
+    const employeeDepartmentName = getNameByIdFromList(employee.departmentId, departmentsList);
+    const selectedDepartmentName = department === 'All' ? 'All' : getNameByIdFromList(parseInt(department), departmentsList);
+    
+    // Debug logging
+    if (department !== 'All') {
+      console.log('Filtering:', {
+        employeeId: employee.id,
+        employeeDepartmentId: employee.departmentId,
+        employeeDepartmentName,
+        selectedDepartmentId: department,
+        selectedDepartmentName,
+        matches: employeeDepartmentName === selectedDepartmentName
+      });
+    }
+    
+    return (
+      (employee.user.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        employee.id?.toString().toLowerCase().includes(searchTerm.toLowerCase())) &&
+      (status === 'All' || employee.employmentStatus === status) &&
+      (department === 'All' || employeeDepartmentName === selectedDepartmentName) &&
+      (!dateOfJoiningFilter || employee.dateOfJoin >= dateOfJoiningFilter) &&
+      (!dateOfLeavingFilter || (employee.dateOfLeaving && employee.dateOfLeaving <= dateOfLeavingFilter))
+    );
+  });
 
   const itemsPerPage = 10;
   const totalPages = Math.ceil(filteredEmployees.length / itemsPerPage);
@@ -51,6 +75,10 @@ export default function Employee({ darkMode, setCurrentPage, toggleDarkMode }) {
     (currentPageNumber - 1) * itemsPerPage,
     currentPageNumber * itemsPerPage
   );
+
+  const handleDepartmentChange = (e) => {
+    setDepartment(e.target.value);
+  };
 
   const handleSubmit = async (updatedEmployeeData) => {
     try {
@@ -170,7 +198,7 @@ export default function Employee({ darkMode, setCurrentPage, toggleDarkMode }) {
 
   const fetchDepartments = async () => {
     try {
-      setLoading(true)
+      setDepartmentsLoading(true)
       const response = await departmentService.getDepartments()
       if (response.success) {
         setDepartments(response.data)
@@ -178,10 +206,15 @@ export default function Employee({ darkMode, setCurrentPage, toggleDarkMode }) {
         toast.error(response.message || 'Failed to fetch departments')
       }
     } catch (error) {
+      console.error('Error fetching departments:', error)
       toast.error('Error fetching departments')
     } finally {
-      setLoading(false)
+      setDepartmentsLoading(false)
     }
+  }
+
+  const refreshDepartments = async () => {
+    await fetchDepartments();
   }
 
   const fetchBranches = async () => {
@@ -258,12 +291,12 @@ export default function Employee({ darkMode, setCurrentPage, toggleDarkMode }) {
                <div className={`p-4 ${darkMode ? 'bg-[#1C1C1C]' : 'bg-white'} border-b ${darkMode ? 'border-[#3C3C3C]' : 'border-gray-200'}`}>
                  <div className="flex justify-between items-center">
                    <div className="flex space-x-3">
-                     <button 
+                     {/* <button 
                        onClick={handleInvite} 
                        className={`px-4 py-2 ${darkMode ? 'bg-[#BB86FC] text-[#1C1C1C] hover:bg-[#A66EFC]' : 'bg-blue-600 text-white hover:bg-blue-700'} rounded-md text-xs font-medium transition-all duration-200 transform hover:scale-102`}
                      >
                        Invite Employee
-                     </button>
+                     </button> */}
                      <button 
                        onClick={() => { setSelectedEmployee(null); setShowForm(true);}} 
                        className={`px-4 py-2 ${darkMode ? 'bg-[#03DAC6] text-[#1C1C1C] hover:bg-[#00BFA5]' : 'bg-green-600 text-white hover:bg-green-700'} rounded-md text-xs font-medium transition-all duration-200 transform hover:scale-102 flex items-center`}
@@ -278,7 +311,7 @@ export default function Employee({ darkMode, setCurrentPage, toggleDarkMode }) {
                        <Upload className="w-3.5 h-3.5 mr-1.5" />
                        Export
                      </button>
-                     <div className="relative">
+                     {/* <div className="relative">
                        <input
                          type="file"
                          accept=".xlsx,.xls"
@@ -293,7 +326,7 @@ export default function Employee({ darkMode, setCurrentPage, toggleDarkMode }) {
                          <FileUp className="w-3.5 h-3.5 mr-1.5" />
                          Import
                        </label>
-                     </div>
+                     </div> */}
                    </div>
                  </div>
                </div>
@@ -346,14 +379,20 @@ export default function Employee({ darkMode, setCurrentPage, toggleDarkMode }) {
                        <div className="relative">
                          <select
                            value={department}
-                           onChange={(e) => setDepartment(e.target.value)}
-                           className={`appearance-none px-4 py-2 pr-8 border rounded-md text-xs font-medium ${darkMode ? 'bg-[#2C2C2C] border-[#3C3C3C] text-[#E0E0E0] focus:border-[#BB86FC]' : 'bg-white border-gray-300 text-[#31293F] focus:border-blue-500'} transition-all duration-200 focus:outline-none shadow-sm hover:shadow-md cursor-pointer`}
+                           onChange={handleDepartmentChange}
+                           disabled={departmentsLoading}
+                           className={`appearance-none px-4 py-2 pr-8 border rounded-md text-xs font-medium ${darkMode ? 'bg-[#2C2C2C] border-[#3C3C3C] text-[#E0E0E0] focus:border-[#BB86FC]' : 'bg-white border-gray-300 text-[#31293F] focus:border-blue-500'} transition-all duration-200 focus:outline-none shadow-sm hover:shadow-md cursor-pointer ${departmentsLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
                          >
                            <option value="All">All Departments</option>
-                           <option value="IT">IT</option>
-                           <option value="HR">HR</option>
-                           <option value="Finance">Finance</option>
-                           <option value="Marketing">Marketing</option>
+                           {departmentsLoading ? (
+                             <option value="">Loading departments...</option>
+                           ) : departmentsList.length === 0 ? (
+                             <option value="">No departments found</option>
+                           ) : (
+                             departmentsList.map(dept => (
+                               <option key={dept.id} value={dept.id}>{dept.name}</option>
+                             ))
+                           )}
                          </select>
                          <div className={`absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none ${darkMode ? 'text-[#A6A9C8]' : 'text-gray-400'}`}>
                            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -361,6 +400,15 @@ export default function Employee({ darkMode, setCurrentPage, toggleDarkMode }) {
                            </svg>
                          </div>
                        </div>
+                       {departmentsList.length === 0 && !departmentsLoading && (
+                         <button
+                           onClick={refreshDepartments}
+                           className={`px-2 py-1 text-xs rounded ${darkMode ? 'bg-[#BB86FC] text-[#1C1C1C] hover:bg-[#A66EFC]' : 'bg-blue-500 text-white hover:bg-blue-600'} transition-colors duration-200`}
+                           title="Refresh departments"
+                         >
+                           ↻
+                         </button>
+                       )}
                      </div>
                    </div>
                  </div>
@@ -381,7 +429,7 @@ export default function Employee({ darkMode, setCurrentPage, toggleDarkMode }) {
                          <th className="px-4 py-3 text-left font-semibold text-xs uppercase tracking-wider">Date of Join</th>
                          <th className="px-4 py-3 text-left font-semibold text-xs uppercase tracking-wider">Email</th>
                          <th className="px-4 py-3 text-left font-semibold text-xs uppercase tracking-wider">Status</th>
-                         <th className="px-4 py-3 text-left font-semibold text-xs uppercase tracking-wider">Action</th>
+                         {/* <th className="px-4 py-3 text-left font-semibold text-xs uppercase tracking-wider">Action</th> */}
                        </tr>
                      </thead>
                      <tbody className={`${darkMode ? 'divide-[#4C4C4C]' : 'divide-gray-200'}`}>
@@ -408,7 +456,7 @@ export default function Employee({ darkMode, setCurrentPage, toggleDarkMode }) {
                                {employee.employmentStatus}
                              </span>
                            </td>
-                           <td className="px-4 py-3">
+                           {/* <td className="px-4 py-3">
                              <div className="flex space-x-1">
                                <button 
                                  onClick={(e) => { e.stopPropagation(); handleView(employee); }} 
@@ -432,7 +480,7 @@ export default function Employee({ darkMode, setCurrentPage, toggleDarkMode }) {
                                  <Trash2 size={14} />
                                </button>
                              </div>
-                           </td>
+                           </td> */}
                          </tr>
                        ))}
                      </tbody>
@@ -498,7 +546,7 @@ export default function Employee({ darkMode, setCurrentPage, toggleDarkMode }) {
                         <X size={20} />
                       </button>
                       <h2 className="text-lg font-semibold">
-                        {selectedEmployee ? 'Edit Employee' : 'Create Employee'}
+                        {selectedEmployee ? `Editing - ${selectedEmployee.empCode} - ${selectedEmployee.user?.name || 'Unknown'}` : 'Create Employee'}
                       </h2>
                     </div>
                   </div>

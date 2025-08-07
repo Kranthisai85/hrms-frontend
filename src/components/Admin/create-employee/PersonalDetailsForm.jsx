@@ -299,19 +299,21 @@ export function PersonalDetailsForm({ employeeData, setEmployeeData, onSaveSecti
                 </div>
             </div>
             <div className="space-y-2">
-                <h3 className="font-semibold text-lg">Present Address</h3>
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <h3 className="font-semibold text-lg mb-5">Present Address</h3>
+                <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
                     <FloatingInput
                         name="address"
                         label="House Number/Street/Flat No"
                         value={formData.address || ''}
                         onChange={handleInputChange}
+                        placeholder="House Number/Street/Flat No"
                     />
                     <FloatingInput
                         name="city"
                         label="City"
                         value={formData.city || ''}
                         onChange={handleInputChange}
+                        placeholder="City"
                     />
                     <SearchableSelect
                         id="state"
@@ -347,19 +349,21 @@ export function PersonalDetailsForm({ employeeData, setEmployeeData, onSaveSecti
 
             {/* Permanent Address Section */}
             <div className="space-y-2">
-                <h3 className="font-semibold text-lg">Permanent Address</h3>
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <h3 className="font-semibold text-lg mb-5">Permanent Address</h3>
+                <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
                     <FloatingInput
                         name="permanentAddress"
                         label="House Number/Street/Flat No"
                         value={formData.permanentAddress || ''}
                         onChange={handleInputChange}
+                        placeholder="House Number/Street/Flat No"
                     />
                     <FloatingInput
                         name="permanentCity"
                         label="City"
                         value={formData.permanentCity || ''}
                         onChange={handleInputChange}
+                        placeholder="City"
                     />
                     <SearchableSelect
                         id="permanentState"
@@ -400,12 +404,14 @@ export function PersonalDetailsForm({ employeeData, setEmployeeData, onSaveSecti
                         label="Name"
                         value={formData.emergencyContactName || ''}
                         onChange={handleInputChange}
+                        placeholder="Emergency Contact Name"
                     />
                     <FloatingInput
                         name="emergencyContactPhone"
                         label="Number"
                         value={formData.emergencyContactPhone || ''}
                         onChange={handleInputChange}
+                        placeholder="Emergency Contact Number"
                     />
                     <SearchableSelect
                         id="emergencyContactRelation"
