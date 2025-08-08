@@ -5,27 +5,76 @@ export function ProofDocumentModal({ isOpen, onClose, onUpload, onCancel }) {
     const [selectedDocument, setSelectedDocument] = useState('');
     const [file, setFile] = useState(null);
     const [comment, setComment] = useState('');
+    const [fileError, setFileError] = useState('');
 
     const handleFileChange = (e) => {
         const selectedFile = e.target.files[0];
-        if (selectedFile && selectedFile.size <= 10 * 1024 * 1024) {
+        setFileError('');
+        
+        if (selectedFile) {
+            // Check file size (10MB limit)
+            if (selectedFile.size > 10 * 1024 * 1024) {
+                setFileError('File size should not exceed 10MB');
+                setFile(null);
+                return;
+            }
+
+            // Check file type - allow images and PDFs
+            const allowedTypes = [
+                'image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/bmp', 'image/webp',
+                'application/pdf'
+            ];
+            
+            if (!allowedTypes.includes(selectedFile.type)) {
+                setFileError('Only images (JPG, PNG, GIF, BMP, WebP) and PDF files are allowed');
+                setFile(null);
+                return;
+            }
+
             setFile(selectedFile);
-        } else {
-            alert('File size should not exceed 10MB');
         }
     };
 
     const handleUpload = () => {
-        if (selectedDocument && file) {
-            onUpload({
-                documentName: selectedDocument,
-                fileName: file.name,
-                size: file.size,
-                lastUpdated: new Date().toISOString(),
-                comment,
-            });
-            onClose();
+        if (!selectedDocument) {
+            alert('Please select a document type');
+            return;
         }
+        
+        if (!file) {
+            alert('Please select a file');
+            return;
+        }
+
+        if (fileError) {
+            alert(fileError);
+            return;
+        }
+
+        onUpload({
+            documentName: selectedDocument,
+            fileName: file.name,
+            size: file.size,
+            lastUpdated: new Date().toISOString(),
+            comment,
+            file: file, // Include the actual file for upload
+        });
+        
+        // Reset form
+        setSelectedDocument('');
+        setFile(null);
+        setComment('');
+        setFileError('');
+        onClose();
+    };
+
+    const handleClose = () => {
+        // Reset form
+        setSelectedDocument('');
+        setFile(null);
+        setComment('');
+        setFileError('');
+        onClose();
     };
 
     if (!isOpen) return null;
@@ -35,7 +84,7 @@ export function ProofDocumentModal({ isOpen, onClose, onUpload, onCancel }) {
             <div className="bg-white rounded-lg p-6 w-full max-w-2xl">
                 <div className="flex justify-between items-center mb-4">
                     <h3 className="text-lg font-semibold">Upload Document</h3>
-                    <button onClick={onClose} className="text-gray-500 hover:text-gray-700">
+                    <button onClick={handleClose} className="text-gray-500 hover:text-gray-700">
                         <X size={20} />
                     </button>
                 </div>
@@ -66,11 +115,20 @@ export function ProofDocumentModal({ isOpen, onClose, onUpload, onCancel }) {
                         <input
                             type="file"
                             onChange={handleFileChange}
+                            accept=".jpg,.jpeg,.png,.gif,.bmp,.webp,.pdf"
                             className="block px-2.5 pb-2.5 pt-4 w-full text-sm text-gray-900 bg-transparent rounded-lg border border-gray-300 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer"
                         />
                         <label className="absolute text-sm text-gray-500 duration-300 transform -translate-y-4 scale-75 top-2 z-10 origin-[0] bg-white px-2 peer-focus:px-2 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:-translate-y-1/2 peer-placeholder-shown:top-1/2 peer-focus:top-2 peer-focus:scale-75 peer-focus:-translate-y-4 left-1">
-                            File
+                            File (Images or PDF, max 10MB)
                         </label>
+                        {fileError && (
+                            <p className="text-red-500 text-xs mt-1">{fileError}</p>
+                        )}
+                        {file && (
+                            <p className="text-green-600 text-xs mt-1">
+                                Selected: {file.name} ({(file.size / 1024).toFixed(1)} KB)
+                            </p>
+                        )}
                     </div>
                     <div className="relative">
                         <textarea
@@ -83,18 +141,21 @@ export function ProofDocumentModal({ isOpen, onClose, onUpload, onCancel }) {
                             Comment (Optional)
                         </label>
                     </div>
-                    <button
-                        onClick={handleUpload}
-                        className="w-full bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-                    >
-                        Upload
-                    </button>
-                    <button
-                        onClick={onCancel}
-                        className="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
-                    >
-                        Cancel
-                    </button>
+                    <div className="flex space-x-2">
+                        <button
+                            onClick={handleUpload}
+                            disabled={!selectedDocument || !file || !!fileError}
+                            className="flex-1 bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:bg-gray-300 disabled:cursor-not-allowed"
+                        >
+                            Upload
+                        </button>
+                        <button
+                            onClick={onCancel}
+                            className="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
+                        >
+                            Cancel
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>

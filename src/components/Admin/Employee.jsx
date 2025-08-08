@@ -16,6 +16,7 @@ export default function Employee({ darkMode, setCurrentPage, toggleDarkMode }) {
   const [showViewModal, setShowViewModal] = useState(false);
   const [status, setStatus] = useState('All');
   const [department, setDepartment] = useState('All');
+  const [employmentType, setEmploymentType] = useState('All');
   const [dateOfJoiningFilter, setDateOfJoiningFilter] = useState('');
   const [dateOfLeavingFilter, setDateOfLeavingFilter] = useState('');
   const [departmentsList, setDepartments] = useState([])
@@ -42,6 +43,12 @@ export default function Employee({ darkMode, setCurrentPage, toggleDarkMode }) {
     const employeeDepartmentName = getNameByIdFromList(employee.departmentId, departmentsList);
     const selectedDepartmentName = department === 'All' ? 'All' : getNameByIdFromList(parseInt(department), departmentsList);
     
+    // Search by employee code or name
+    const searchMatches = searchTerm === '' || 
+      employee.empCode?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      employee.user.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      employee.user.lastName?.toLowerCase().includes(searchTerm.toLowerCase());
+    
     // Debug logging
     if (department !== 'All') {
       console.log('Filtering:', {
@@ -55,9 +62,9 @@ export default function Employee({ darkMode, setCurrentPage, toggleDarkMode }) {
     }
     
     return (
-      (employee.user.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        employee.id?.toString().toLowerCase().includes(searchTerm.toLowerCase())) &&
+      searchMatches &&
       (status === 'All' || employee.employmentStatus === status) &&
+      (employmentType === 'All' || employee.employmentType === employmentType) &&
       (department === 'All' || employeeDepartmentName === selectedDepartmentName) &&
       (!dateOfJoiningFilter || employee.dateOfJoin >= dateOfJoiningFilter) &&
       (!dateOfLeavingFilter || (employee.dateOfLeaving && employee.dateOfLeaving <= dateOfLeavingFilter))
@@ -69,7 +76,7 @@ export default function Employee({ darkMode, setCurrentPage, toggleDarkMode }) {
 
   useEffect(() => {
     setCurrentPageNumber(1);
-  }, [searchTerm, status, department, dateOfJoiningFilter, dateOfLeavingFilter]);
+  }, [searchTerm, status, department, employmentType, dateOfJoiningFilter, dateOfLeavingFilter]);
 
   const currentEmployees = filteredEmployees.slice(
     (currentPageNumber - 1) * itemsPerPage,
@@ -340,7 +347,7 @@ export default function Employee({ darkMode, setCurrentPage, toggleDarkMode }) {
                        <Search className={`absolute left-2.5 top-1/2 transform -translate-y-1/2 ${darkMode ? 'text-[#A6A9C8]' : 'text-gray-400'} w-4 h-4`} />
                        <input
                          type="text"
-                         placeholder="Search employees..."
+                         placeholder="Search by Employee Code or Name..."
                          value={searchTerm}
                          onChange={(e) => setSearchTerm(e.target.value)}
                          className={`w-full pl-8 pr-3 py-2 border rounded-md text-xs ${darkMode ? 'bg-[#2C2C2C] border-[#3C3C3C] text-[#E0E0E0] focus:border-[#BB86FC]' : 'bg-white border-gray-300 text-[#31293F] focus:border-blue-500'} transition-colors duration-200 focus:outline-none`}
@@ -410,6 +417,30 @@ export default function Employee({ darkMode, setCurrentPage, toggleDarkMode }) {
                          </button>
                        )}
                      </div>
+
+                     {/* Employment Type Filter */}
+                     <div className="flex items-center space-x-2">
+                       <label className={`text-xs font-medium ${darkMode ? 'text-[#E0E0E0]' : 'text-[#31293F]'}`}>Type:</label>
+                       <div className="relative">
+                         <select
+                           value={employmentType}
+                           onChange={(e) => setEmploymentType(e.target.value)}
+                           className={`appearance-none px-4 py-2 pr-8 border rounded-md text-xs font-medium ${darkMode ? 'bg-[#2C2C2C] border-[#3C3C3C] text-[#E0E0E0] focus:border-[#BB86FC]' : 'bg-white border-gray-300 text-[#31293F] focus:border-blue-500'} transition-all duration-200 focus:outline-none shadow-sm hover:shadow-md cursor-pointer`}
+                         >
+                           <option value="All">All Types</option>
+                           <option value="Full-time">Full-time</option>
+                           <option value="Part-time">Part-time</option>
+                           <option value="Contract">Contract</option>
+                           <option value="Intern">Intern</option>
+                           <option value="Consultant">Consultant</option>
+                         </select>
+                         <div className={`absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none ${darkMode ? 'text-[#A6A9C8]' : 'text-gray-400'}`}>
+                           <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                           </svg>
+                         </div>
+                       </div>
+                     </div>
                    </div>
                  </div>
                </div>
@@ -417,21 +448,21 @@ export default function Employee({ darkMode, setCurrentPage, toggleDarkMode }) {
               {/* Table Section */}
               <div className="flex-grow overflow-hidden">
                 <div className="overflow-x-auto h-full">
-                                     <table className={`w-full text-xs ${darkMode ? 'bg-[#2C2C2C] text-[#E0E0E0]' : 'bg-white text-[#31293F]'}`}>
-                     <thead className={`${darkMode ? 'bg-[#3C3C3C]' : 'bg-gray-100'} sticky top-0 z-10`}>
-                       <tr>
-                         <th className="px-4 py-3 text-left font-semibold text-xs uppercase tracking-wider">Sl No</th>
-                         <th className="px-4 py-3 text-left font-semibold text-xs uppercase tracking-wider">Employee ID</th>
-                         <th className="px-4 py-3 text-left font-semibold text-xs uppercase tracking-wider">Name</th>
-                         <th className="px-4 py-3 text-left font-semibold text-xs uppercase tracking-wider">Designation</th>
-                         <th className="px-4 py-3 text-left font-semibold text-xs uppercase tracking-wider">Department</th>
-                         <th className="px-4 py-3 text-left font-semibold text-xs uppercase tracking-wider">Branch</th>
-                         <th className="px-4 py-3 text-left font-semibold text-xs uppercase tracking-wider">Date of Join</th>
-                         <th className="px-4 py-3 text-left font-semibold text-xs uppercase tracking-wider">Email</th>
-                         <th className="px-4 py-3 text-left font-semibold text-xs uppercase tracking-wider">Status</th>
-                         {/* <th className="px-4 py-3 text-left font-semibold text-xs uppercase tracking-wider">Action</th> */}
-                       </tr>
-                     </thead>
+                  <table className={`w-full text-xs ${darkMode ? 'bg-[#2C2C2C] text-[#E0E0E0]' : 'bg-white text-[#31293F]'}`}>
+                    <thead className={`${darkMode ? 'bg-[#3C3C3C]' : 'bg-gray-100'} sticky top-0 z-10`}>
+                      <tr>
+                        <th className="px-3 py-3 text-center font-semibold text-xs uppercase tracking-wider">Sl No</th>
+                        <th className="px-3 py-3 text-center font-semibold text-xs uppercase tracking-wider">Employee ID</th>
+                        <th className="px-3 py-3 text-center font-semibold text-xs uppercase tracking-wider">Name</th>
+                        <th className="px-3 py-3 text-center font-semibold text-xs uppercase tracking-wider">Designation</th>
+                        <th className="px-3 py-3 text-center font-semibold text-xs uppercase tracking-wider">Department</th>
+                        <th className="px-3 py-3 text-center font-semibold text-xs uppercase tracking-wider">Branch</th>
+                        <th className="px-3 py-3 text-center font-semibold text-xs uppercase tracking-wider">Mobile</th>
+                        <th className="px-3 py-3 text-center font-semibold text-xs uppercase tracking-wider">Email</th>
+                        <th className="px-3 py-3 text-center font-semibold text-xs uppercase tracking-wider">Status</th>
+                        {/* <th className="px-3 py-3 text-center font-semibold text-xs uppercase tracking-wider">Action</th> */}
+                      </tr>
+                    </thead>
                      <tbody className={`${darkMode ? 'divide-[#4C4C4C]' : 'divide-gray-200'}`}>
                        {currentEmployees.map((employee, index) => (
                          <tr 
@@ -439,15 +470,15 @@ export default function Employee({ darkMode, setCurrentPage, toggleDarkMode }) {
                            className={`${darkMode ? 'hover:bg-[#3C3C3C] border-[#4C4C4C]' : 'hover:bg-gray-50 border-gray-200'} hover:cursor-pointer transition-colors duration-150 border-b`} 
                            onClick={() => handleEdit(employee)}
                          >
-                           <td className="px-4 py-3 font-medium">{(currentPageNumber - 1) * itemsPerPage + index + 1}</td>
-                           <td className="px-4 py-3 font-medium">{employee.empCode}</td>
-                           <td className="px-4 py-3 font-medium">{`${employee.user.name} ${employee.user.lastName != undefined ? employee.user.lastName : ''}`}</td>
-                           <td className="px-4 py-3">{getNameByIdFromList(employee.designationId, designationsList)}</td>
-                           <td className="px-4 py-3">{getNameByIdFromList(employee.departmentId, departmentsList)}</td>
-                           <td className="px-4 py-3">{getNameByIdFromList(employee.branchId, branchesList)}</td>
-                           <td className="px-4 py-3">{formatDate(employee.joiningDate)}</td>
-                           <td className="px-4 py-3">{employee.email}</td>
-                           <td className="px-4 py-3">
+                           <td className="px-3 py-3 text-center font-medium">{(currentPageNumber - 1) * itemsPerPage + index + 1}</td>
+                           <td className="px-3 py-3 text-center font-medium">{employee.empCode}</td>
+                           <td className="px-3 py-3 text-center font-medium">{`${employee.user.name} ${employee.user.lastName != undefined ? employee.user.lastName : ''}`}</td>
+                           <td className="px-3 py-3 text-center">{getNameByIdFromList(employee.designationId, designationsList)}</td>
+                           <td className="px-3 py-3 text-center">{getNameByIdFromList(employee.departmentId, departmentsList)}</td>
+                           <td className="px-3 py-3 text-center">{getNameByIdFromList(employee.branchId, branchesList)}</td>
+                           <td className="px-3 py-3 text-center">{employee.user?.phone || 'N/A'}</td>
+                           <td className="px-3 py-3 text-center">{employee.email}</td>
+                           <td className="px-3 py-3 text-center">
                              <span className={`px-2 py-1 rounded-full text-xs font-semibold ${employee.employmentStatus === 'Probation' ? 'bg-yellow-100 text-yellow-800' :
                                employee.employmentStatus === 'Confirmed' ? 'bg-green-100 text-green-800' :
                                  employee.employmentStatus === 'Resigned' ? 'bg-red-100 text-red-800' :

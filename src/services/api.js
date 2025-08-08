@@ -164,6 +164,15 @@ export const employeeService = {
       responseType: 'blob'
     });
     return response;
+  },
+
+  uploadDocument: async (formData) => {
+    const response = await api.post('/employees/upload-document', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
+    });
+    return response.data;
   }
 };
 

@@ -1,5 +1,6 @@
 import { format } from 'date-fns';
-import { FileUp } from 'lucide-react';
+import { FileUp, Eye, Download, Trash2 } from 'lucide-react';
+import { API_URL } from '../../../services/api';
 
 export function DocumentsTab({ employeeData, setEmployeeData, onSaveSection, loading, feedback, setIsUploadModalOpen, darkMode, onCancel }) {
     // Ensure uploadedDocuments is always an array
@@ -9,14 +10,53 @@ export function DocumentsTab({ employeeData, setEmployeeData, onSaveSection, loa
         // Only send documents section fields
         const sectionData = {
             documents: (uploadedDocuments || []).map(doc => ({
-                documentName: doc.type || '',
-                fileName: doc.documentNumber || '',
-                lastUpdated: doc.issueDate || new Date().toISOString(),
-                comment: doc.description || '',
+                documentName: doc.documentName || doc.type || '',
+                fileName: doc.fileName || doc.documentNumber || '',
+                size: doc.size || 0,
+                lastUpdated: doc.lastUpdated || doc.issueDate || new Date().toISOString(),
+                comment: doc.comment || doc.description || '',
                 user_id: employeeData.userId || employeeData.user?.id // Add user_id as required by backend
             })),
         };
         onSaveSection(sectionData);
+    };
+
+    const handleViewDocument = (document) => {
+        if (document.fileName) {
+            const fileUrl = `${API_URL}uploads/employee-documents/${document.fileName}`;
+            window.open(fileUrl, '_blank');
+        }
+    };
+
+    const handleDownloadDocument = (document) => {
+        if (document.fileName) {
+            const fileUrl = `${API_URL}uploads/employee-documents/${document.fileName}`;
+            const link = document.createElement('a');
+            link.href = fileUrl;
+            link.download = document.fileName;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+    };
+
+    const handleDeleteDocument = (index) => {
+        if (window.confirm('Are you sure you want to delete this document?')) {
+            const updatedDocuments = uploadedDocuments.filter((_, i) => i !== index);
+            setEmployeeData(prev => ({ ...prev, documents: updatedDocuments }));
+        }
+    };
+
+    const getFileIcon = (fileName) => {
+        if (!fileName) return '📄';
+        const extension = fileName.split('.').pop()?.toLowerCase();
+        if (['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp'].includes(extension)) {
+            return '🖼️';
+        } else if (extension === 'pdf') {
+            return '📄';
+        } else {
+            return '📎';
+        }
     };
 
     return (
@@ -28,33 +68,69 @@ export function DocumentsTab({ employeeData, setEmployeeData, onSaveSection, loa
                     className="text-green-500 flex items-center hover:text-green-600 text-sm"
                 >
                     <FileUp className="mr-1" size={16} />
-                    Drop Files Here
+                    Add Files Here
                 </button>
             </div>
-            <div className="border rounded-lg overflow-hidden" style={{ maxHeight: '300px', overflowY: 'auto' }}>
+            <div className="border rounded-lg overflow-hidden" style={{ maxHeight: '400px', overflowY: 'auto' }}>
                 <table className="w-full">
                     <thead className="bg-gray-50 sticky top-0">
                         <tr>
                             <th className="px-4 py-2 text-left text-sm font-medium text-gray-500">Sr. No.</th>
                             <th className="px-4 py-2 text-left text-sm font-medium text-gray-500">Document Type</th>
-                            <th className="px-4 py-2 text-left text-sm font-medium text-gray-500">Document Number</th>
-                            <th className="px-4 py-2 text-left text-sm font-medium text-gray-500">Issue Date</th>
-                            <th className="px-4 py-2 text-left text-sm font-medium text-gray-500">Expiry Date</th>
-                            <th className="px-4 py-2 text-left text-sm font-medium text-gray-500">Status</th>
+                            {/* <th className="px-4 py-2 text-left text-sm font-medium text-gray-500">File Name</th>
+                            <th className="px-4 py-2 text-left text-sm font-medium text-gray-500">Size</th> */}
+                            <th className="px-4 py-2 text-left text-sm font-medium text-gray-500">Upload Date</th>
+                            <th className="px-4 py-2 text-left text-sm font-medium text-gray-500">Actions</th>
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-200">
                         {uploadedDocuments.map((doc, index) => (
                             <tr key={index} className="hover:bg-gray-50">
                                 <td className="px-4 py-2 text-sm">{index + 1}</td>
-                                <td className="px-4 py-2 text-sm">{doc.type}</td>
-                                <td className="px-4 py-2 text-sm">{doc.documentNumber}</td>
-                                <td className="px-4 py-2 text-sm">{doc.issueDate ? format(new Date(doc.issueDate), 'dd-MMM-yyyy') : '-'}</td>
-                                <td className="px-4 py-2 text-sm">{doc.expiryDate ? format(new Date(doc.expiryDate), 'dd-MMM-yyyy') : '-'}</td>
                                 <td className="px-4 py-2 text-sm">
-                                    <span className="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs">
-                                        Uploaded
-                                    </span>
+                                    <div className="flex items-center">
+                                        <span className="mr-2">{getFileIcon(doc.fileName)}</span>
+                                        {doc.documentName || doc.type}
+                                    </div>
+                                </td>
+                                {/* <td className="px-4 py-2 text-sm">
+                                    <div className="max-w-xs truncate" title={doc.fileName || doc.documentNumber}>
+                                        {doc.fileName || doc.documentNumber || 'N/A'}
+                                    </div>
+                                </td>
+                                <td className="px-4 py-2 text-sm">
+                                    {doc.size ? `${(doc.size / 1024).toFixed(1)} KB` : 'N/A'}
+                                </td> */}
+                                <td className="px-4 py-2 text-sm">
+                                    {doc.lastUpdated || doc.issueDate ? 
+                                        format(new Date(doc.lastUpdated || doc.issueDate), 'dd-MMM-yyyy') : 
+                                        'N/A'
+                                    }
+                                </td>
+                                <td className="px-4 py-2 text-sm">
+                                    <div className="flex items-center space-x-2">
+                                        <button
+                                            onClick={() => handleViewDocument(doc)}
+                                            className="p-1 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded"
+                                            title="View Document"
+                                        >
+                                            <Eye size={16} />
+                                        </button>
+                                        <button
+                                            onClick={() => handleDownloadDocument(doc)}
+                                            className="p-1 text-green-600 hover:text-green-800 hover:bg-green-50 rounded"
+                                            title="Download Document"
+                                        >
+                                            <Download size={16} />
+                                        </button>
+                                        <button
+                                            onClick={() => handleDeleteDocument(index)}
+                                            className="p-1 text-red-600 hover:text-red-800 hover:bg-red-50 rounded"
+                                            title="Delete Document"
+                                        >
+                                            <Trash2 size={16} />
+                                        </button>
+                                    </div>
                                 </td>
                             </tr>
                         ))}

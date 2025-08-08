@@ -75,34 +75,30 @@ export function PersonalDetailsForm({ employeeData, setEmployeeData, onSaveSecti
         permanentPincode: ''
     });
 
-    // Map address data from backend response to form structure
-    const mappedAddressData = {
-        // Present Address - map from address object
+    // Create form data by reading from the correct sources
+    const formData = {
+        ...employeeData,
+        // Present Address - read from nested address object
         address: employeeData.address?.address || '',
         city: employeeData.address?.city || '',
         state: employeeData.address?.state || '',
         country: employeeData.address?.country || 'India',
         pincode: employeeData.address?.pincode || '',
         
-        // Permanent Address - map from address object
+        // Permanent Address - read from nested address object
         permanentAddress: employeeData.address?.permanentAddress || '',
         permanentCity: employeeData.address?.permanentCity || '',
         permanentState: employeeData.address?.permanentState || '',
         permanentCountry: employeeData.address?.permanentCountry || 'India',
         permanentPincode: employeeData.address?.permanentPincode || '',
         
-        // Emergency Contact - map from employee fields (flat structure to match backend)
+        // Emergency Contact - read from flat fields
         emergencyContactName: employeeData.emergencyContactName || '',
         emergencyContactPhone: employeeData.emergencyContactPhone || '',
         emergencyContactRelation: employeeData.emergencyContactRelation || '',
         
         // Other fields
         photo: employeeData.photo || null
-    };
-
-    const formData = {
-        ...employeeData,
-        ...mappedAddressData
     };
     // (You can add validation logic here if needed)
 

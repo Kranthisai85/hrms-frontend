@@ -128,7 +128,59 @@ export default function EmployeeProfileDetails({
                 // Update: send only sectionData
                 response = await employeeService.updateEmployee(employeeData.id, sectionData);
                 console.log('Backend response:', response);
-                setEmployeeData(prev => ({ ...prev, ...sectionData }));
+                
+                // Handle different sections appropriately
+                if (section === 'personal') {
+                    // For personal section, we need to preserve the address object structure
+                    // and only update the specific fields that were changed
+                    setEmployeeData(prev => {
+                        const updatedData = { ...prev };
+                        
+                        // Update emergency contact fields
+                        if (sectionData.emergencyContactName !== undefined) {
+                            updatedData.emergencyContactName = sectionData.emergencyContactName;
+                        }
+                        if (sectionData.emergencyContactPhone !== undefined) {
+                            updatedData.emergencyContactPhone = sectionData.emergencyContactPhone;
+                        }
+                        if (sectionData.emergencyContactRelation !== undefined) {
+                            updatedData.emergencyContactRelation = sectionData.emergencyContactRelation;
+                        }
+                        
+                        // Update photo if provided
+                        if (sectionData.photo !== undefined) {
+                            updatedData.photo = sectionData.photo;
+                        }
+                        
+                        // Update address fields in the address object
+                        if (sectionData.address !== undefined || sectionData.city !== undefined || 
+                            sectionData.state !== undefined || sectionData.country !== undefined || 
+                            sectionData.pincode !== undefined || sectionData.permanentAddress !== undefined || 
+                            sectionData.permanentCity !== undefined || sectionData.permanentState !== undefined || 
+                            sectionData.permanentCountry !== undefined || sectionData.permanentPincode !== undefined) {
+                            
+                            updatedData.address = {
+                                ...prev.address,
+                                address: sectionData.address !== undefined ? sectionData.address : prev.address?.address,
+                                city: sectionData.city !== undefined ? sectionData.city : prev.address?.city,
+                                state: sectionData.state !== undefined ? sectionData.state : prev.address?.state,
+                                country: sectionData.country !== undefined ? sectionData.country : prev.address?.country,
+                                pincode: sectionData.pincode !== undefined ? sectionData.pincode : prev.address?.pincode,
+                                permanentAddress: sectionData.permanentAddress !== undefined ? sectionData.permanentAddress : prev.address?.permanentAddress,
+                                permanentCity: sectionData.permanentCity !== undefined ? sectionData.permanentCity : prev.address?.permanentCity,
+                                permanentState: sectionData.permanentState !== undefined ? sectionData.permanentState : prev.address?.permanentState,
+                                permanentCountry: sectionData.permanentCountry !== undefined ? sectionData.permanentCountry : prev.address?.permanentCountry,
+                                permanentPincode: sectionData.permanentPincode !== undefined ? sectionData.permanentPincode : prev.address?.permanentPincode,
+                            };
+                        }
+                        
+                        return updatedData;
+                    });
+                } else {
+                    // For other sections, use the original logic
+                    setEmployeeData(prev => ({ ...prev, ...sectionData }));
+                }
+                
                 setFeedback({ [section]: { type: 'success', message: 'Section updated successfully.' } });
             }
         } catch (err) {
@@ -173,22 +225,62 @@ export default function EmployeeProfileDetails({
         }
     };
 
-    // Document upload handler (for Documents tab)
-    const handleDocumentUpload = (documentData) => {
-        const docs = employeeData.documents || [];
-        const existingDocIndex = docs.findIndex(doc => doc.documentName === documentData.documentName);
-        let updatedDocuments;
-        if (existingDocIndex !== -1) {
-            if (window.confirm(`A document "${documentData.documentName}" already exists. Do you want to replace it?`)) {
+    // Document upload handler (for Documents tab) - Hybrid approach
+    const handleDocumentUpload = async (documentData) => {
+        try {
+            // Quick local check for immediate feedback
+            const docs = employeeData.documents || [];
+            const existingDoc = docs.find(doc => doc.documentName === documentData.documentName);
+            
+            // If document exists locally, ask for confirmation
+            if (existingDoc) {
+                const confirmMessage = `A document "${documentData.documentName}" already exists.\n\nExisting document details:\n- File: ${existingDoc.fileName || 'N/A'}\n- Size: ${existingDoc.size ? (existingDoc.size / 1024).toFixed(1) + ' KB' : 'N/A'}\n- Uploaded: ${existingDoc.lastUpdated ? new Date(existingDoc.lastUpdated).toLocaleDateString() : 'N/A'}\n\nDo you want to replace it?`;
+                
+                if (!window.confirm(confirmMessage)) {
+                    return; // User cancelled
+                }
+            }
+            
+            // If there's a file to upload, handle it
+            if (documentData.file) {
+                const formData = new FormData();
+                formData.append('document', documentData.file);
+                formData.append('documentName', documentData.documentName);
+                formData.append('employeeId', employeeData.id);
+                formData.append('comment', documentData.comment || '');
+                
+                // If we found existing document locally, tell backend to replace
+                if (existingDoc) {
+                    formData.append('replaceExisting', 'true');
+                }
+                
+                // Upload to backend
+                const uploadResult = await employeeService.uploadDocument(formData);
+                
+                // Update documentData with the uploaded file info
+                documentData.fileName = uploadResult.fileName;
+                documentData.size = uploadResult.size;
+                documentData.lastUpdated = new Date().toISOString();
+            }
+            
+            // Update local state
+            let updatedDocuments;
+            const existingDocIndex = docs.findIndex(doc => doc.documentName === documentData.documentName);
+            
+            if (existingDocIndex !== -1) {
+                // Replace existing document in the list
                 updatedDocuments = [...docs];
                 updatedDocuments[existingDocIndex] = documentData;
             } else {
-                return;
+                // Add new document to the list
+                updatedDocuments = [...docs, documentData];
             }
-        } else {
-            updatedDocuments = [...docs, documentData];
+            
+            setEmployeeData(prev => ({ ...prev, documents: updatedDocuments }));
+        } catch (error) {
+            console.error('Document upload error:', error);
+            alert('Failed to upload document. Please try again.');
         }
-        setEmployeeData(prev => ({ ...prev, documents: updatedDocuments }));
     };
 
     return (

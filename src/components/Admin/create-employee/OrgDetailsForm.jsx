@@ -104,8 +104,13 @@ export function OrgDetailsForm({ employeeData, setEmployeeData, onSaveSection, l
         if (empCode.length < 3) {
             return 'Employee Code must be at least 3 characters long';
         }
-        if (empCode.length > 5) {
-            return 'Employee Code cannot exceed 5 characters';
+        if (empCode.length > 12) {
+            return 'Employee Code cannot exceed 12 characters';
+        }
+        // Check if employee code contains only alphanumeric characters
+        const alphanumericRegex = /^[a-zA-Z0-9]+$/;
+        if (!alphanumericRegex.test(empCode)) {
+            return 'Employee Code can only contain letters and numbers';
         }
         return null;
     };
@@ -417,12 +422,17 @@ export function OrgDetailsForm({ employeeData, setEmployeeData, onSaveSection, l
 
     const handleInputChange = useCallback((e) => {
         const { name, value, type, checked } = e.target;
-        const fieldValue = type === 'checkbox' ? checked : value;
+        let fieldValue = type === 'checkbox' ? checked : value;
         
         // Special handling for employment status
         if (name === 'employmentStatus') {
             handleEmploymentStatusChange(value);
             return;
+        }
+        
+        // Auto-capitalize Employee Code
+        if (name === 'empCode') {
+            fieldValue = fieldValue.toUpperCase();
         }
         
         setEmployeeData(prev => ({
@@ -457,7 +467,7 @@ export function OrgDetailsForm({ employeeData, setEmployeeData, onSaveSection, l
             panNumber: formData.panNumber, // Backend expects 'pan'
             aadharNumber: formData.aadharNumber, // Backend expects 'aadhaarNo'
             officialEmail: formData.email, // Backend expects 'officialEmail'
-            personalEmail: formData.personalEmail, // Backend expects 'personalEmail'
+            // personalEmail: formData.personalEmail, // Backend expects 'personalEmail'
             joiningDate: formData.joiningDate, // Backend expects 'dateOfJoin'
             confirmationDate: formData.confirmationDate,
             resignationDate: formData.resignationDate,
@@ -470,7 +480,8 @@ export function OrgDetailsForm({ employeeData, setEmployeeData, onSaveSection, l
             phone: formData.user?.phone, // Backend expects 'mobileNumber'
             dateOfBirth:  formData.user?.dateOfBirth,
             gender: formData.user?.gender,
-            bloodGroup: formData.user?.bloodGroup
+            bloodGroup: formData.user?.bloodGroup,
+            personalEmail: formData.user?.email,
         };
         
         // Call onSaveSection with error handling for unique constraints
@@ -537,7 +548,8 @@ export function OrgDetailsForm({ employeeData, setEmployeeData, onSaveSection, l
                     onBlur={(e) => handleFieldBlur('empCode', e.target.value)}
                     required
                     error={formErrors.empCode}
-                    placeholder="Emp Code"
+                    placeholder="Alphanumeric, 3-12 chars"
+                    maxLength={12}
                 />
                 <FloatingInput
                     id="name"
@@ -700,6 +712,7 @@ export function OrgDetailsForm({ employeeData, setEmployeeData, onSaveSection, l
                         { value: 'Part-time', label: 'Part-Time' },
                         { value: 'Contract', label: 'Contract' },
                         { value: 'Intern', label: 'Intern' },
+                        { value: 'Consultant', label: 'Consultant' },
                     ]}
                     required
                     error={formErrors.employmentType}
@@ -843,7 +856,7 @@ export function OrgDetailsForm({ employeeData, setEmployeeData, onSaveSection, l
                 />
                 <FloatingInput
                     id="email"
-                    label="Email"
+                    label="Official Email"
                     type="email"
                     value={formData.email || ''}
                     onChange={handleInputChange}
